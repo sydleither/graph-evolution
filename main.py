@@ -33,11 +33,11 @@ class Organism:
         return newOrg
     
 
-    def getEvaluationScores(self, evaluationFunctions:list[Callable]) -> list[float]:
+    def getEvaluationScores(self, evaluationFunctions:list[Callable], idealValues:list[Callable]) -> list[float]:
         #only evaluate fitness once, otherwise return memo value
         if not self.evaluationScores:
             #TODO: don't evaluate objectives unless required (optimization)
-            self.evaluationScores = [func(self) for func in evaluationFunctions]
+            self.evaluationScores = [evaluationFunctions[i](self, idealValues[i]) for i in range(len(evaluationFunctions))]
         return self.evaluationScores
         
 
@@ -89,7 +89,7 @@ class Organism:
 #   1) a distance function, e.g. (val - target)**2 or
 #   2) a negative value, e.g. -val (for maximization) or
 #   3) a positive value, e.g. val (for minimization)
-def connectance(network:Organism, ideal_val:float=0.5) -> float:
+def connectance(network:Organism, ideal_val:float) -> float:
     return ((network.numInteractions / network.numNodes**2) - ideal_val)**2
 
 
@@ -115,10 +115,10 @@ def epsilonLexicase(population:list[Organism], numParents:int, epsilon:float = 0
         cut:list[int] = [i for i in range(POPSIZE)]
         for objectiveID in objectiveIDs:
             #get best w.r.t. this objective
-            minVal = min([population[i].getEvaluationScores(EVAL_FUNCS)[objectiveID] for i in cut])
+            minVal = min([population[i].getEvaluationScores(EVAL_FUNCS, IDEAL_VALS)[objectiveID] for i in cut])
             #keep only those organisms that are within epsilon of the best organism
             #TODO: instead of epsilon being a fixed offset, it could be a percentage of the best or a percentage of the range of values
-            cut = [i for i in cut if population[i].getEvaluationScores(EVAL_FUNCS)[objectiveID] <= minVal+epsilon]
+            cut = [i for i in cut if population[i].getEvaluationScores(EVAL_FUNCS, IDEAL_VALS)[objectiveID] <= minVal+epsilon]
             if len(cut) == 1:
                 parents.append(population[cut[0]])
                 break
@@ -145,8 +145,8 @@ if __name__ == '__main__':
         children = [parent.makeMutatedCopy(MUTATION_RATE) for parent in parents]
         population = children
 
-    for eval_func in EVAL_FUNCS:
+    for j in range(len(EVAL_FUNCS)):
         print()
-        print(eval_func.__name__)
+        print(EVAL_FUNCS[j].__name__)
         for i in range(POPSIZE):
-            print(f'\t{i}: {population[i].getEvaluationScores([eval_func])[0]}')
+            print(f'\t{i}: {population[i].getEvaluationScores([EVAL_FUNCS[j]], [IDEAL_VALS[j]])[0]}')
