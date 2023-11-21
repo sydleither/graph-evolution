@@ -33,7 +33,7 @@ class Organism:
         return newOrg
     
 
-    def getEvaluationScores(self, evaluationFunctions:list[Callable], idealValues:list[Callable]) -> list[float]:
+    def getEvaluationScores(self, evaluationFunctions:list[Callable], idealValues:list[float]) -> list[float]:
         #only evaluate fitness once, otherwise return memo value
         if not self.evaluationScores:
             #TODO: don't evaluate objectives unless required (optimization)
