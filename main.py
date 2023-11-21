@@ -1,9 +1,11 @@
 from copy import deepcopy
-from random import random, shuffle, sample
+from random import random, sample, shuffle
+from statistics import mean
 from typing import Callable
 
 import matplotlib.pyplot as plt
 import networkx as nx
+
 
 # this function is based on:
 # Clifford Bohm, Arend Hintze, Jory Schossau; July 24–28, 2023.
@@ -50,7 +52,7 @@ class Organism:
         #internal number of interactions reference
         self.numInteractions:int = sum([sum([1 for y in x if y != 0]) for x in self.adjacencyMatrix])
         #evaluation memo, for possible efficiency boosts (do not access directly, use getter)
-        self.evaluationScores:list[float] = []
+        self.evaluationScores:dict[str:float] = {}
         self.sparsity = sparsity
         self.weightRange = weightRange
 
@@ -67,14 +69,14 @@ class Organism:
         return newOrg
     
 
-    def getEvaluationScores(self, evaluationFunctions:list[Callable], idealValues:list[float]) -> list[float]:
-        #only evaluate fitness once, otherwise return memo value
-        if not self.evaluationScores:
-            #TODO: don't evaluate objectives unless required (optimization)
-            self.evaluationScores = [evaluationFunctions[i](self, idealValues[i]) for i in range(len(evaluationFunctions))]
+    def getEvaluationScores(self, evaluationDict:dict[str:tuple[Callable,float]]) -> dict[str:float]:
+        for name, evaluationPack in evaluationDict.items():
+            evalFunc, targetValue = evaluationPack
+            if name not in self.evaluationScores:
+                self.evaluationScores[name] = evalFunc(self,targetValue)
         return self.evaluationScores
+            
         
-
     def getNetworkxObject(self) -> nx.DiGraph:
         G = nx.DiGraph()
         for i in range(self.numNodes):
@@ -120,14 +122,10 @@ class Organism:
 # evaluation functions #
 ########################
 
-#function stub for an evaluation function
-#TODO: create real evaluation functions, one for each property of the network
-#NOTE: the lexicase selection algorithm assumes we are minimizing values, therefore each evaluation function should be either:
-#   1) a distance function, e.g. (val - target)**2 or
-#   2) a negative value, e.g. -val (for maximization) or
-#   3) a positive value, e.g. val (for minimization)
 def connectance(network:Organism, ideal_val:float) -> float:
     return ((network.numInteractions / network.numNodes**2) - ideal_val)**2
+
+
 
 
 ################
@@ -143,24 +141,20 @@ def epsilonLexicase(population:list[Organism], numParents:int, epsilon:float = 0
     global EVAL_FUNCS, POPSIZE
 
     parents:list[Organism] = []
-    objectiveIDs:list[int]= list(range(len(EVAL_FUNCS)))
+    objectiveNames:list[str] = list(EVAL_FUNCS.keys())
 
-    for _ in range(POPSIZE):
-         #randomize objective evaluation order
-        shuffle(objectiveIDs)
-        #IDs of organisms that 'make the cut'
-        cut:list[int] = [i for i in range(POPSIZE)]
-        for objectiveID in objectiveIDs:
-            #get best w.r.t. this objective
-            minVal = min([population[i].getEvaluationScores(EVAL_FUNCS, IDEAL_VALS)[objectiveID] for i in cut])
+    for _ in range(numParents):
+        shuffle(objectiveNames) #randomize objective evaluation order
+        cut:list[int] = [i for i in range(POPSIZE)] #IDs of organisms that 'make the cut'
+
+        for name in objectiveNames:
+            minVal = min([population[i].getEvaluationScores({name:EVAL_FUNCS[name]})[name] for i in cut]) #get best w.r.t. this objective
             #keep only those organisms that are within epsilon of the best organism
-            #TODO: instead of epsilon being a fixed offset, it could be a percentage of the best or a percentage of the range of values
-            cut = [i for i in cut if population[i].getEvaluationScores(EVAL_FUNCS, IDEAL_VALS)[objectiveID] <= minVal+epsilon]
+            cut = [i for i in cut if population[i].getEvaluationScores({name:EVAL_FUNCS[name]})[name] <= minVal*(1+epsilon)]
             if len(cut) == 1:
                 parents.append(population[cut[0]])
                 break
-        #if choices remain after all objectives, choose randomly
-        parents.append(population[sample(cut,k=1)[0]])
+        parents.append(population[sample(cut,k=1)[0]]) #if choices remain after all objectives, choose randomly
 
     return parents
 
@@ -169,23 +163,34 @@ if __name__ == '__main__':
     POPSIZE = 10
     MUTATION_RATE = 0.005
     NETWORK_SIZE = 10
-    NETWORK_SPARSITY = 0.8
+    NETWORK_SPARSITY = 0.1
     NUM_GENERATIONS = 10
-    EVAL_FUNCS = [connectance,]
-    IDEAL_VALS = [0.5,]
+    EVAL_FUNCS:dict[str:tuple[Callable,float]] = {"connectance":(connectance,0.5),}
 
     population = [Organism(NETWORK_SIZE,NETWORK_SPARSITY) for _ in range(POPSIZE)]
 
+
+    fitnessLog = []
     for gen in range(NUM_GENERATIONS):
         print("Gen",gen)
         parents = epsilonLexicase(population,POPSIZE)
         children = [parent.makeMutatedCopy(MUTATION_RATE) for parent in parents]
+        fitnessLog.append(mean([org.getEvaluationScores(EVAL_FUNCS)["connectance"] for org in population]))
         population = children
 
     population[0].saveGraphFigure("testFigure.png")
 
-    for j in range(len(EVAL_FUNCS)):
+    plt.plot(fitnessLog,label="Connectance")
+    plt.legend()
+    plt.xlabel("Generations")
+    plt.ylabel("MSE")
+    plt.savefig("selectionTest.png")
+    plt.close()
+
+    for name, funcPack in EVAL_FUNCS.items():
+        func,targetVal = funcPack
         print()
-        print(EVAL_FUNCS[j].__name__)
-        for i in range(POPSIZE):
-            print(f'\t{i}: {population[i].getEvaluationScores([EVAL_FUNCS[j]], [IDEAL_VALS[j]])[0]}')
+        print(name)
+        for orgID, org in enumerate(population):
+            orgFitness = org.getEvaluationScores({name:funcPack})[name]
+            print("\t{}: {}".format(orgID,orgFitness))
