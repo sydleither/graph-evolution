@@ -7,17 +7,19 @@ import networkx as nx
 
 
 class Organism:
-    def __init__(self,numNodes:int, sparsity:float = 0.5) -> None:
+    def __init__(self, numNodes:int, sparsity:float=0.5) -> None:
         #init numNodes x numNodes matrix with 'sparsity' percent of 1s (0.9 -> 90% 1s)
         #TODO: support weighted digraphs using cliff/arend's sparsity function
         self.adjacencyMatrix:list[list[int]] = [[1 if random() <= sparsity else 0 for _ in range(numNodes)] for _ in range(numNodes)]
         #internal size reference
         self.numNodes:int = numNodes
+        #internal number of interactions reference
+        self.numInteractions:int = sum([sum([1 for y in x if y != 0]) for x in self.adjacencyMatrix])
         #evaluation memo, for possible efficiency boosts (do not access directly, use getter)
         self.evaluationScores:list[float] = []
 
 
-    def makeMutatedCopy(self,mutationRate:float = 0.005):
+    def makeMutatedCopy(self, mutationRate:float = 0.005):
         #inheritance
         newOrg = Organism(self.numNodes)
         newOrg.adjacencyMatrix = deepcopy(self.adjacencyMatrix)
@@ -31,7 +33,7 @@ class Organism:
         return newOrg
     
 
-    def getEvaluationScores(self,evaluationFunctions:list[Callable]) -> list[float]:
+    def getEvaluationScores(self, evaluationFunctions:list[Callable]) -> list[float]:
         #only evaluate fitness once, otherwise return memo value
         if not self.evaluationScores:
             #TODO: don't evaluate objectives unless required (optimization)
@@ -50,7 +52,7 @@ class Organism:
         return G
 
 
-    def saveGraphFigure(self,path:str):
+    def saveGraphFigure(self, path:str):
         G = self.getNetworkxObject()
         ######################
         # grpah layout style #
@@ -87,8 +89,8 @@ class Organism:
 #   1) a distance function, e.g. (val - target)**2 or
 #   2) a negative value, e.g. -val (for maximization) or
 #   3) a positive value, e.g. val (for minimization)
-def foo(network:Organism) -> float:
-    return random()
+def connectance(network:Organism, ideal_val:float=0.5) -> float:
+    return ((network.numInteractions / network.numNodes**2) - ideal_val)**2
 
 
 ################
@@ -126,13 +128,14 @@ def epsilonLexicase(population:list[Organism], numParents:int, epsilon:float = 0
     return parents
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     POPSIZE = 100
     MUTATION_RATE = 0.005
     NETWORK_SIZE = 10
     NETWORK_SPARSITY = 0.5
     NUM_GENERATIONS = 500
-    EVAL_FUNCS = [foo,]
+    EVAL_FUNCS = [connectance,]
+    IDEAL_VALS = [0.5,]
 
     population = [Organism(NETWORK_SIZE,NETWORK_SPARSITY) for _ in range(POPSIZE)]
 
@@ -141,4 +144,9 @@ if __name__ == "__main__":
         parents = epsilonLexicase(population,POPSIZE)
         children = [parent.makeMutatedCopy(MUTATION_RATE) for parent in parents]
         population = children
-    print([x.getEvaluationScores() for x in population])
+
+    for eval_func in EVAL_FUNCS:
+        print()
+        print(eval_func.__name__)
+        for i in range(POPSIZE):
+            print(f'\t{i}: {population[i].getEvaluationScores([eval_func])[0]}')
