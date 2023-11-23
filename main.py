@@ -14,7 +14,7 @@ import networkx as nx
 # Proceedings of the 2023 Artificial Life Conference. 
 # ALIFE 2023: Ghost in the Machine: Proceedings of the 2023 Artificial Life Conference. 
 # Online. (pp. 53). ASME. https://doi.org/10.1162/isal_a_00655
-def sparsify(x,percentSparse:float = 0.5, outputRange:tuple[float]=(-1,1)):
+def sparsify(x, percentSparse:float = 0.5, outputRange:tuple[float]=(-1,1)):
     assert 0 <= percentSparse <= 1
     assert outputRange[0] <= 0 <= outputRange[1]
     assert outputRange[0] != 0 or outputRange[1] != 0
@@ -39,7 +39,6 @@ def sparsify(x,percentSparse:float = 0.5, outputRange:tuple[float]=(-1,1)):
         return (pos/b)*(x-t2)
     if 1 < x:
         return pos
-    
 
 
 class Organism:
@@ -65,7 +64,7 @@ class Organism:
         for i in range(self.numNodes):
             for j in range(self.numNodes):
                 if random() <= mutationRate:
-                    newOrg.adjacencyMatrix[i][j] = sparsify(random(),percentSparse=self.sparsity, outputRange=self.weightRange) 
+                    newOrg.adjacencyMatrix[i][j] = sparsify(random(), percentSparse=self.sparsity, outputRange=self.weightRange) 
         return newOrg
     
 
@@ -73,7 +72,7 @@ class Organism:
         for name, evaluationPack in evaluationDict.items():
             evalFunc, targetValue = evaluationPack
             if name not in self.evaluationScores:
-                self.evaluationScores[name] = evalFunc(self,targetValue)
+                self.evaluationScores[name] = (evalFunc(self) - targetValue)**2
         return self.evaluationScores
             
         
@@ -122,8 +121,8 @@ class Organism:
 # evaluation functions #
 ########################
 
-def connectance(network:Organism, ideal_val:float) -> float:
-    return ((network.numInteractions / network.numNodes**2) - ideal_val)**2
+def connectance(network:Organism) -> float:
+    return network.numInteractions / network.numNodes**2
 
 
 
@@ -132,7 +131,7 @@ def connectance(network:Organism, ideal_val:float) -> float:
 # helper funcs #
 ################
 
-#tanspose of a matrix (list-of-list)
+#transpose of a matrix (list-of-list)
 def T(LL:list[list]) -> list[list]:
     return list(zip(*LL))
 
@@ -160,15 +159,14 @@ def epsilonLexicase(population:list[Organism], numParents:int, epsilon:float = 0
 
 
 if __name__ == '__main__':
-    POPSIZE = 10
+    POPSIZE = 100
     MUTATION_RATE = 0.005
     NETWORK_SIZE = 10
     NETWORK_SPARSITY = 0.1
-    NUM_GENERATIONS = 10
+    NUM_GENERATIONS = 100
     EVAL_FUNCS:dict[str:tuple[Callable,float]] = {"connectance":(connectance,0.5),}
 
-    population = [Organism(NETWORK_SIZE,NETWORK_SPARSITY) for _ in range(POPSIZE)]
-
+    population = [Organism(NETWORK_SIZE, NETWORK_SPARSITY) for _ in range(POPSIZE)]
 
     fitnessLog = []
     for gen in range(NUM_GENERATIONS):
@@ -180,7 +178,7 @@ if __name__ == '__main__':
 
     population[0].saveGraphFigure("testFigure.png")
 
-    plt.plot(fitnessLog,label="Connectance")
+    plt.plot(fitnessLog, label="Connectance")
     plt.legend()
     plt.xlabel("Generations")
     plt.ylabel("MSE")
@@ -193,4 +191,4 @@ if __name__ == '__main__':
         print(name)
         for orgID, org in enumerate(population):
             orgFitness = org.getEvaluationScores({name:funcPack})[name]
-            print("\t{}: {}".format(orgID,orgFitness))
+            print("\t{}: {}".format(orgID, orgFitness))
