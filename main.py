@@ -50,6 +50,8 @@ class Organism:
         self.numNodes:int = numNodes
         #internal number of interactions reference
         self.numInteractions:int = sum([sum([1 for y in x if y != 0]) for x in self.adjacencyMatrix])
+        #internal number of positive interactions reference
+        self.numPositive:int = sum([sum([1 for y in x if y > 0]) for x in self.adjacencyMatrix])
         #evaluation memo, for possible efficiency boosts (do not access directly, use getter)
         self.evaluationScores:dict[str:float] = {}
         self.sparsity = sparsity
@@ -107,8 +109,9 @@ class Organism:
                                 {node:node for node in G.nodes()},
                                 font_size=9,
                                 font_color="k")
-
-        nx.draw_networkx_edges(G, pos=pos)
+        
+        weights = nx.get_edge_attributes(G, 'weight').values()
+        nx.draw_networkx_edges(G, pos=pos, edge_color=weights, width=5, edge_cmap=plt.cm.PuOr, edge_vmin=-1, edge_vmax=1)
         nx.draw_networkx_edge_labels(G, pos=pos,
                                      edge_labels={(n1,n2):round(data['weight'],3) for n1,n2,data in G.edges(data=True)},
                                      label_pos=0.8)
@@ -120,11 +123,38 @@ class Organism:
 ########################
 # evaluation functions #
 ########################
-
 def connectance(network:Organism) -> float:
     return network.numInteractions / network.numNodes**2
 
 
+def positive_interactions_proportion(network:Organism) -> float:
+    return network.numPositive / network.numInteractions
+
+
+def average_positive_interactions_strength(network:Organism) -> float:
+    return sum([sum([y for y in x if y > 0]) for x in network.adjacencyMatrix]) / network.numPositive
+
+
+def proportion_of_self_loops_positive(network:Organism) -> float:
+    return sum([1 for i in range(network.numNodes) if network.adjacencyMatrix[i][i] > 0]) / network.numNodes
+
+
+def number_of_mutualistic_pairs(network:Organism) -> float:
+    adj = network.adjacencyMatrix
+    nn = network.numNodes
+    return sum([sum([1 for j in range(i+1, nn) if adj[i][j] > 0 and adj[j][i] > 0]) for i in range(nn)])
+
+
+def number_of_competiton_pairs(network:Organism) -> float:
+    adj = network.adjacencyMatrix
+    nn = network.numNodes
+    return sum([sum([1 for j in range(i+1, nn) if adj[i][j] < 0 and adj[j][i] < 0]) for i in range(nn)])
+
+
+def number_of_parasitism_pairs(network:Organism) -> float:
+    adj = network.adjacencyMatrix
+    nn = network.numNodes
+    return sum([sum([1 for j in range(i+1, nn) if (adj[i][j] < 0 and adj[j][i] > 0) or (adj[i][j] > 0 and adj[j][i] < 0)]) for i in range(nn)])
 
 
 ################
@@ -164,31 +194,32 @@ if __name__ == '__main__':
     NETWORK_SIZE = 10
     NETWORK_SPARSITY = 0.1
     NUM_GENERATIONS = 100
-    EVAL_FUNCS:dict[str:tuple[Callable,float]] = {"connectance":(connectance,0.5),}
+    EVAL_FUNCS:dict[str:tuple[Callable,float]] = {
+        "connectance":(connectance, 0.5), 
+        "positive_interactions_proportion":(positive_interactions_proportion, 0.5),
+        "average_positive_interactions_strength":(average_positive_interactions_strength, 0.25),
+        "number_of_mutualistic_pairs":(number_of_mutualistic_pairs, 4),
+        "number_of_competiton_pairs":(number_of_competiton_pairs, 2)
+    }
+    eval_funcs_names = EVAL_FUNCS.keys()
 
     population = [Organism(NETWORK_SIZE, NETWORK_SPARSITY) for _ in range(POPSIZE)]
-
-    fitnessLog = []
+    fitnessLog = {x:[] for x in eval_funcs_names}
     for gen in range(NUM_GENERATIONS):
         print("Gen",gen)
         parents = epsilonLexicase(population,POPSIZE)
         children = [parent.makeMutatedCopy(MUTATION_RATE) for parent in parents]
-        fitnessLog.append(mean([org.getEvaluationScores(EVAL_FUNCS)["connectance"] for org in population]))
+        for func_name, funcPack in EVAL_FUNCS.items():
+            func_fitnesses = [org.getEvaluationScores({func_name:funcPack})[func_name] for org in population]
+            fitnessLog[func_name].append(mean(func_fitnesses))
         population = children
 
     population[0].saveGraphFigure("testFigure.png")
 
-    plt.plot(fitnessLog, label="Connectance")
+    for func_name in eval_funcs_names:
+        plt.plot(fitnessLog[func_name], label=func_name)
     plt.legend()
     plt.xlabel("Generations")
     plt.ylabel("MSE")
     plt.savefig("selectionTest.png")
     plt.close()
-
-    for name, funcPack in EVAL_FUNCS.items():
-        func,targetVal = funcPack
-        print()
-        print(name)
-        for orgID, org in enumerate(population):
-            orgFitness = org.getEvaluationScores({name:funcPack})[name]
-            print("\t{}: {}".format(orgID, orgFitness))
