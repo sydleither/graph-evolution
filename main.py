@@ -40,6 +40,7 @@ if __name__ == '__main__':
 
     POPSIZE = 100
     MUTATION_RATE = 0.005
+    CROSSOVER_RATE = 0.2
     NETWORK_SIZE = 10
     NETWORK_SPARSITY = 0.1
     NUM_GENERATIONS = 100
@@ -57,8 +58,15 @@ if __name__ == '__main__':
     fitnessLog = {x:[] for x in eval_funcs_names}
     for gen in range(NUM_GENERATIONS):
         print("Gen",gen)
-        parents = epsilonLexicase(population,POPSIZE)
-        children = [parent.makeMutatedCopy(MUTATION_RATE) for parent in parents]
+        ### mutation only ###
+        # parents = epsilonLexicase(population,POPSIZE)
+        # children = [parent.makeMutatedCopy(MUTATION_RATE) for parent in parents]
+        ###
+        ### crossover plus mutation ###
+        parents = epsilonLexicase(population,POPSIZE*2)
+        crosses = [p1.makeCrossedCopyWith(p2,CROSSOVER_RATE) for p1, p2 in zip(parents[:POPSIZE],parents[POPSIZE+1:])]
+        children = [cross.makeMutatedCopy(MUTATION_RATE) for cross in crosses]
+        ###
         for func_name, funcPack in EVAL_FUNCS.items():
             func_fitnesses = [org.getEvaluationScores({func_name:funcPack})[func_name] for org in population]
             fitnessLog[func_name].append(mean(func_fitnesses))
