@@ -63,9 +63,10 @@ if __name__ == '__main__':
         parents = epsilonLexicase(population,2)
         child = parents[0].makeCrossedCopyWith(parents[1],CROSSOVER_RATE).makeMutatedCopy(MUTATION_RATE)
         
-        for func_name, funcPack in EVAL_FUNCS.items():
-            func_fitnesses = [org.getEvaluationScores({func_name:funcPack})[func_name] for org in population]
-            fitnessLog[func_name].append(mean(func_fitnesses))
+        if gen%POPSIZE == 0:
+            for func_name, funcPack in EVAL_FUNCS.items():
+                func_fitnesses = [org.getEvaluationScores({func_name:funcPack})[func_name] for org in population]
+                fitnessLog[func_name].append(mean(func_fitnesses))
         
         deathIndex = randint(0,POPSIZE-1)
         population[deathIndex] = child
