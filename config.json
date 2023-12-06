@@ -1,0 +1,12 @@
+{
+    "popsize": 100,
+    "mutation_rate": 0.005,
+    "crossover_rate": 0.2,
+    "network_size": 10,
+    "network_sparsity": 0.1,
+    "num_generations": 100,
+    "eval_funcs": {
+        "connectance": 0.5,
+        "positive_interactions_proportion": 0.75
+    }
+}
