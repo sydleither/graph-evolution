@@ -79,6 +79,16 @@ class Organism:
                                                                  percentSparse=self.sparsity, outputRange=self.weightRange)
         return newOrg
 
+    def makeCrossedCopyWith(self,other,rateFromOther = 0.2):
+        #for now, crossover occurs on the node level
+        #inheritance
+        newOrg = Organism(self.numNodes)
+        newOrg.adjacencyMatrix = deepcopy(self.adjacencyMatrix)
+        #crossover
+        for i in range(self.numNodes):
+            if random() <= rateFromOther:
+                newOrg.adjacencyMatrix[i] = deepcopy(other.adjacencyMatrix[i])
+        return newOrg
 
     def getEvaluationScores(self, evaluationDict:dict[str:tuple[Callable,float]]) -> dict[str:float]:
         for name, evaluationPack in evaluationDict.items():
