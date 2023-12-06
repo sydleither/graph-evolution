@@ -1,5 +1,5 @@
 from copy import deepcopy
-from random import random
+from random import random, randint
 from typing import Callable
 
 import networkx as nx
@@ -57,7 +57,9 @@ class Organism:
         self.weightRange = weightRange
 
 
-    def makeMutatedCopy(self, mutationRate:float = 0.005):
+    def makeMutatedCopy(self, mutationRate:float = 0.005, mutationOdds: tuple[int] = (1,2)):
+        #setup
+        mutationThresholds = [sum(mutationOdds[:k+1]) for k in range(len(mutationOdds))]
         #inheritance
         newOrg = Organism(self.numNodes)
         newOrg.adjacencyMatrix = deepcopy(self.adjacencyMatrix)
@@ -65,7 +67,16 @@ class Organism:
         for i in range(self.numNodes):
             for j in range(self.numNodes):
                 if random() <= mutationRate:
-                    newOrg.adjacencyMatrix[i][j] = sparsify(random(), percentSparse=self.sparsity, outputRange=self.weightRange) 
+                    mutationType = randint(1,sum(mutationOdds))
+                    if mutationType <= mutationThresholds[0]:
+                        #point mutation
+                        newOrg.adjacencyMatrix[i][j] = sparsify(random(),
+                                                                percentSparse=self.sparsity, outputRange=self.weightRange)
+                    elif mutationType <= mutationThresholds[1]:
+                        #offset mutation
+                        offset = (random()/4)-(1/8) #-1/8 to 1/8
+                        newOrg.adjacencyMatrix[i][j] = sparsify(newOrg.adjacencyMatrix[i][j] + offset,
+                                                                 percentSparse=self.sparsity, outputRange=self.weightRange)
         return newOrg
 
 
