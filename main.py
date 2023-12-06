@@ -1,4 +1,4 @@
-from random import sample, shuffle
+from random import sample, shuffle, randint
 from statistics import mean
 from typing import Callable
 
@@ -56,21 +56,20 @@ if __name__ == '__main__':
 
     population = [Organism(NETWORK_SIZE, NETWORK_SPARSITY) for _ in range(POPSIZE)]
     fitnessLog = {x:[] for x in eval_funcs_names}
-    for gen in range(NUM_GENERATIONS):
-        print("Gen",gen)
-        ### mutation only ###
-        # parents = epsilonLexicase(population,POPSIZE)
-        # children = [parent.makeMutatedCopy(MUTATION_RATE) for parent in parents]
-        ###
-        ### crossover plus mutation ###
-        parents = epsilonLexicase(population,POPSIZE*2)
-        crosses = [p1.makeCrossedCopyWith(p2,CROSSOVER_RATE) for p1, p2 in zip(parents[:POPSIZE],parents[POPSIZE+1:])]
-        children = [cross.makeMutatedCopy(MUTATION_RATE) for cross in crosses]
-        ###
-        for func_name, funcPack in EVAL_FUNCS.items():
-            func_fitnesses = [org.getEvaluationScores({func_name:funcPack})[func_name] for org in population]
-            fitnessLog[func_name].append(mean(func_fitnesses))
-        population = children
+    for gen in range(NUM_GENERATIONS*POPSIZE):
+        if gen%POPSIZE == 0:
+            print("Gen",gen//POPSIZE)
+
+        parents = epsilonLexicase(population,2)
+        child = parents[0].makeCrossedCopyWith(parents[1],CROSSOVER_RATE).makeMutatedCopy(MUTATION_RATE)
+        
+        if gen%POPSIZE == 0:
+            for func_name, funcPack in EVAL_FUNCS.items():
+                func_fitnesses = [org.getEvaluationScores({func_name:funcPack})[func_name] for org in population]
+                fitnessLog[func_name].append(mean(func_fitnesses))
+        
+        deathIndex = randint(0,POPSIZE-1)
+        population[deathIndex] = child
 
     population[0].saveGraphFigure("testFigure.png")
 
