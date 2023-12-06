@@ -1,4 +1,5 @@
 from copy import deepcopy
+import numpy as np
 from random import random, randint
 from typing import Callable
 
@@ -99,11 +100,7 @@ class Organism:
 
 
     def getNetworkxObject(self) -> nx.DiGraph:
-        G = nx.DiGraph()
-        for i in range(self.numNodes):
-            for j in range(self.numNodes):
-                if abs(self.adjacencyMatrix[i][j]) > 0:
-                    G.add_edge(i,j,weight=self.adjacencyMatrix[i][j])
+        G = nx.DiGraph(np.array(self.adjacencyMatrix))
         return G
 
 
