@@ -1,10 +1,10 @@
 from copy import deepcopy
-import numpy as np
-from random import random, randint
+from random import randint, random
 from typing import Callable
 
-import networkx as nx
 import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
 
 
 # this function is based on:
@@ -42,28 +42,31 @@ def sparsify(x, percentSparse:float = 0.5, outputRange:tuple[float]=(-1,1)):
 
 
 class Organism:
-    def __init__(self, numNodes:int, sparsity:float=0.5, weightRange=(-1,1)) -> None:
-        #init numNodes x numNodes matrix with 'sparsity' percent of 0s, and weights in weightRange.
-        self.adjacencyMatrix:list[list[int]] = [[sparsify(random(),percentSparse=sparsity, outputRange=weightRange) 
-                                                 for _ in range(numNodes)] for _ in range(numNodes)]
-        #internal size reference
+    def __init__(self, numNodes:int, sparsity:float=0.5, weightRange=(-1,1), genome:list[list[float]]=None) -> None:
+        if genome is None:
+            self.genotypeMatrix:list[list[float]] = [[random() for _ in range(numNodes)] for _ in range(numNodes)]
+        else:
+            self.genotypeMatrix:list[list[float]] = genome
+
         self.numNodes:int = numNodes
-        #internal number of interactions reference
-        self.numInteractions:int = sum([sum([1 for y in x if y != 0]) for x in self.adjacencyMatrix])
-        #internal number of positive interactions reference
-        self.numPositive:int = sum([sum([1 for y in x if y > 0]) for x in self.adjacencyMatrix])
-        #evaluation memo, for possible efficiency boosts (do not access directly, use getter)
-        self.evaluationScores:dict[str:float] = {}
         self.sparsity = sparsity
         self.weightRange = weightRange
 
+        self.evaluationScores:dict[str:float] = {}
 
-    def makeMutatedCopy(self, mutationRate:float = 0.005, mutationOdds: tuple[int] = (1,2,1)):
+        self.adjacencyMatrix:list[list[float]] = [[sparsify(val,self.sparsity,self.weightRange) for val in row] for row in self.genotypeMatrix]
+
+        #internal number of interactions reference
+        self.numInteractions:int = sum([sum([1 for val in row if val != 0]) for row in self.adjacencyMatrix])
+        #internal number of positive interactions reference
+        self.numPositive:int = sum([sum([1 for val in row if val > 0]) for row in self.adjacencyMatrix])
+
+
+    def makeMutatedCopy(self, mutationRate:float = 0.005, mutationOdds: tuple[int] = (2,4,1)):
         #setup
         mutationThresholds = [sum(mutationOdds[:k+1]) for k in range(len(mutationOdds))]
         #inheritance
-        newOrg = Organism(self.numNodes)
-        newOrg.adjacencyMatrix = deepcopy(self.adjacencyMatrix)
+        newGenome = deepcopy(self.genotypeMatrix)
         #variation
         for i in range(self.numNodes):
             for j in range(self.numNodes):
@@ -71,29 +74,28 @@ class Organism:
                     mutationType = randint(1,sum(mutationOdds))
                     if mutationType <= mutationThresholds[0]:
                         #point mutation
-                        newOrg.adjacencyMatrix[i][j] = sparsify(random(),
-                                                                percentSparse=self.sparsity, outputRange=self.weightRange)
+                        newGenome[i][j] = random()
                     elif mutationType <= mutationThresholds[1]:
                         #offset mutation
                         offset = (random()/4)-(1/8) #-1/8 to 1/8
-                        newOrg.adjacencyMatrix[i][j] = sparsify(newOrg.adjacencyMatrix[i][j] + offset,
-                                                                 percentSparse=self.sparsity, outputRange=self.weightRange)
+                        newGenome[i][j] = min(1,max(0,newGenome[i][j] + offset))
                     elif mutationType <= mutationThresholds[2]:
-                        newOrg.adjacencyMatrix[i][j] = sparsify(1-newOrg.adjacencyMatrix[i][j],
-                                                                 percentSparse=self.sparsity, outputRange=self.weightRange)
-        return newOrg
+                        newGenome[i][j] = 1-newGenome[i][j]
+                    else:
+                        print("ERROR: no mutation selected")
+                        exit(1)
+        return Organism(self.numNodes,self.sparsity,self.weightRange,newGenome)
 
 
     def makeCrossedCopyWith(self,other,rateFromOther = 0.2):
         #for now, crossover occurs on the node level
         #inheritance
-        newOrg = Organism(self.numNodes)
-        newOrg.adjacencyMatrix = deepcopy(self.adjacencyMatrix)
+        newGenome = deepcopy(self.genotypeMatrix)
         #crossover
         for i in range(self.numNodes):
             if random() <= rateFromOther:
-                newOrg.adjacencyMatrix[i] = deepcopy(other.adjacencyMatrix[i])
-        return newOrg
+                newGenome[i] = deepcopy(other.genotypeMatrix[i])
+        return Organism(self.numNodes,self.sparsity,self.weightRange,newGenome)
 
 
     def getEvaluationScores(self, evaluationDict:dict[str:tuple[Callable,float]]) -> dict[str:float]:

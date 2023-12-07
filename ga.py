@@ -1,4 +1,4 @@
-from random import sample, shuffle, randint
+from random import randint, sample, shuffle
 from statistics import mean
 from typing import Callable
 
@@ -11,7 +11,8 @@ def T(LL:list[list]) -> list[list]:
     return list(zip(*LL))
 
 
-def epsilonLexicase(population:list[Organism], numParents:int, popsize:int, eval_funcs, epsilon:float = 0.05) -> list[Organism]:
+def epsilonLexicase(population:list[Organism], numParents:int, eval_funcs:dict, epsilon:float = 0.05) -> list[Organism]:
+    popsize:int = len(population)
     parents:list[Organism] = []
     objectiveNames:list[str] = list(eval_funcs.keys())
 
@@ -26,7 +27,8 @@ def epsilonLexicase(population:list[Organism], numParents:int, popsize:int, eval
             if len(cut) == 1:
                 parents.append(population[cut[0]])
                 break
-        parents.append(population[sample(cut,k=1)[0]]) #if choices remain after all objectives, choose randomly
+        if len(cut) > 1:
+            parents.append(population[sample(cut,k=1)[0]]) #if choices remain after all objectives, choose randomly
 
     return parents
 
@@ -41,18 +43,17 @@ def run(config):
 
     population = [Organism(config["network_size"], config["network_sparsity"]) for _ in range(popsize)]
     fitnessLog = {x:[] for x in eval_funcs.keys()}
+
     for gen in range(config["num_generations"]*popsize):
         if gen%popsize == 0:
             print("Gen", gen//popsize)
-
-        parents = epsilonLexicase(population, 2, popsize, eval_funcs)
-        child = parents[0].makeCrossedCopyWith(parents[1], config["crossover_rate"]).makeMutatedCopy(config["mutation_rate"])
-        
-        if gen%popsize == 0:
+            
             for func_name, funcPack in eval_funcs.items():
                 func_fitnesses = [org.getEvaluationScores({func_name:funcPack})[func_name] for org in population]
                 fitnessLog[func_name].append(mean(func_fitnesses))
-        
+
+        parents = epsilonLexicase(population, 2, eval_funcs)
+        child = parents[0].makeCrossedCopyWith(parents[1], config["crossover_rate"]).makeMutatedCopy(config["mutation_rate"])
         deathIndex = randint(0, popsize-1)
         population[deathIndex] = child
 
