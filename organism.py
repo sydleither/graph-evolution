@@ -62,7 +62,7 @@ class Organism:
         self.numPositive:int = sum([sum([1 for val in row if val > 0]) for row in self.adjacencyMatrix])
 
 
-    def makeMutatedCopy(self, mutationRate:float = 0.005, mutationOdds: tuple[int] = (2,4,1)):
+    def makeMutatedCopy(self, mutationRate:float = 0.005, mutationOdds: tuple[int] = (1,2,1)):
         #setup
         mutationThresholds = [sum(mutationOdds[:k+1]) for k in range(len(mutationOdds))]
         #inheritance

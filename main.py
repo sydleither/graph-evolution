@@ -40,10 +40,6 @@ def plot_fitness(fitness_log, eval_func_names):
 def main(config):
     final_pop, fitness_log = run(config)
     
-    weights = [val  for organism in final_pop for row in organism.adjacencyMatrix for val in row]
-    plt.hist(weights)
-    plt.show()
-
     plot_fitness(fitness_log, config["eval_funcs"].keys())
     final_pop_histogram(final_pop, config["eval_funcs"])
     final_pop[0].saveGraphFigure("./graphFigure.png")
