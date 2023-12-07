@@ -10,6 +10,10 @@ class Evaluation:
         return network.numInteractions / network.numNodes**2
     
 
+    def proportion_of_self_loops(self, network:Organism) -> float:
+        return sum([1 for i in range(network.numNodes) if network.adjacencyMatrix[i][i] != 0]) / network.numNodes
+    
+
     def diameter(self, network:Organism) -> int:
         shortest_path = dict(nx.shortest_path_length(network.getNetworkxObject()))
         return max([max(shortest_path[i].values()) for i in range(len(shortest_path))])
