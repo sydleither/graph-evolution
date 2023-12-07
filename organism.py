@@ -58,7 +58,7 @@ class Organism:
         self.weightRange = weightRange
 
 
-    def makeMutatedCopy(self, mutationRate:float = 0.005, mutationOdds: tuple[int] = (1,2)):
+    def makeMutatedCopy(self, mutationRate:float = 0.005, mutationOdds: tuple[int] = (1,2,1)):
         #setup
         mutationThresholds = [sum(mutationOdds[:k+1]) for k in range(len(mutationOdds))]
         #inheritance
@@ -78,7 +78,11 @@ class Organism:
                         offset = (random()/4)-(1/8) #-1/8 to 1/8
                         newOrg.adjacencyMatrix[i][j] = sparsify(newOrg.adjacencyMatrix[i][j] + offset,
                                                                  percentSparse=self.sparsity, outputRange=self.weightRange)
+                    elif mutationType <= mutationThresholds[2]:
+                        newOrg.adjacencyMatrix[i][j] = sparsify(1-newOrg.adjacencyMatrix[i][j],
+                                                                 percentSparse=self.sparsity, outputRange=self.weightRange)
         return newOrg
+
 
     def makeCrossedCopyWith(self,other,rateFromOther = 0.2):
         #for now, crossover occurs on the node level
@@ -90,6 +94,7 @@ class Organism:
             if random() <= rateFromOther:
                 newOrg.adjacencyMatrix[i] = deepcopy(other.adjacencyMatrix[i])
         return newOrg
+
 
     def getEvaluationScores(self, evaluationDict:dict[str:tuple[Callable,float]]) -> dict[str:float]:
         for name, evaluationPack in evaluationDict.items():

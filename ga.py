@@ -2,8 +2,6 @@ from random import sample, shuffle, randint
 from statistics import mean
 from typing import Callable
 
-import matplotlib.pyplot as plt
-
 from eval_functions import Evaluation
 from organism import Organism
 
