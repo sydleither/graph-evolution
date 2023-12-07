@@ -2,7 +2,6 @@ import json
 import sys
 
 import matplotlib.pyplot as plt
-
 from bintools import numBins
 from eval_functions import Evaluation
 from ga import run
@@ -11,7 +10,7 @@ from ga import run
 def final_pop_histogram(final_pop, eval_funcs):
     eval = Evaluation()
     num_plots = len(eval_funcs)
-    figure, axis = plt.subplots(1, num_plots, figsize=(3*num_plots,5))
+    figure, axis = plt.subplots(1, num_plots, figsize=(3*num_plots,5)) #TODO: dynamically add new rows when columns are full
     i = 0
     for func_name, ideal_val in eval_funcs.items():
         eval_func = getattr(eval, func_name)
@@ -40,8 +39,10 @@ def plot_fitness(fitness_log, eval_func_names):
 
 def main(config):
     final_pop, fitness_log = run(config)
+    
     plot_fitness(fitness_log, config["eval_funcs"].keys())
     final_pop_histogram(final_pop, config["eval_funcs"])
+    final_pop[0].saveGraphFigure("./graphFigure.png")
 
 
 if __name__ == "__main__":
