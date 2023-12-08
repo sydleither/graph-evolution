@@ -7,7 +7,7 @@ from eval_functions import Evaluation
 from ga import run
 
 
-def final_pop_histogram(final_pop, eval_funcs):
+def final_pop_histogram(final_pop, eval_funcs, transparent=False):
     eval = Evaluation()
     num_plots = len(eval_funcs)
     figure, axis = plt.subplots(1, num_plots, figsize=(3*num_plots,5)) #TODO: dynamically add new rows when columns are full
@@ -21,11 +21,11 @@ def final_pop_histogram(final_pop, eval_funcs):
         i += 1
     figure.tight_layout(rect=[0, 0.03, 1, 0.95])
     figure.suptitle('Final Population Histograms')
-    plt.savefig('histograms.png')
+    plt.savefig('histograms.png', transparent=transparent)
     plt.close()
 
 
-def plot_fitness(fitness_log, eval_func_names):
+def plot_fitness(fitness_log, eval_func_names, transparent=False):
     figure, axis = plt.subplots(1, 1)
     for func_name in eval_func_names:
         axis.plot(fitness_log[func_name], label=func_name)
@@ -33,6 +33,8 @@ def plot_fitness(fitness_log, eval_func_names):
     figure.supxlabel("Generations")
     figure.supylabel("MSE")
     figure.legend()
+    if transparent:
+        figure.patch.set_alpha(0.0)
     plt.savefig("fitness.png")
     plt.close()
 

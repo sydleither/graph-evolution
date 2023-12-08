@@ -22,7 +22,7 @@ class Evaluation:
         nn = network.numNodes
         networkx_obj = network.getNetworkxObject()
         a = 2.5
-        dist = [x**-a for x in [(y/10)+1 for y in range(10)]]
+        dist = [x**-a for x in [(y/nn)+1 for y in range(nn)]]
         degree_sequence = sorted([networkx_obj.in_degree(n)/nn for n in networkx_obj.nodes()], reverse=True)
         squares = sum([(dist[i]-degree_sequence[i])**2 for i in range(nn)])
         return squares
@@ -32,7 +32,7 @@ class Evaluation:
         nn = network.numNodes
         networkx_obj = network.getNetworkxObject()
         a = 2.5
-        dist = [x**-a for x in [(y/10)+1 for y in range(10)]]
+        dist = [x**-a for x in [(y/nn)+1 for y in range(nn)]]
         degree_sequence = sorted([networkx_obj.out_degree(n)/nn for n in networkx_obj.nodes()], reverse=True)
         squares = sum([(dist[i]-degree_sequence[i])**2 for i in range(nn)])
         return squares
