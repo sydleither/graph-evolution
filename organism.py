@@ -42,7 +42,7 @@ def sparsify(x, percentSparse:float = 0.5, outputRange:tuple[float]=(-1,1)):
 
 
 class Organism:
-    def __init__(self, numNodes:int, sparsity:float=0.5, weightRange=(-1,1), genome:list[list[float]]=None) -> None:
+    def __init__(self, numNodes:int, sparsity:float, weightRange, genome:list[list[float]]=None) -> None:
         if genome is None:
             self.genotypeMatrix:list[list[float]] = [[random() for _ in range(numNodes)] for _ in range(numNodes)]
         else:
@@ -62,7 +62,7 @@ class Organism:
         self.numPositive:int = sum([sum([1 for val in row if val > 0]) for row in self.adjacencyMatrix])
 
 
-    def makeMutatedCopy(self, mutationRate:float = 0.005, mutationOdds: tuple[int] = (1,2,1)):
+    def makeMutatedCopy(self, mutationRate:float, mutationOdds:tuple[int]):
         #setup
         mutationThresholds = [sum(mutationOdds[:k+1]) for k in range(len(mutationOdds))]
         #inheritance
@@ -87,7 +87,7 @@ class Organism:
         return Organism(self.numNodes,self.sparsity,self.weightRange,newGenome)
 
 
-    def makeCrossedCopyWith(self,other,rateFromOther = 0.2):
+    def makeCrossedCopyWith(self, other, rateFromOther):
         #for now, crossover occurs on the node level
         #inheritance
         newGenome = deepcopy(self.genotypeMatrix)

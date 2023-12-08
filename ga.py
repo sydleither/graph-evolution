@@ -11,7 +11,7 @@ def T(LL:list[list]) -> list[list]:
     return list(zip(*LL))
 
 
-def epsilonLexicase(population:list[Organism], numParents:int, popsize:int, eval_funcs:dict, epsilon:float = 0.05) -> list[Organism]:
+def epsilonLexicase(population:list[Organism], numParents:int, popsize:int, eval_funcs:dict, epsilon:float) -> list[Organism]:
     parents:list[Organism] = []
     objectiveNames:list[str] = list(eval_funcs.keys())
 
@@ -40,7 +40,7 @@ def run(config):
     for eval_func_name, ideal_val in config["eval_funcs"].items():
         eval_funcs[eval_func_name] = (getattr(eval, eval_func_name), ideal_val)
 
-    population = [Organism(config["network_size"], config["network_sparsity"]) for _ in range(popsize)]
+    population = [Organism(config["network_size"], config["network_sparsity"], config["weight_range"]) for _ in range(popsize)]
     fitnessLog = {x:[] for x in eval_funcs.keys()}
 
     for gen in range(config["num_generations"]*popsize):
@@ -51,8 +51,9 @@ def run(config):
                 func_fitnesses = [org.getEvaluationScores({func_name:funcPack})[func_name] for org in population]
                 fitnessLog[func_name].append(mean(func_fitnesses))
 
-        parents = epsilonLexicase(population, 2, popsize, eval_funcs)
-        child = parents[0].makeCrossedCopyWith(parents[1], config["crossover_rate"]).makeMutatedCopy(config["mutation_rate"])
+        parents = epsilonLexicase(population, 2, popsize, eval_funcs, config["epsilon"])
+        child = parents[0].makeCrossedCopyWith(parents[1], config["crossover_rate"])
+        child = child.makeMutatedCopy(config["mutation_rate"], config["mutation_odds"])
         deathIndex = randint(0, popsize-1)
         population[deathIndex] = child
 
