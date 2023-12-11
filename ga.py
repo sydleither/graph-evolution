@@ -57,4 +57,9 @@ def run(config):
         deathIndex = randint(0, popsize-1)
         population[deathIndex] = child
 
+    #compute fitness for final population, for downstream analysis
+    for func_name, funcPack in eval_funcs.items():
+        func_fitnesses = [org.getEvaluationScores({func_name:funcPack})[func_name] for org in population]
+        # fitnessLog[func_name].append(mean(func_fitnesses))
+
     return population, fitnessLog

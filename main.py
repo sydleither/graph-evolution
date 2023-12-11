@@ -6,6 +6,9 @@ from bintools import numBins
 from eval_functions import Evaluation
 from ga import run
 
+#transpose a matrix (list of list)
+def T(LL:list[list])->list[list]:
+    return list(zip(*LL))
 
 def final_pop_histogram(final_pop, eval_funcs, transparent=False):
     eval = Evaluation()
@@ -39,12 +42,32 @@ def plot_fitness(fitness_log, eval_func_names, transparent=False):
     plt.close()
 
 
+def plotParetoFront(population,config,save=True):
+    paretoFront = []
+    for i in range(config["popsize"]):
+        if not any([population[j] > population[i] for j in range(config["popsize"]) if j != i]):
+            paretoFront.append(population[i])
+    funcNames = list(config["eval_funcs"].keys())
+    for feature1,feature2 in zip(funcNames[:-1],funcNames[1:]):
+        R = sorted(sorted([(org.evaluationScores[feature1],org.evaluationScores[feature2]) for org in paretoFront],key=lambda r: r[1],reverse=True),key=lambda r: r[0])
+        plt.plot(*T(R),marker="o",linestyle="--")
+        plt.title(feature1+" "+feature2)
+        plt.xlabel(feature1 + " MSE")
+        plt.ylabel(feature2 + " MSE")
+        if save:
+            plt.savefig("./pareto_{}_{}.png".format(feature1,feature2))
+            plt.close()
+        else:
+            plt.show()
+
 def main(config):
     final_pop, fitness_log = run(config)
     
     plot_fitness(fitness_log, config["eval_funcs"].keys())
     final_pop_histogram(final_pop, config["eval_funcs"])
     final_pop[0].saveGraphFigure("./graphFigure.png")
+    plotParetoFront(final_pop,config,save=True)
+
 
 
 if __name__ == "__main__":
