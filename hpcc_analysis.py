@@ -12,13 +12,12 @@ from eval_functions import Evaluation
 def final_pop_histograms(final_pops, eval_funcs, file_name, transparent=False):
     eval = Evaluation()
     num_plots = len(eval_funcs)
-    figure, axis = plt.subplots(1, num_plots, figsize=(3*num_plots,5))
+    figure, axis = plt.subplots(1, num_plots, figsize=(4*num_plots,5))
     i = 0
     for func_name, ideal_val in eval_funcs.items():
         eval_func = getattr(eval, func_name)
-        for run in range(len(final_pops)):
-            func_fitnesses = [eval_func(org) for org in final_pops[run]]
-            axis[i].hist(func_fitnesses, bins=numBins(func_fitnesses), alpha=0.5)
+        data = [[eval_func(org) for org in final_pops[run]] for run in range(len(final_pops))]
+        axis[i].hist(data, bins=numBins([d for dd in data for d in dd]), stacked=True)
         axis[i].axvline(ideal_val, color="black", linestyle="--")
         axis[i].set_title(func_name)
         i += 1
