@@ -21,7 +21,7 @@ def final_pop_histogram(final_pop, eval_funcs, transparent=False):
         i += 1
     figure.tight_layout(rect=[0, 0.03, 1, 0.95])
     figure.suptitle('Final Population Histograms')
-    plt.savefig('histograms.png', transparent=transparent)
+    plt.savefig("histograms.png", transparent=transparent)
     plt.close()
 
 
