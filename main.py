@@ -13,7 +13,7 @@ def T(LL:list[list])->list[list]:
 def final_pop_histogram(final_pop, eval_funcs, transparent=False):
     eval = Evaluation()
     num_plots = len(eval_funcs)
-    figure, axis = plt.subplots(1, num_plots, figsize=(3*num_plots,5)) #TODO: dynamically add new rows when columns are full
+    figure, axis = plt.subplots(1, num_plots, figsize=(4*num_plots,5)) #TODO: dynamically add new rows when columns are full
     i = 0
     for func_name, ideal_val in eval_funcs.items():
         eval_func = getattr(eval, func_name)
@@ -24,7 +24,7 @@ def final_pop_histogram(final_pop, eval_funcs, transparent=False):
         i += 1
     figure.tight_layout(rect=[0, 0.03, 1, 0.95])
     figure.suptitle('Final Population Histograms')
-    plt.savefig('histograms.png', transparent=transparent)
+    plt.savefig("histograms.png", transparent=transparent)
     plt.close()
 
 

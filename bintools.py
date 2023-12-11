@@ -5,6 +5,8 @@ def numBins(data):
     from statistics import stdev
     from numpy import sqrt, pi
     STD = stdev(data)
+    if STD == 0:
+        return 1
     LEN = len(data)
     RNG = max(data)-min(data)
     B =  (24*sqrt(pi))**(1/3) * STD * LEN**(-1/3)
