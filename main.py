@@ -66,7 +66,7 @@ def plotParetoFront(population, config, save_loc=None):
 
 
 def run_rep(i, config):
-    save_loc = "data/{}/{}".format(config["name"], i)
+    save_loc = "{}/{}/{}".format(config["data_dir"], config["name"], i)
     os.makedirs(save_loc)
 
     final_pop, fitness_log = run(config)
@@ -91,7 +91,7 @@ def main(config, rep=None):
         for i in range(config["reps"]):
             run_rep(i, config)
 
-    config_path = "data/{}/config.json".format(config["name"])
+    config_path = "{}/{}/config.json".format(config["data_dir"], config["name"])
     if not os.path.exists(config_path):
         with open(config_path, "w") as f:
             json.dump(config, f)

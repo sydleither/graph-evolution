@@ -1,4 +1,5 @@
 {
+    "data_dir": "data",
     "name": "config",
     "reps": 3,
     "save_data": 1,

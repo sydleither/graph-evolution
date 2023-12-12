@@ -83,7 +83,7 @@ def main(config_dir):
             with open("{}/fitness_log.pkl".format(full_path), "rb") as f:
                 fitness_logs.append(pickle.load(f))
 
-    data_path = "data/{}".format(config_file["name"])
+    data_path = "{}/{}".format(config_file["data_dir"], config_file["name"])
     if not os.path.exists(data_path):
         os.makedirs(data_path)
     
