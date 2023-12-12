@@ -159,4 +159,3 @@ class Organism:
         
     def __eq__(self, other):
         return not (self < other or self > other)
-    ###########################
