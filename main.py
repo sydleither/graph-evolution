@@ -67,7 +67,11 @@ def plotParetoFront(population, config, save_loc=None):
 
 def run_rep(i, config):
     save_loc = "{}/{}/{}".format(config["data_dir"], config["name"], i)
-    os.makedirs(save_loc)
+    try:
+        os.makedirs(save_loc)
+    except:
+        print("{} already exists. Please delete or rename experiment.".format(save_loc))
+        exit()
 
     final_pop, fitness_log = run(config)
 
@@ -94,7 +98,7 @@ def main(config, rep=None):
     config_path = "{}/{}/config.json".format(config["data_dir"], config["name"])
     if not os.path.exists(config_path):
         with open(config_path, "w") as f:
-            json.dump(config, f)
+            json.dump(config, f, indent=4)
 
 
 if __name__ == "__main__":
@@ -111,4 +115,4 @@ if __name__ == "__main__":
         rep = sys.argv[2]
         main(config, rep)
     else:
-        print("Please pass in valid arguments: config and rep")
+        print("Please pass in valid arguments: config and (rep)(optional)")
