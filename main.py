@@ -8,9 +8,6 @@ from bintools import numBins
 from eval_functions import Evaluation
 from ga import run
 
-#transpose a matrix (list of list)
-def T(LL:list[list])->list[list]:
-    return list(zip(*LL))
 
 #transpose a matrix (list of list)
 def T(LL:list[list])->list[list]:
