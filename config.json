@@ -1,4 +1,9 @@
 {
+    "data_dir": "data",
+    "name": "config",
+    "reps": 3,
+    "save_data": 1,
+    "plot_data": 0,
     "popsize": 100,
     "mutation_rate": 0.005,
     "mutation_odds": [1,2,1],
@@ -6,12 +11,10 @@
     "weight_range": [-1,1],
     "network_size": 10,
     "network_sparsity": 0.75,
-    "num_generations": 500,
+    "num_generations": 100,
     "epsilon": 0.05,
     "eval_funcs": {
-        "connectance": 0.25,
-        "positive_interactions_proportion": 0.25,
-        "average_positive_interactions_strength": 0.75,
-        "proportion_of_self_loops": 0.1
+        "in_degree_distribution": 0,
+        "connectance": 0.25
     }
 }

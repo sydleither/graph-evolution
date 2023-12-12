@@ -9,7 +9,7 @@ from bintools import numBins
 from eval_functions import Evaluation
 
 
-def final_pop_histograms(final_pops, eval_funcs, file_name, transparent=False):
+def final_pop_histograms(final_pops, eval_funcs, save_loc, transparent=False):
     eval = Evaluation()
     num_plots = len(eval_funcs)
     figure, axis = plt.subplots(1, num_plots, figsize=(4*num_plots,5))
@@ -22,12 +22,12 @@ def final_pop_histograms(final_pops, eval_funcs, file_name, transparent=False):
         axis[i].set_title(func_name)
         i += 1
     figure.tight_layout(rect=[0, 0.03, 1, 0.95])
-    figure.suptitle('Final Population Histograms')
-    plt.savefig(f'{file_name}/histograms.png', transparent=transparent)
+    figure.suptitle("Final Population Histograms")
+    plt.savefig("{}/histograms.png".format(save_loc), transparent=transparent)
     plt.close()
 
 
-def plot_fitnesses_error(fitness_logs, eval_func_names, file_name, transparent=False):
+def plot_fitnesses_error(fitness_logs, eval_func_names, save_loc, transparent=False):
     figure, axis = plt.subplots(1, 1)
     for func_name in eval_func_names:
         eval_func_data = [fitness_logs[i][func_name] for i in range(len(fitness_logs))]
@@ -43,11 +43,11 @@ def plot_fitnesses_error(fitness_logs, eval_func_names, file_name, transparent=F
     figure.legend()
     if transparent:
         figure.patch.set_alpha(0.0)
-    plt.savefig(f'{file_name}/fitness1.png')
+    plt.savefig("{}/fitness_w_error.png".format(save_loc))
     plt.close()
 
 
-def plot_fitnesses_sep(fitness_logs, eval_func_names, file_name, transparent=False):
+def plot_fitnesses_sep(fitness_logs, eval_func_names, save_loc, transparent=False):
     num_plots = len(eval_func_names)
     figure, axis = plt.subplots(num_plots, 1, figsize=(5,3*num_plots))
     i = 0
@@ -65,23 +65,25 @@ def plot_fitnesses_sep(fitness_logs, eval_func_names, file_name, transparent=Fal
     figure.tight_layout(rect=[0, 0.03, 1, 0.95])
     if transparent:
         figure.patch.set_alpha(0.0)
-    plt.savefig(f'{file_name}/fitness2.png')
+    plt.savefig("{}/fitness.png".format(save_loc))
     plt.close()
 
 
-def main(config_name):
+def main(config_dir):
     final_pops = []
     fitness_logs = []
 
-    config_dir = SCRATCH_LOC+config_name
     for run_dir in os.listdir(config_dir):
-        with open(f'{config_dir}/{run_dir}/final_pop.pkl', 'rb') as f:
-            final_pops.append(pickle.load(f))
-        with open(f'{config_dir}/{run_dir}/fitness_log.pkl', 'rb') as f:
-            fitness_logs.append(pickle.load(f))
-    config_file = json.load(open(f'{config_dir}/0/{config_name}.json'))
+        full_path = "{}/{}".format(config_dir, run_dir)
+        if run_dir.endswith(".json"):
+            config_file = json.load(open(full_path))
+        elif not os.path.isfile(full_path):
+            with open("{}/final_pop.pkl".format(full_path), "rb") as f:
+                final_pops.append(pickle.load(f))
+            with open("{}/fitness_log.pkl".format(full_path), "rb") as f:
+                fitness_logs.append(pickle.load(f))
 
-    data_path = f'data/{config_name}'
+    data_path = "{}/{}".format(config_file["data_dir"], config_file["name"])
     if not os.path.exists(data_path):
         os.makedirs(data_path)
     
@@ -90,9 +92,7 @@ def main(config_name):
 
 
 if __name__ == "__main__":
-    SCRATCH_LOC = '/mnt/gs21/scratch/leithers/graph-evolution/'
     if len(sys.argv) == 2:
         main(sys.argv[1])
     else:
-        print('Please give a valid run directory located in scratch.')
-    
+        print('Please give a valid data directory.')
