@@ -1,0 +1,11 @@
+cd /mnt/scratch/leithers/graph-evolution
+
+cp /mnt/home/leithers/graph_evolution/graph-evolution/${1} .
+cp /mnt/home/leithers/graph_evolution/graph-evolution/main.py .
+cp /mnt/home/leithers/graph_evolution/graph-evolution/ga.py .
+cp /mnt/home/leithers/graph_evolution/graph-evolution/eval_functions.py .
+cp /mnt/home/leithers/graph_evolution/graph-evolution/organism.py .
+cp /mnt/home/leithers/graph_evolution/graph-evolution/bintools.py .
+
+sbatch /mnt/home/leithers/graph_evolution/graph-evolution/hpcc.sb ${1}
+find /mnt/scratch/leithers/graph-evolution -type f -empty -delete

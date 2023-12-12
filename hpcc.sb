@@ -18,22 +18,4 @@
 
 #SBATCH --array=0-9
 
-cd /mnt/scratch/leithers/graph-evolution
-
-#make directory with config name
-mkdir $1
-cd $1
-
-#make directory for each run within the config
-mkdir ${SLURM_ARRAY_TASK_ID}
-cd ${SLURM_ARRAY_TASK_ID}
-
-# Get scripts
-cp /mnt/home/leithers/graph_evolution/graph-evolution/${1}.json .
-cp /mnt/home/leithers/graph_evolution/graph-evolution/hpcc_main.py .
-cp /mnt/home/leithers/graph_evolution/graph-evolution/ga.py .
-cp /mnt/home/leithers/graph_evolution/graph-evolution/eval_functions.py .
-cp /mnt/home/leithers/graph_evolution/graph-evolution/organism.py .
-
-# Run script
-python3 hpcc_main.py ${1}.json > outfile.txt
+python3 main.py ${1} ${SLURM_ARRAY_TASK_ID} > outfile.txt
