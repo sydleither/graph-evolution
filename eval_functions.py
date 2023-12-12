@@ -7,13 +7,25 @@ class Evaluation:
     def __init__(self, config) -> None:
         self.config = config
 
+        dist_dict = {}
+        for eval_func_name, eval_func_params in config["eval_funcs"].items():
+            if "target" in eval_func_params.keys():
+                continue
+            dist_dict[eval_func_name] = self.get_distribution(eval_func_params, config["network_size"])
+        self.dist_dict = dist_dict
+
+
+    def get_distribution(self, dist_info:dict, num_nodes:int) -> list[float]:
+        if dist_info["name"] == "scale-free":
+            gamma = dist_info["gamma"]
+            return [x**-gamma for x in [(y/num_nodes)+1 for y in range(num_nodes)]]
+
 
     #node-level topological properties
     def in_degree_distribution(self, network:Organism) -> float:
         nn = network.numNodes
         networkx_obj = network.getNetworkxObject()
-        a = 2.5
-        dist = [x**-a for x in [(y/nn)+1 for y in range(nn)]]
+        dist = self.dist_dict["in_degree_distribution"]
         degree_sequence = sorted([networkx_obj.in_degree(n)/nn for n in networkx_obj.nodes()], reverse=True)
         squares = sum([(dist[i]-degree_sequence[i])**2 for i in range(nn)])
         return squares
@@ -22,8 +34,7 @@ class Evaluation:
     def out_degree_distribution(self, network:Organism) -> float:
         nn = network.numNodes
         networkx_obj = network.getNetworkxObject()
-        a = 2.5
-        dist = [x**-a for x in [(y/nn)+1 for y in range(nn)]]
+        dist = self.dist_dict["out_degree_distribution"]
         degree_sequence = sorted([networkx_obj.out_degree(n)/nn for n in networkx_obj.nodes()], reverse=True)
         squares = sum([(dist[i]-degree_sequence[i])**2 for i in range(nn)])
         return squares
