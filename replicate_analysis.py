@@ -9,13 +9,13 @@ from bintools import numBins
 from eval_functions import Evaluation
 
 
-def final_pop_histograms(final_pops, eval_funcs, save_loc, transparent=False):
-    eval = Evaluation()
+def final_pop_histograms(eval, final_pops, eval_funcs, save_loc, transparent=False):
     num_plots = len(eval_funcs)
     figure, axis = plt.subplots(1, num_plots, figsize=(4*num_plots,5))
     i = 0
-    for func_name, ideal_val in eval_funcs.items():
+    for func_name, func_params in eval_funcs.items():
         eval_func = getattr(eval, func_name)
+        ideal_val = func_params["target"] if "target" in func_params.keys() else 0
         data = [[eval_func(org) for org in final_pops[run]] for run in range(len(final_pops))]
         axis[i].hist(data, bins=numBins([d for dd in data for d in dd]), stacked=True)
         axis[i].axvline(ideal_val, color="black", linestyle="--")
@@ -87,7 +87,7 @@ def main(config_dir):
     if not os.path.exists(data_path):
         os.makedirs(data_path)
     
-    final_pop_histograms(final_pops, config_file["eval_funcs"], data_path)
+    final_pop_histograms(Evaluation(config_file), final_pops, config_file["eval_funcs"], data_path)
     plot_fitnesses_sep(fitness_logs, config_file["eval_funcs"].keys(), data_path)
 
 

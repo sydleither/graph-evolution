@@ -143,10 +143,11 @@ class Organism:
         plt.savefig(path)
         plt.close()
 
+
     ###########################
     #pareto sorting functions #
     ###########################
-    def __gt__(self,other):
+    def __gt__(self, other):
         if not isinstance(other,Organism):
             raise TypeError("Invalid comparison of organism to",type(other))
         meInYou = all([myKey in other.evaluationScores.keys() for myKey in self.evaluationScores.keys()])
@@ -156,6 +157,7 @@ class Organism:
             return all([self.evaluationScores[prop] < other.evaluationScores[prop] for prop in self.evaluationScores.keys()])
         else:
             raise Exception("Organisms must be evaluated on the same criteria.",self.evaluationScores.keys(),other.evaluationScores.keys())
-        
+
+
     def __eq__(self, other):
         return not (self < other or self > other)

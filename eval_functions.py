@@ -4,20 +4,11 @@ from organism import Organism
 
 
 class Evaluation:
-    #topological properties
-    def connectance(self, network:Organism) -> float:
-        return network.numInteractions / network.numNodes**2
-    
+    def __init__(self, config) -> None:
+        self.config = config
 
-    def proportion_of_self_loops(self, network:Organism) -> float:
-        return sum([1 for i in range(network.numNodes) if network.adjacencyMatrix[i][i] != 0]) / network.numNodes
-    
 
-    def diameter(self, network:Organism) -> int:
-        shortest_path = dict(nx.shortest_path_length(network.getNetworkxObject()))
-        return max([max(shortest_path[i].values()) for i in range(len(shortest_path))])
-    
-
+    #node-level topological properties
     def in_degree_distribution(self, network:Organism) -> float:
         nn = network.numNodes
         networkx_obj = network.getNetworkxObject()
@@ -36,6 +27,20 @@ class Evaluation:
         degree_sequence = sorted([networkx_obj.out_degree(n)/nn for n in networkx_obj.nodes()], reverse=True)
         squares = sum([(dist[i]-degree_sequence[i])**2 for i in range(nn)])
         return squares
+    
+
+    #topological properties
+    def connectance(self, network:Organism) -> float:
+        return network.numInteractions / network.numNodes**2
+
+
+    def proportion_of_self_loops(self, network:Organism) -> float:
+        return sum([1 for i in range(network.numNodes) if network.adjacencyMatrix[i][i] != 0]) / network.numNodes
+    
+
+    def diameter(self, network:Organism) -> int:
+        shortest_path = dict(nx.shortest_path_length(network.getNetworkxObject()))
+        return max([max(shortest_path[i].values()) for i in range(len(shortest_path))])
     
 
     #interaction strength properties
