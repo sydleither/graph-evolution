@@ -14,14 +14,14 @@ def T(LL:list[list])->list[list]:
     return list(zip(*LL))
 
 
-def final_pop_histogram(final_pop, eval_funcs, save_loc, transparent=False):
-    eval = Evaluation()
+def final_pop_histogram(eval, final_pop, eval_funcs, save_loc, transparent=False):
     num_plots = len(eval_funcs)
     figure, axis = plt.subplots(1, num_plots, figsize=(4*num_plots,5)) #TODO: dynamically add new rows when columns are full
     i = 0
-    for func_name, ideal_val in eval_funcs.items():
+    for func_name, func_params in eval_funcs.items():
         eval_func = getattr(eval, func_name)
         func_fitnesses = [eval_func(org) for org in final_pop]
+        ideal_val = func_params["target"] if "target" in func_params.keys() else 0
         axis[i].hist(func_fitnesses, bins=numBins(func_fitnesses), color="forestgreen")
         axis[i].axvline(ideal_val, color="black", linestyle="--")
         axis[i].set_title(func_name)
@@ -83,7 +83,7 @@ def run_rep(i, config):
 
     if config["plot_data"] == 1:
         plot_fitness(fitness_log, config["eval_funcs"].keys(), save_loc)
-        final_pop_histogram(final_pop, config["eval_funcs"], save_loc)
+        final_pop_histogram(Evaluation(config), final_pop, config["eval_funcs"], save_loc)
         plotParetoFront(final_pop, config, save_loc)
         final_pop[0].saveGraphFigure("{}/graphFigure.png".format(save_loc))
 

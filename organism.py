@@ -109,6 +109,22 @@ class Organism:
     def getNetworkxObject(self) -> nx.DiGraph:
         G = nx.DiGraph(np.array(self.adjacencyMatrix))
         return G
+    
+
+    def getDegreeDistribution(self, kind:str) -> list[float]:
+        networkx_obj = self.getNetworkxObject()
+        num_nodes = self.numNodes
+        if kind == "in":
+            degree_sequence = list(d for _, d in networkx_obj.in_degree())
+        elif kind == "out":
+            degree_sequence = list(d for _, d in networkx_obj.out_degree())
+        else:
+            degree_sequence = list(d for _, d in networkx_obj.degree())
+            num_nodes = 2*num_nodes
+        freq = [0]*(num_nodes+1)
+        for d in degree_sequence:
+            freq[d] += 1/num_nodes
+        return freq
 
 
     def saveGraphFigure(self, path:str):
@@ -143,10 +159,11 @@ class Organism:
         plt.savefig(path)
         plt.close()
 
+
     ###########################
     #pareto sorting functions #
     ###########################
-    def __gt__(self,other):
+    def __gt__(self, other):
         if not isinstance(other,Organism):
             raise TypeError("Invalid comparison of organism to",type(other))
         meInYou = all([myKey in other.evaluationScores.keys() for myKey in self.evaluationScores.keys()])
@@ -156,6 +173,7 @@ class Organism:
             return all([self.evaluationScores[prop] < other.evaluationScores[prop] for prop in self.evaluationScores.keys()])
         else:
             raise Exception("Organisms must be evaluated on the same criteria.",self.evaluationScores.keys(),other.evaluationScores.keys())
-        
+
+
     def __eq__(self, other):
         return not (self < other or self > other)
