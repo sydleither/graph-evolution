@@ -17,38 +17,22 @@ class Evaluation:
     def get_distribution(self, dist_info:dict, num_nodes:int) -> list[float]:
         if dist_info["name"] == "scale-free":
             gamma = dist_info["gamma"]
-            return [x**-gamma for x in [(y/num_nodes)+1 for y in range(num_nodes)]]
+            offset = dist_info["offset"]
+            return [(x+offset)**-gamma for x in range(num_nodes+1)]
 
 
     #node-level topological properties
     def in_degree_distribution(self, network:Organism) -> float:
-        nn = network.numNodes
-        networkx_obj = network.getNetworkxObject()
         dist = self.dist_dict["in_degree_distribution"]
-        degree_sequence = sorted([networkx_obj.in_degree(n)/nn for n in networkx_obj.nodes()], reverse=True)
-        squares = sum([(dist[i]-degree_sequence[i])**2 for i in range(nn)])
+        degree_sequence = network.getDegreeDistribution("in")
+        squares = sum([(dist[i]-degree_sequence[i])**2 for i in range(network.numNodes+1)])
         return squares
     
 
     def out_degree_distribution(self, network:Organism) -> float:
-        nn = network.numNodes
-        networkx_obj = network.getNetworkxObject()
         dist = self.dist_dict["out_degree_distribution"]
-        degree_sequence = sorted([networkx_obj.out_degree(n)/nn for n in networkx_obj.nodes()], reverse=True)
-        squares = sum([(dist[i]-degree_sequence[i])**2 for i in range(nn)])
-        return squares
-
-
-    def powerlaw_weight_distribution(self, network:Organism) -> float:
-        nn = network.numNodes
-        networkx_obj = network.getNetworkxObject()
-        beta = self.config["eval_funcs"]["powerlaw_weight_distribution"]["beta"]
-        degree_sequence = sorted([networkx_obj.degree(n)/nn for n in networkx_obj.nodes()], reverse=True)
-        dist = [x**beta for x in degree_sequence]
-        in_weights = [sum([abs(val) for val in row]) for row in network.adjacencyMatrix]
-        out_weights = [sum([abs(row[col]) for row in network.adjacencyMatrix]) for col in range(nn)]
-        weight_sequence = sorted([(in_weights[i]+out_weights[i]-network.adjacencyMatrix[i][i])/nn for i in range(nn)], reverse=True)
-        squares = sum([(dist[i]-weight_sequence[i])**2 for i in range(nn)])
+        degree_sequence = network.getDegreeDistribution("out")
+        squares = sum([(dist[i]-degree_sequence[i])**2 for i in range(network.numNodes+1)])
         return squares
     
 
