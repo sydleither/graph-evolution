@@ -52,11 +52,11 @@ def plot_fitnesses_sep(fitness_logs, eval_func_names, save_loc, transparent=Fals
     figure, axis = plt.subplots(num_plots, 1, figsize=(5,3*num_plots))
     i = 0
     for func_name in eval_func_names:
-        eval_func_data = [fitness_logs[i][func_name] for i in range(len(fitness_logs))]
-        eval_func_data_mean = [np.mean([eval_func_data[i][j] for i in range(len(eval_func_data))]) for j in range(len(eval_func_data[0]))]
-        axis[i].plot(eval_func_data_mean)
         for run in range(len(fitness_logs)):
             axis[i].plot(fitness_logs[run][func_name], alpha=0.5, color='gray')
+        eval_func_data = [fitness_logs[i][func_name] for i in range(len(fitness_logs))]
+        eval_func_data_mean = [np.mean([eval_func_data[i][j] for i in range(len(eval_func_data))]) for j in range(len(eval_func_data[0]))]
+        axis[i].plot(eval_func_data_mean, color="forestgreen")
         axis[i].set_title(func_name)
         axis[i].set_yscale("log")
         i += 1
