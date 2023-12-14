@@ -114,9 +114,9 @@ class Organism:
     def getDegreeDistribution(self, kind:str) -> list[float]:
         networkx_obj = self.getNetworkxObject()
         num_nodes = self.numNodes
-        if kind == "in":
+        if kind == "in_degree_distribution":
             degree_sequence = list(d for _, d in networkx_obj.in_degree())
-        elif kind == "out":
+        elif kind == "out_degree_distribution":
             degree_sequence = list(d for _, d in networkx_obj.out_degree())
         else:
             degree_sequence = list(d for _, d in networkx_obj.degree())
