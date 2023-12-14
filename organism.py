@@ -1,6 +1,7 @@
 from copy import deepcopy
-from random import randint, random
+from random import randint, random, sample
 from typing import Callable
+from collections import deque
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -86,14 +87,56 @@ class Organism:
                         exit(1)
         return Organism(self.numNodes,self.sparsity,self.weightRange,newGenome)
 
+    
+    def xover_traversal_helper(self,other,rateFromOther,algorithm):
+        N = len(other.genotypeMatrix)
+        if algorithm == "DFS":
+            visited = []
+        elif algorithm == "BFS":
+            visited = deque()
+        else: raise Exception("invalid traversal algorithm")
+        completed = []
+        available = [i for i in range(N)]
+        while random() <= rateFromOther and len(completed) < N and available:
+            currentNode = sample(available,k=1)[0]
+            visited.append(currentNode)
+            available = [i for i in range(N)
+                            if other.adjacencyMatrix[currentNode][i] != 0 and
+                            i not in visited and
+                            i not in completed]
+            while not available and len(completed) < N and visited:
+                completed.append(currentNode)
+                if algorithm == "DFS":
+                    currentNode = visited.pop()
+                elif algorithm == "BFS":
+                    currentNode = visited.popleft()
+                available = [i for i in range(N)
+                            if other.adjacencyMatrix[currentNode][i] != 0 and
+                            i not in visited and
+                            i not in completed]
+        return list(visited) + completed
 
-    def makeCrossedCopyWith(self, other, rateFromOther):
-        #for now, crossover occurs on the node level
+    def makeCrossedCopyWith(self, other, rateFromOther, crossOdds:tuple[int]):
+        #setup
+        crossoverThresholds = [sum(crossOdds[:k+1]) for k in range(len(crossOdds))]
+        crossoverType = randint(1,sum(crossOdds))
         #inheritance
         newGenome = deepcopy(self.genotypeMatrix)
         #crossover
-        for i in range(self.numNodes):
-            if random() <= rateFromOther:
+        if crossoverType <= crossoverThresholds[0]:
+            #binary node crossover
+            for i in range(self.numNodes):
+                if random() <= rateFromOther:
+                    newGenome[i] = deepcopy(other.genotypeMatrix[i])
+        elif crossoverType <= crossoverThresholds[1]:
+            #depth-first-traversal crossover
+            crossNodes = self.xover_traversal_helper(other,rateFromOther,"DFS")
+            for i in crossNodes:
+                newGenome[i] = deepcopy(other.genotypeMatrix[i])
+        elif crossoverType <= crossoverThresholds[2]:
+            #breadth-first-traversal crossover
+            crossNodes = self.xover_traversal_helper(other,rateFromOther,"BFS")
+            for i in crossNodes:
                 newGenome[i] = deepcopy(other.genotypeMatrix[i])
         return Organism(self.numNodes,self.sparsity,self.weightRange,newGenome)
 

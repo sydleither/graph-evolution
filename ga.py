@@ -53,7 +53,7 @@ def run(config):
                 fitnessLog[func_name].append(mean(func_fitnesses))
 
         parents = epsilonLexicase(population, 2, popsize, eval_funcs, config["epsilon"])
-        child = parents[0].makeCrossedCopyWith(parents[1], config["crossover_rate"])
+        child = parents[0].makeCrossedCopyWith(parents[1], config["crossover_rate"], config["crossover_odds"])
         child = child.makeMutatedCopy(config["mutation_rate"], config["mutation_odds"])
         deathIndex = randint(0, popsize-1)
         population[deathIndex] = child
