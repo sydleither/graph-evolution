@@ -7,16 +7,44 @@ import matplotlib.pyplot as plt
 import numpy as np
 from bintools import numBins
 from eval_functions import Evaluation
+from plot_utils import calculate_standard_error
 
 
-def final_pop_histograms_all(eval, final_pops, eval_funcs, save_loc, transparent=False):
+def plot_distributions(eval_obj, final_pops, eval_funcs, save_loc, transparent=False):
+    all_distributions = [func for func in dir(Evaluation) if callable(getattr(Evaluation, func)) and func.endswith("distribution")]
+    figure, axis = plt.subplots(2, 2, figsize=(8, 6))
+    fig_row = 0
+    fig_col = 0
+    for dist_name in all_distributions:
+        is_eval_func = dist_name in eval_funcs.keys()
+        for final_pop in final_pops:
+            org_dists = [org.getDegreeDistribution(dist_name) for org in final_pop]
+            degree_mean, neg_error, pos_error = calculate_standard_error(org_dists)
+            axis[fig_row][fig_col].plot(degree_mean, label=dist_name)
+            axis[fig_row][fig_col].fill_between(range(len(degree_mean)), neg_error, pos_error, alpha=0.5)
+        if is_eval_func:
+            goal_dist = eval_obj.dist_dict[dist_name]
+            axis[fig_row][fig_col].plot(goal_dist, color="black", linewidth=2)
+        color = "forestgreen" if is_eval_func else "sienna"
+        axis[fig_row][fig_col].set_title(dist_name, color=color)
+        fig_row += 1
+        if fig_row % 5 == 0:
+            fig_col += 1
+            fig_row = 0
+    figure.tight_layout(rect=[0, 0.03, 1, 0.95])
+    figure.suptitle('Final Population Distributions')
+    plt.savefig("{}/distributions.png".format(save_loc), transparent=transparent)
+    plt.close()
+
+
+def final_pop_histograms_all(eval_obj, final_pops, eval_funcs, save_loc, transparent=False):
     all_property_names = [func for func in dir(Evaluation) if callable(getattr(Evaluation, func)) and not func.startswith("__")]
     figure, axis = plt.subplots(5, 3, figsize=(12, 15))
     fig_row = 0
     fig_col = 0
     for property_name in all_property_names:
         is_eval_func = property_name in eval_funcs.keys()
-        eval_func = getattr(eval, property_name)
+        eval_func = getattr(eval_obj, property_name)
         data = [[eval_func(org) for org in final_pops[run]] for run in range(len(final_pops))]
         axis[fig_row][fig_col].hist(data, bins=numBins([d for dd in data for d in dd]), stacked=True)
         if is_eval_func:
@@ -34,13 +62,12 @@ def final_pop_histograms_all(eval, final_pops, eval_funcs, save_loc, transparent
     plt.close()
 
 
-
-def final_pop_histograms(eval, final_pops, eval_funcs, save_loc, transparent=False):
+def final_pop_histograms(eval_obj, final_pops, eval_funcs, save_loc, transparent=False):
     num_plots = len(eval_funcs)
     figure, axis = plt.subplots(1, num_plots, figsize=(4*num_plots,5))
     i = 0
     for func_name, func_params in eval_funcs.items():
-        eval_func = getattr(eval, func_name)
+        eval_func = getattr(eval_obj, func_name)
         ideal_val = func_params["target"] if "target" in func_params.keys() else 0
         data = [[eval_func(org) for org in final_pops[run]] for run in range(len(final_pops))]
         axis[i].hist(data, bins=numBins([d for dd in data for d in dd]), stacked=True)
@@ -55,12 +82,10 @@ def final_pop_histograms(eval, final_pops, eval_funcs, save_loc, transparent=Fal
 
 def plot_fitnesses_error(fitness_logs, eval_func_names, save_loc, transparent=False):
     figure, axis = plt.subplots(1, 1)
+    num_replicates = len(fitness_logs)
     for func_name in eval_func_names:
-        eval_func_data = [fitness_logs[i][func_name] for i in range(len(fitness_logs))]
-        eval_func_data_mean = [np.mean([eval_func_data[i][j] for i in range(len(eval_func_data))]) for j in range(len(eval_func_data[0]))]
-        eval_func_data_error = [np.std([eval_func_data[i][j] for i in range(len(eval_func_data))])/np.sqrt(len(eval_func_data)) for j in range(len(eval_func_data[0]))]
-        neg_error = [eval_func_data_mean[i]-eval_func_data_error[i] for i in range(len(eval_func_data_mean))]
-        pos_error = [eval_func_data_mean[i]+eval_func_data_error[i] for i in range(len(eval_func_data_mean))]
+        eval_func_data = [fitness_logs[i][func_name] for i in range(num_replicates)]
+        eval_func_data_mean, neg_error, pos_error = calculate_standard_error(eval_func_data)
         axis.plot(eval_func_data_mean, label=func_name)
         axis.fill_between(range(len(eval_func_data_mean)), neg_error, pos_error, alpha=0.5)
     axis.set_yscale("log")
@@ -113,9 +138,12 @@ def main(config_dir):
     if not os.path.exists(data_path):
         os.makedirs(data_path)
     
-    final_pop_histograms(Evaluation(config_file), final_pops, config_file["eval_funcs"], data_path)
-    final_pop_histograms_all(Evaluation(config_file), final_pops, config_file["eval_funcs"], data_path)
-    plot_fitnesses_sep(fitness_logs, config_file["eval_funcs"].keys(), data_path)
+    eval_obj = Evaluation(config_file)
+    eval_funcs = config_file["eval_funcs"]
+    final_pop_histograms_all(eval_obj, final_pops, eval_funcs, data_path)
+    plot_distributions(eval_obj, final_pops, eval_funcs, data_path)
+    plot_fitnesses_sep(fitness_logs, eval_funcs.keys(), data_path)
+    plot_fitnesses_error(fitness_logs, eval_funcs.keys(), data_path)
 
 
 if __name__ == "__main__":
