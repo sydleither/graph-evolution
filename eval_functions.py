@@ -10,11 +10,11 @@ class Evaluation:
         dist_dict = {}
         for eval_func_name, eval_func_params in config["eval_funcs"].items():
             if "name" in eval_func_params.keys():
-                dist_dict[eval_func_name] = self.get_distribution(eval_func_params, config["network_size"])
+                dist_dict[eval_func_name] = self.__get_distribution__(eval_func_params, config["network_size"])
         self.dist_dict = dist_dict
 
 
-    def get_distribution(self, dist_info:dict, num_nodes:int) -> list[float]:
+    def __get_distribution__(self, dist_info:dict, num_nodes:int) -> list[float]:
         if dist_info["name"] == "scale-free":
             gamma = dist_info["gamma"]
             offset = dist_info["offset"]
@@ -24,14 +24,14 @@ class Evaluation:
     #node-level topological properties
     def in_degree_distribution(self, network:Organism) -> float:
         dist = self.dist_dict["in_degree_distribution"]
-        degree_sequence = network.getDegreeDistribution("in")
+        degree_sequence = network.getDegreeDistribution("in_degree_distribution")
         squares = sum([(dist[i]-degree_sequence[i])**2 for i in range(network.numNodes+1)])
         return squares
     
 
     def out_degree_distribution(self, network:Organism) -> float:
         dist = self.dist_dict["out_degree_distribution"]
-        degree_sequence = network.getDegreeDistribution("out")
+        degree_sequence = network.getDegreeDistribution("out_degree_distribution")
         squares = sum([(dist[i]-degree_sequence[i])**2 for i in range(network.numNodes+1)])
         return squares
     
@@ -48,6 +48,13 @@ class Evaluation:
     def diameter(self, network:Organism) -> int:
         shortest_path = dict(nx.shortest_path_length(network.getNetworkxObject()))
         return max([max(shortest_path[i].values()) for i in range(len(shortest_path))])
+    
+
+    #node-level interaction strength properties
+    # def pos_in_weight_distribution(self, network:Organism) -> float:
+    #     nn = network.numNodes
+    #     networkx_obj = network.getNetworkxObject()
+    #     degree_sequence = sorted([networkx_obj.in_degree(n)/nn for n in networkx_obj.nodes()], reverse=True)
     
 
     #interaction strength properties
