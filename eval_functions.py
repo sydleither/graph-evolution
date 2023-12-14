@@ -18,7 +18,7 @@ class Evaluation:
         if dist_info["name"] == "scale-free":
             gamma = dist_info["gamma"]
             offset = dist_info["offset"]
-            return [(x+offset)**-gamma for x in range(num_nodes+1)]
+            return [0]+[(x+offset)**-gamma for x in range(num_nodes)]
 
 
     #node-level topological properties

@@ -88,7 +88,7 @@ class Organism:
         return Organism(self.numNodes,self.sparsity,self.weightRange,newGenome)
 
     
-    def xover_traversal_helper(self,other,rateFromOther,algorithm):
+    def xover_traversal_helper(self, other, rateFromOther, algorithm):
         N = len(other.genotypeMatrix)
         if algorithm == "DFS":
             visited = []
@@ -116,10 +116,11 @@ class Organism:
                             i not in completed]
         return list(visited) + completed
 
+
     def makeCrossedCopyWith(self, other, rateFromOther, crossOdds:tuple[int]):
         #setup
         crossoverThresholds = [sum(crossOdds[:k+1]) for k in range(len(crossOdds))]
-        crossoverType = randint(1,sum(crossOdds))
+        crossoverType = randint(1, sum(crossOdds))
         #inheritance
         newGenome = deepcopy(self.genotypeMatrix)
         #crossover
@@ -130,15 +131,15 @@ class Organism:
                     newGenome[i] = deepcopy(other.genotypeMatrix[i])
         elif crossoverType <= crossoverThresholds[1]:
             #depth-first-traversal crossover
-            crossNodes = self.xover_traversal_helper(other,rateFromOther,"DFS")
+            crossNodes = self.xover_traversal_helper(other, rateFromOther, "DFS")
             for i in crossNodes:
                 newGenome[i] = deepcopy(other.genotypeMatrix[i])
         elif crossoverType <= crossoverThresholds[2]:
             #breadth-first-traversal crossover
-            crossNodes = self.xover_traversal_helper(other,rateFromOther,"BFS")
+            crossNodes = self.xover_traversal_helper(other, rateFromOther, "BFS")
             for i in crossNodes:
                 newGenome[i] = deepcopy(other.genotypeMatrix[i])
-        return Organism(self.numNodes,self.sparsity,self.weightRange,newGenome)
+        return Organism(self.numNodes, self.sparsity, self.weightRange, newGenome)
 
 
     def getEvaluationScores(self, evaluationDict:dict[str:tuple[Callable,float]]) -> dict[str:float]:
