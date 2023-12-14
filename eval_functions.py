@@ -37,6 +37,10 @@ class Evaluation:
     
 
     #topological properties
+    def strong_components(self, network:Organism) -> int:
+        return len(list(nx.strongly_connected_components(network.getNetworkxObject())))
+
+
     def connectance(self, network:Organism) -> float:
         return network.numInteractions / network.numNodes**2
 

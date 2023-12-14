@@ -55,14 +55,16 @@ def final_pop_histograms(eval, final_pops, eval_funcs, save_loc, transparent=Fal
 
 def plot_fitnesses_error(fitness_logs, eval_func_names, save_loc, transparent=False):
     figure, axis = plt.subplots(1, 1)
+    num_replicates = len(fitness_logs)
     for func_name in eval_func_names:
-        eval_func_data = [fitness_logs[i][func_name] for i in range(len(fitness_logs))]
-        eval_func_data_mean = [np.mean([eval_func_data[i][j] for i in range(len(eval_func_data))]) for j in range(len(eval_func_data[0]))]
-        eval_func_data_error = [np.std([eval_func_data[i][j] for i in range(len(eval_func_data))])/np.sqrt(len(eval_func_data)) for j in range(len(eval_func_data[0]))]
-        neg_error = [eval_func_data_mean[i]-eval_func_data_error[i] for i in range(len(eval_func_data_mean))]
-        pos_error = [eval_func_data_mean[i]+eval_func_data_error[i] for i in range(len(eval_func_data_mean))]
+        eval_func_data = [fitness_logs[i][func_name] for i in range(num_replicates)]
+        num_generations = len(eval_func_data[0])
+        eval_func_data_mean = [np.mean([eval_func_data[i][j] for i in range(num_replicates)]) for j in range(num_generations)]
+        eval_func_data_error = [np.std([eval_func_data[i][j] for i in range(num_replicates)])/np.sqrt(num_replicates) for j in range(num_generations)]
+        neg_error = [eval_func_data_mean[i]-eval_func_data_error[i] for i in range(num_generations)]
+        pos_error = [eval_func_data_mean[i]+eval_func_data_error[i] for i in range(num_generations)]
         axis.plot(eval_func_data_mean, label=func_name)
-        axis.fill_between(range(len(eval_func_data_mean)), neg_error, pos_error, alpha=0.5)
+        axis.fill_between(range(num_generations), neg_error, pos_error, alpha=0.5)
     axis.set_yscale("log")
     figure.supxlabel("Generations")
     figure.supylabel("MSE")
@@ -113,9 +115,11 @@ def main(config_dir):
     if not os.path.exists(data_path):
         os.makedirs(data_path)
     
-    final_pop_histograms(Evaluation(config_file), final_pops, config_file["eval_funcs"], data_path)
-    final_pop_histograms_all(Evaluation(config_file), final_pops, config_file["eval_funcs"], data_path)
+    eval_obj = Evaluation(config_file)
+    final_pop_histograms(eval_obj, final_pops, config_file["eval_funcs"], data_path)
+    final_pop_histograms_all(eval_obj, final_pops, config_file["eval_funcs"], data_path)
     plot_fitnesses_sep(fitness_logs, config_file["eval_funcs"].keys(), data_path)
+    plot_fitnesses_error(fitness_logs, config_file["eval_funcs"].keys(), data_path)
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ import pickle
 import sys
 
 import matplotlib.pyplot as plt
+import numpy as np
 from bintools import numBins
 from eval_functions import Evaluation
 from ga import run
@@ -12,6 +13,37 @@ from ga import run
 #transpose a matrix (list of list)
 def T(LL:list[list])->list[list]:
     return list(zip(*LL))
+
+
+def plot_distributions_error(eval_obj, final_pop, eval_funcs, save_loc, transparent=False):
+    all_distributions = [func for func in dir(Evaluation) if callable(getattr(Evaluation, func)) and func.endswith("distribution")]
+    pop_size = len(final_pop)
+    num_degrees = final_pop[0].numNodes+1
+    figure, axis = plt.subplots(2, 2, figsize=(8, 6))
+    fig_row = 0
+    fig_col = 0
+    for dist_name in all_distributions:
+        is_eval_func = dist_name in eval_funcs.keys()
+        org_dists = [org.getDegreeDistribution(dist_name) for org in final_pop]
+        degree_mean = [np.mean([org_dists[i][j] for i in range(pop_size)]) for j in range(num_degrees)]
+        degree_error = [np.std([org_dists[i][j] for i in range(pop_size)])/np.sqrt(pop_size) for j in range(num_degrees)]
+        neg_error = [degree_mean[i]-degree_error[i] for i in range(num_degrees)]
+        pos_error = [degree_mean[i]+degree_error[i] for i in range(num_degrees)]
+        color = "forestgreen" if is_eval_func else "sienna"
+        axis[fig_row][fig_col].plot(degree_mean, label=dist_name, color=color)
+        axis[fig_row][fig_col].fill_between(range(num_degrees), neg_error, pos_error, alpha=0.5, color=color)
+        if is_eval_func:
+            goal_dist = eval_obj.dist_dict[dist_name]
+            axis[fig_row][fig_col].plot(goal_dist, color="black", linewidth=2)
+        axis[fig_row][fig_col].set_title(dist_name)
+        fig_row += 1
+        if fig_row % 5 == 0:
+            fig_col += 1
+            fig_row = 0
+    figure.tight_layout(rect=[0, 0.03, 1, 0.95])
+    figure.suptitle('Final Population Distributions')
+    plt.savefig("{}/distributions_w_error.png".format(save_loc), transparent=transparent)
+    plt.close()
 
 
 def plot_distributions(eval_obj, final_pop, eval_funcs, save_loc, transparent=False):
@@ -23,9 +55,10 @@ def plot_distributions(eval_obj, final_pop, eval_funcs, save_loc, transparent=Fa
         is_eval_func = dist_name in eval_funcs.keys()
         org_dists = [org.getDegreeDistribution(dist_name) for org in final_pop]
         for org_dist in org_dists:
-            axis[fig_row][fig_col].plot(org_dist, color="gray")
-        goal_dist = eval_obj.dist_dict[dist_name]
-        axis[fig_row][fig_col].plot(goal_dist, color="forestgreen" if is_eval_func else "sienna", linewidth=2)
+            axis[fig_row][fig_col].plot(org_dist, color="forestgreen" if is_eval_func else "sienna")
+        if is_eval_func:
+            goal_dist = eval_obj.dist_dict[dist_name]
+            axis[fig_row][fig_col].plot(goal_dist, linewidth=3, color="black")
         axis[fig_row][fig_col].set_title(dist_name)
         fig_row += 1
         if fig_row % 5 == 0:
@@ -38,7 +71,7 @@ def plot_distributions(eval_obj, final_pop, eval_funcs, save_loc, transparent=Fa
 
 
 def final_pop_histogram_all(eval_obj, final_pop, eval_funcs, save_loc, transparent=False):
-    all_property_names = [func for func in dir(Evaluation) if callable(getattr(Evaluation, func)) and not func.startswith("__")]
+    all_property_names = [func for func in dir(Evaluation) if callable(getattr(Evaluation, func)) and not (func.startswith("__") or func.endswith("distribution"))]
     figure, axis = plt.subplots(5, 3, figsize=(12, 15))
     fig_row = 0
     fig_col = 0
@@ -115,11 +148,8 @@ def plotParetoFront(population, config, save_loc=None):
 
 def run_rep(i, config):
     save_loc = "{}/{}/{}".format(config["data_dir"], config["name"], i)
-    try:
+    if not os.path.exists(save_loc):
         os.makedirs(save_loc)
-    except:
-        print("{} already exists. Please delete or rename experiment.".format(save_loc))
-        exit()
 
     final_pop, fitness_log = run(config)
 
@@ -132,24 +162,23 @@ def run_rep(i, config):
     if config["plot_data"] == 1:
         eval_obj = Evaluation(config)
         plot_fitness(fitness_log, config["eval_funcs"].keys(), save_loc)
-        final_pop_histogram(eval_obj, final_pop, config["eval_funcs"], save_loc)
         final_pop_histogram_all(eval_obj, final_pop, config["eval_funcs"], save_loc)
         plot_distributions(eval_obj, final_pop, config["eval_funcs"], save_loc)
+        plot_distributions_error(eval_obj, final_pop, config["eval_funcs"], save_loc)
         plotParetoFront(final_pop, config, save_loc)
         final_pop[0].saveGraphFigure("{}/graphFigure.png".format(save_loc))
 
 
 def main(config, rep=None):
+    config_path = "{}/{}/config.json".format(config["data_dir"], config["name"])
+    if not os.path.exists(config_path):
+        with open(config_path, "w") as f:
+            json.dump(config, f, indent=4)
     if rep:
         run_rep(rep, config)
     else:
         for i in range(config["reps"]):
             run_rep(i, config)
-
-    config_path = "{}/{}/config.json".format(config["data_dir"], config["name"])
-    if not os.path.exists(config_path):
-        with open(config_path, "w") as f:
-            json.dump(config, f, indent=4)
 
 
 if __name__ == "__main__":
