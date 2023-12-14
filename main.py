@@ -14,6 +14,35 @@ def T(LL:list[list])->list[list]:
     return list(zip(*LL))
 
 
+def distributions(): #TODO
+    return
+
+
+def final_pop_histogram_all(eval, final_pop, eval_funcs, save_loc, transparent=False):
+    all_property_names = [func for func in dir(Evaluation) if callable(getattr(Evaluation, func)) and not func.startswith("__")]
+    figure, axis = plt.subplots(5, 3, figsize=(12, 15))
+    fig_row = 0
+    fig_col = 0
+    for property_name in all_property_names:
+        is_eval_func = property_name in eval_funcs.keys()
+        eval_func = getattr(eval, property_name)
+        func_fitnesses = [eval_func(org) for org in final_pop]
+        color = "forestgreen" if is_eval_func else "sienna"
+        axis[fig_row][fig_col].hist(func_fitnesses, bins=numBins(func_fitnesses), color=color)
+        if is_eval_func:
+            ideal_val = eval_funcs[property_name]["target"] if "target" in eval_funcs[property_name].keys() else 0
+            axis[fig_row][fig_col].axvline(ideal_val, color="black", linestyle="--")
+        axis[fig_row][fig_col].set_title(property_name)
+        fig_row += 1
+        if fig_row % 5 == 0:
+            fig_col += 1
+            fig_row = 0
+    figure.tight_layout(rect=[0, 0.03, 1, 0.95])
+    figure.suptitle('Final Population Histograms')
+    plt.savefig("{}/histograms_all.png".format(save_loc), transparent=transparent)
+    plt.close()
+
+
 def final_pop_histogram(eval, final_pop, eval_funcs, save_loc, transparent=False):
     num_plots = len(eval_funcs)
     figure, axis = plt.subplots(1, num_plots, figsize=(4*num_plots,5)) #TODO: dynamically add new rows when columns are full
@@ -84,6 +113,7 @@ def run_rep(i, config):
     if config["plot_data"] == 1:
         plot_fitness(fitness_log, config["eval_funcs"].keys(), save_loc)
         final_pop_histogram(Evaluation(config), final_pop, config["eval_funcs"], save_loc)
+        final_pop_histogram_all(Evaluation(config), final_pop, config["eval_funcs"], save_loc)
         plotParetoFront(final_pop, config, save_loc)
         final_pop[0].saveGraphFigure("{}/graphFigure.png".format(save_loc))
 

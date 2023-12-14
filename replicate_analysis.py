@@ -9,6 +9,32 @@ from bintools import numBins
 from eval_functions import Evaluation
 
 
+def final_pop_histograms_all(eval, final_pops, eval_funcs, save_loc, transparent=False):
+    all_property_names = [func for func in dir(Evaluation) if callable(getattr(Evaluation, func)) and not func.startswith("__")]
+    figure, axis = plt.subplots(5, 3, figsize=(12, 15))
+    fig_row = 0
+    fig_col = 0
+    for property_name in all_property_names:
+        is_eval_func = property_name in eval_funcs.keys()
+        eval_func = getattr(eval, property_name)
+        data = [[eval_func(org) for org in final_pops[run]] for run in range(len(final_pops))]
+        axis[fig_row][fig_col].hist(data, bins=numBins([d for dd in data for d in dd]), stacked=True)
+        if is_eval_func:
+            ideal_val = eval_funcs[property_name]["target"] if "target" in eval_funcs[property_name].keys() else 0
+            axis[fig_row][fig_col].axvline(ideal_val, color="black", linestyle="--")
+        color = "forestgreen" if is_eval_func else "sienna"
+        axis[fig_row][fig_col].set_title(property_name, color=color)
+        fig_row += 1
+        if fig_row % 5 == 0:
+            fig_col += 1
+            fig_row = 0
+    figure.tight_layout(rect=[0, 0.03, 1, 0.95])
+    figure.suptitle('Final Population Histograms')
+    plt.savefig("{}/histograms_all.png".format(save_loc), transparent=transparent)
+    plt.close()
+
+
+
 def final_pop_histograms(eval, final_pops, eval_funcs, save_loc, transparent=False):
     num_plots = len(eval_funcs)
     figure, axis = plt.subplots(1, num_plots, figsize=(4*num_plots,5))
@@ -88,6 +114,7 @@ def main(config_dir):
         os.makedirs(data_path)
     
     final_pop_histograms(Evaluation(config_file), final_pops, config_file["eval_funcs"], data_path)
+    final_pop_histograms_all(Evaluation(config_file), final_pops, config_file["eval_funcs"], data_path)
     plot_fitnesses_sep(fitness_logs, config_file["eval_funcs"].keys(), data_path)
 
 
