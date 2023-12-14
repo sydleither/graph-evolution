@@ -63,11 +63,14 @@ class Evaluation:
 
     #interaction strength properties
     def positive_interactions_proportion(self, network:Organism) -> float:
-        return network.numPositive / network.numInteractions
+        num_interactions = network.numInteractions
+        return network.numPositive / num_interactions if num_interactions > 0 else 0
 
 
     def average_positive_interactions_strength(self, network:Organism) -> float:
-        return sum([sum([y for y in x if y > 0]) for x in network.adjacencyMatrix]) / network.numPositive
+        sum_pos = sum([sum([y for y in x if y > 0]) for x in network.adjacencyMatrix])
+        num_pos = network.numPositive
+        return  sum_pos / num_pos if num_pos > 0 else 0
 
 
     def proportion_of_self_loops_positive(self, network:Organism) -> float:
