@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from bintools import numBins
 from eval_functions import Evaluation
+from plot_utils import calculate_standard_error
 
 
 def final_pop_histograms_all(eval, final_pops, eval_funcs, save_loc, transparent=False):
@@ -58,13 +59,9 @@ def plot_fitnesses_error(fitness_logs, eval_func_names, save_loc, transparent=Fa
     num_replicates = len(fitness_logs)
     for func_name in eval_func_names:
         eval_func_data = [fitness_logs[i][func_name] for i in range(num_replicates)]
-        num_generations = len(eval_func_data[0])
-        eval_func_data_mean = [np.mean([eval_func_data[i][j] for i in range(num_replicates)]) for j in range(num_generations)]
-        eval_func_data_error = [np.std([eval_func_data[i][j] for i in range(num_replicates)])/np.sqrt(num_replicates) for j in range(num_generations)]
-        neg_error = [eval_func_data_mean[i]-eval_func_data_error[i] for i in range(num_generations)]
-        pos_error = [eval_func_data_mean[i]+eval_func_data_error[i] for i in range(num_generations)]
+        eval_func_data_mean, neg_error, pos_error = calculate_standard_error(eval_func_data)
         axis.plot(eval_func_data_mean, label=func_name)
-        axis.fill_between(range(num_generations), neg_error, pos_error, alpha=0.5)
+        axis.fill_between(range(len(eval_func_data_mean)), neg_error, pos_error, alpha=0.5)
     axis.set_yscale("log")
     figure.supxlabel("Generations")
     figure.supylabel("MSE")
@@ -116,7 +113,6 @@ def main(config_dir):
         os.makedirs(data_path)
     
     eval_obj = Evaluation(config_file)
-    final_pop_histograms(eval_obj, final_pops, config_file["eval_funcs"], data_path)
     final_pop_histograms_all(eval_obj, final_pops, config_file["eval_funcs"], data_path)
     plot_fitnesses_sep(fitness_logs, config_file["eval_funcs"].keys(), data_path)
     plot_fitnesses_error(fitness_logs, config_file["eval_funcs"].keys(), data_path)

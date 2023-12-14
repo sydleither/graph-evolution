@@ -8,6 +8,7 @@ import numpy as np
 from bintools import numBins
 from eval_functions import Evaluation
 from ga import run
+from plot_utils import calculate_standard_error
 
 
 #transpose a matrix (list of list)
@@ -17,21 +18,16 @@ def T(LL:list[list])->list[list]:
 
 def plot_distributions_error(eval_obj, final_pop, eval_funcs, save_loc, transparent=False):
     all_distributions = [func for func in dir(Evaluation) if callable(getattr(Evaluation, func)) and func.endswith("distribution")]
-    pop_size = len(final_pop)
-    num_degrees = final_pop[0].numNodes+1
     figure, axis = plt.subplots(2, 2, figsize=(8, 6))
     fig_row = 0
     fig_col = 0
     for dist_name in all_distributions:
         is_eval_func = dist_name in eval_funcs.keys()
         org_dists = [org.getDegreeDistribution(dist_name) for org in final_pop]
-        degree_mean = [np.mean([org_dists[i][j] for i in range(pop_size)]) for j in range(num_degrees)]
-        degree_error = [np.std([org_dists[i][j] for i in range(pop_size)])/np.sqrt(pop_size) for j in range(num_degrees)]
-        neg_error = [degree_mean[i]-degree_error[i] for i in range(num_degrees)]
-        pos_error = [degree_mean[i]+degree_error[i] for i in range(num_degrees)]
+        degree_mean, neg_error, pos_error = calculate_standard_error(org_dists)
         color = "forestgreen" if is_eval_func else "sienna"
         axis[fig_row][fig_col].plot(degree_mean, label=dist_name, color=color)
-        axis[fig_row][fig_col].fill_between(range(num_degrees), neg_error, pos_error, alpha=0.5, color=color)
+        axis[fig_row][fig_col].fill_between(range(len(degree_mean)), neg_error, pos_error, alpha=0.5, color=color)
         if is_eval_func:
             goal_dist = eval_obj.dist_dict[dist_name]
             axis[fig_row][fig_col].plot(goal_dist, color="black", linewidth=2)
