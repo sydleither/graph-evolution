@@ -1,13 +1,14 @@
 {
     "data_dir": "data",
-    "name": "distributions",
-    "reps": 1,
-    "save_data": 0,
-    "plot_data": 1,
+    "name": "crossover_test_all3",
+    "reps": 3,
+    "save_data": 1,
+    "plot_data": 0,
     "popsize": 100,
     "mutation_rate": 0.005,
     "mutation_odds": [1,2,1],
-    "crossover_rate": 0.2,
+    "crossover_odds": [1,2,2],
+    "crossover_rate": 0.6,
     "weight_range": [-1,1],
     "network_size": 10,
     "network_sparsity": 0.75,
@@ -15,6 +16,7 @@
     "epsilon": 0.05,
     "eval_funcs": {
         "in_degree_distribution": {"name": "scale-free", "gamma": 2.7, "offset": 1.25},
-        "out_degree_distribution": {"name": "scale-free", "gamma": 2.1, "offset": 1.25}
+        "out_degree_distribution": {"name": "scale-free", "gamma": 2.1, "offset": 1.25},
+        "diameter": {"target": 5}
     }
 }
