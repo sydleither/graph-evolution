@@ -17,7 +17,8 @@ def plot_distributions_error(eval_obj, final_pop, eval_funcs, save_loc, transpar
     fig_col = 0
     for dist_name in all_distributions:
         is_eval_func = dist_name in eval_funcs.keys()
-        org_dists = [org.getDegreeDistribution(dist_name) for org in final_pop]
+        eval_func = getattr(eval_obj, dist_name)
+        org_dists = [eval_func(org) for org in final_pop]
         degree_mean, neg_error, pos_error = calculate_standard_error(org_dists)
         color = "forestgreen" if is_eval_func else "sienna"
         axis[fig_row][fig_col].plot(degree_mean, label=dist_name, color=color)
@@ -27,7 +28,7 @@ def plot_distributions_error(eval_obj, final_pop, eval_funcs, save_loc, transpar
             axis[fig_row][fig_col].plot(goal_dist, color="black", linewidth=2)
         axis[fig_row][fig_col].set_title(dist_name)
         fig_row += 1
-        if fig_row % 5 == 0:
+        if fig_row % 2 == 0:
             fig_col += 1
             fig_row = 0
     figure.tight_layout(rect=[0, 0.03, 1, 0.95])
@@ -43,7 +44,8 @@ def plot_distributions(eval_obj, final_pop, eval_funcs, save_loc, transparent=Fa
     fig_col = 0
     for dist_name in all_distributions:
         is_eval_func = dist_name in eval_funcs.keys()
-        org_dists = [org.getDegreeDistribution(dist_name) for org in final_pop]
+        eval_func = getattr(eval_obj, dist_name)
+        org_dists = [eval_func(org) for org in final_pop]
         for org_dist in org_dists:
             axis[fig_row][fig_col].plot(org_dist, color="forestgreen" if is_eval_func else "sienna")
         if is_eval_func:
@@ -51,7 +53,7 @@ def plot_distributions(eval_obj, final_pop, eval_funcs, save_loc, transparent=Fa
             axis[fig_row][fig_col].plot(goal_dist, linewidth=3, color="black")
         axis[fig_row][fig_col].set_title(dist_name)
         fig_row += 1
-        if fig_row % 5 == 0:
+        if fig_row % 2 == 0:
             fig_col += 1
             fig_row = 0
     figure.tight_layout(rect=[0, 0.03, 1, 0.95])
