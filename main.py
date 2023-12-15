@@ -3,63 +3,11 @@ import os
 import pickle
 import sys
 
+from math import ceil
 import matplotlib.pyplot as plt
-from bintools import numBins
 from eval_functions import Evaluation
 from ga import run
-from plot_utils import calculate_standard_error, final_pop_histogram, T
-
-
-def plot_distributions_error(eval_obj, final_pop, eval_funcs, save_loc, transparent=False):
-    all_distributions = [func for func in dir(Evaluation) if callable(getattr(Evaluation, func)) and func.endswith("distribution")]
-    figure, axis = plt.subplots(2, 2, figsize=(8, 6))
-    fig_row = 0
-    fig_col = 0
-    for dist_name in all_distributions:
-        is_eval_func = dist_name in eval_funcs.keys()
-        eval_func = getattr(eval_obj, dist_name)
-        org_dists = [eval_func(org) for org in final_pop]
-        degree_mean, neg_error, pos_error = calculate_standard_error(org_dists)
-        color = "forestgreen" if is_eval_func else "sienna"
-        axis[fig_row][fig_col].plot(degree_mean, label=dist_name, color=color)
-        axis[fig_row][fig_col].fill_between(range(len(degree_mean)), neg_error, pos_error, alpha=0.5, color=color)
-        if is_eval_func:
-            goal_dist = eval_obj.dist_dict[dist_name]
-            axis[fig_row][fig_col].plot(goal_dist, color="black", linewidth=2)
-        axis[fig_row][fig_col].set_title(dist_name)
-        fig_row += 1
-        if fig_row % 2 == 0:
-            fig_col += 1
-            fig_row = 0
-    figure.tight_layout(rect=[0, 0.03, 1, 0.95])
-    figure.suptitle('Final Population Distributions')
-    plt.savefig("{}/distributions_w_error.png".format(save_loc), transparent=transparent)
-    plt.close()
-
-
-def plot_distributions(eval_obj, final_pop, eval_funcs, save_loc, transparent=False):
-    all_distributions = [func for func in dir(Evaluation) if callable(getattr(Evaluation, func)) and func.endswith("distribution")]
-    figure, axis = plt.subplots(2, 2, figsize=(8, 6))
-    fig_row = 0
-    fig_col = 0
-    for dist_name in all_distributions:
-        is_eval_func = dist_name in eval_funcs.keys()
-        eval_func = getattr(eval_obj, dist_name)
-        org_dists = [eval_func(org) for org in final_pop]
-        for org_dist in org_dists:
-            axis[fig_row][fig_col].plot(org_dist, color="forestgreen" if is_eval_func else "sienna")
-        if is_eval_func:
-            goal_dist = eval_obj.dist_dict[dist_name]
-            axis[fig_row][fig_col].plot(goal_dist, linewidth=3, color="black")
-        axis[fig_row][fig_col].set_title(dist_name)
-        fig_row += 1
-        if fig_row % 2 == 0:
-            fig_col += 1
-            fig_row = 0
-    figure.tight_layout(rect=[0, 0.03, 1, 0.95])
-    figure.suptitle('Final Population Distributions')
-    plt.savefig("{}/distributions.png".format(save_loc), transparent=transparent)
-    plt.close()
+from plot_utils import final_pop_distribution, final_pop_histogram, T
 
 
 def plot_fitness(fitness_log, eval_func_names, save_loc, transparent=False):
@@ -113,8 +61,8 @@ def run_rep(i, save_loc, config):
         plot_fitness(fitness_log, config["eval_funcs"].keys(), save_loc_i)
         final_pop_histogram(eval_obj, final_pop, config["eval_funcs"], save_loc_i, plot_all=True)
         final_pop_histogram(eval_obj, final_pop, config["eval_funcs"], save_loc_i, plot_all=False)
-        plot_distributions(eval_obj, final_pop, config["eval_funcs"], save_loc_i)
-        plot_distributions_error(eval_obj, final_pop, config["eval_funcs"], save_loc_i)
+        final_pop_distribution(eval_obj, final_pop, config["eval_funcs"], save_loc_i, plot_all=True, with_error=False)
+        final_pop_distribution(eval_obj, final_pop, config["eval_funcs"], save_loc_i, plot_all=True, with_error=True)
         plotParetoFront(final_pop, config, save_loc_i)
         final_pop[0].saveGraphFigure("{}/graphFigure.png".format(save_loc_i))
 

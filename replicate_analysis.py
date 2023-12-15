@@ -1,57 +1,12 @@
 import os
 import json
-from math import ceil
 import pickle
 import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
-from bintools import numBins
 from eval_functions import Evaluation
-from plot_utils import calculate_standard_error, final_pop_histogram
-
-
-def final_pop_distributions(eval_obj, final_pops, eval_funcs, save_loc, plot_all=True, transparent=False):
-    #get list of properties to plot
-    if plot_all:
-        distributions = [func for func in dir(Evaluation) if callable(getattr(Evaluation, func)) and func.endswith("distribution")]
-    else:
-        distributions = [func for func in eval_funcs.keys() if func.endswith("distribution")]
-    #dynamically set size of figure
-    num_plots = len(distributions)
-    if num_plots == 0:
-        return
-    fig_col_cnt = 1 if num_plots == 1 else 2 if num_plots <= 4 else 4
-    fig_row_cnt = ceil(num_plots/fig_col_cnt)
-    figure, axis = plt.subplots(fig_row_cnt, fig_col_cnt, figsize=(4*fig_row_cnt, 3*fig_col_cnt), squeeze=False)
-    fig_row = 0
-    fig_col = 0
-    #plot every distribution and if plotting more than the objective distributions, color them differently
-    for dist_name in distributions:
-        for final_pop in final_pops:
-            eval_func = getattr(eval_obj, dist_name)
-            org_dists = [eval_func(org) for org in final_pop]
-            degree_mean, neg_error, pos_error = calculate_standard_error(org_dists)
-            axis[fig_row][fig_col].plot(degree_mean, label=dist_name)
-            axis[fig_row][fig_col].fill_between(range(len(degree_mean)), neg_error, pos_error, alpha=0.5)
-        is_eval_func = dist_name in eval_funcs.keys()
-        if is_eval_func:
-            goal_dist = eval_obj.dist_dict[dist_name]
-            axis[fig_row][fig_col].plot(goal_dist, color="black", linewidth=2)
-        if plot_all:
-            color = "forestgreen" if is_eval_func else "sienna"
-        else:
-            color = "black"
-        axis[fig_row][fig_col].set_title(dist_name, color=color)
-        fig_row += 1
-        if fig_row % fig_row_cnt == 0:
-            fig_col += 1
-            fig_row = 0
-    figure.tight_layout(rect=[0, 0.03, 1, 0.95])
-    figure.suptitle('Final Population Distributions')
-    fig_name = "distributions_all" if plot_all else "distributions"
-    plt.savefig("{}/{}.png".format(save_loc, fig_name), bbox_inches='tight', transparent=transparent)
-    plt.close()
+from plot_utils import calculate_standard_error, final_pop_distribution, final_pop_histogram
 
 
 def plot_fitnesses_error(fitness_logs, eval_func_names, save_loc, transparent=False):
@@ -116,8 +71,8 @@ def main(config_dir):
     eval_funcs = config_file["eval_funcs"]
     final_pop_histogram(eval_obj, final_pops, eval_funcs, data_path, plot_all=True)
     final_pop_histogram(eval_obj, final_pops, eval_funcs, data_path, plot_all=False)
-    final_pop_distributions(eval_obj, final_pops, eval_funcs, data_path, plot_all=True)
-    final_pop_distributions(eval_obj, final_pops, eval_funcs, data_path, plot_all=False)
+    final_pop_distribution(eval_obj, final_pops, eval_funcs, data_path, plot_all=True)
+    final_pop_distribution(eval_obj, final_pops, eval_funcs, data_path, plot_all=False)
     plot_fitnesses_sep(fitness_logs, eval_funcs.keys(), data_path)
     plot_fitnesses_error(fitness_logs, eval_funcs.keys(), data_path)
 
