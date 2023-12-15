@@ -4,16 +4,10 @@ import pickle
 import sys
 
 import matplotlib.pyplot as plt
-import numpy as np
 from bintools import numBins
 from eval_functions import Evaluation
 from ga import run
-from plot_utils import calculate_standard_error
-
-
-#transpose a matrix (list of list)
-def T(LL:list[list])->list[list]:
-    return list(zip(*LL))
+from plot_utils import calculate_standard_error, T
 
 
 def plot_distributions_error(eval_obj, final_pop, eval_funcs, save_loc, transparent=False):
@@ -167,17 +161,14 @@ def run_rep(i, save_loc, config):
 
 def main(config, rep=None):
     save_loc = "{}/{}".format(config["data_dir"], config["name"])
-    if not os.path.exists(save_loc):
-        os.makedirs(save_loc)
-    config_path = "{}/config.json".format(save_loc)
-    with open(config_path, "w") as f:
-        json.dump(config, f, indent=4)
-    
     if rep:
         run_rep(rep, save_loc, config)
     else:
         for i in range(config["reps"]):
             run_rep(i, save_loc, config)
+    config_path = "{}/config.json".format(save_loc)
+    with open(config_path, "w") as f:
+        json.dump(config, f, indent=4)
 
 
 if __name__ == "__main__":

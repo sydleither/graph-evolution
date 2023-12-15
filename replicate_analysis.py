@@ -140,6 +140,7 @@ def main(config_dir):
     
     eval_obj = Evaluation(config_file)
     eval_funcs = config_file["eval_funcs"]
+    final_pop_histograms(eval_obj, final_pops, eval_funcs, data_path)
     final_pop_histograms_all(eval_obj, final_pops, eval_funcs, data_path)
     plot_distributions(eval_obj, final_pops, eval_funcs, data_path)
     plot_fitnesses_sep(fitness_logs, eval_funcs.keys(), data_path)
