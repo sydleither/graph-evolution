@@ -46,7 +46,7 @@ class Evaluation:
     def avg_shortest_path_length_distribution(self, network:Organism) -> int:
         weight = 1/network.numNodes**2
         shortest_path = dict(nx.shortest_path_length(network.getNetworkxObject()))
-        avg_shortest = [weight*np.mean(list(shortest_path[i].values())) for i in range(len(shortest_path))]
+        avg_shortest = sorted([weight*np.mean(list(shortest_path[i].values())) for i in range(len(shortest_path))], reverse=True)
         return avg_shortest
 
     

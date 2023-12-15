@@ -3,7 +3,6 @@ import os
 import pickle
 import sys
 
-from math import ceil
 import matplotlib.pyplot as plt
 from eval_functions import Evaluation
 from ga import run
