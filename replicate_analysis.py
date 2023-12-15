@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from bintools import numBins
 from eval_functions import Evaluation
-from plot_utils import calculate_standard_error
+from plot_utils import calculate_standard_error, final_pop_histogram
 
 
 def final_pop_distributions(eval_obj, final_pops, eval_funcs, save_loc, plot_all=True, transparent=False):
@@ -50,48 +50,6 @@ def final_pop_distributions(eval_obj, final_pops, eval_funcs, save_loc, plot_all
     figure.tight_layout(rect=[0, 0.03, 1, 0.95])
     figure.suptitle('Final Population Distributions')
     fig_name = "distributions_all" if plot_all else "distributions"
-    plt.savefig("{}/{}.png".format(save_loc, fig_name), bbox_inches='tight', transparent=transparent)
-    plt.close()
-
-
-def final_pop_histograms(eval_obj, final_pops, eval_funcs, save_loc, plot_all=True, transparent=False):
-    #get list of properties to plot
-    if plot_all:
-        property_names = [func for func in dir(Evaluation) 
-                          if callable(getattr(Evaluation, func)) 
-                          and not (func.startswith("__") or func.endswith("distribution"))]
-    else:
-        property_names = [func for func in eval_funcs.keys() if not func.endswith("distribution")]
-    #dynamically set size of figure
-    num_plots = len(property_names)
-    if num_plots == 0:
-        return
-    fig_col_cnt = 1 if num_plots == 1 else 2 if num_plots <= 4 else 4
-    fig_row_cnt = ceil(num_plots/fig_col_cnt)
-    figure, axis = plt.subplots(fig_row_cnt, fig_col_cnt, figsize=(5*fig_row_cnt, 3*fig_col_cnt), squeeze=False)
-    fig_row = 0
-    fig_col = 0
-    #plot every property and if plotting more than the objective properties, color them differently
-    for property_name in property_names:
-        eval_func = getattr(eval_obj, property_name)
-        data = [[eval_func(org) for org in final_pops[run]] for run in range(len(final_pops))]
-        axis[fig_row][fig_col].hist(data, bins=numBins([d for dd in data for d in dd]), stacked=True)
-        is_eval_func = property_name in eval_funcs.keys()
-        if is_eval_func:
-            ideal_val = eval_funcs[property_name]["target"] if "target" in eval_funcs[property_name].keys() else 0
-            axis[fig_row][fig_col].axvline(ideal_val, color="black", linestyle="--")
-        if plot_all:
-            color = "forestgreen" if is_eval_func else "sienna"
-        else:
-            color = "black"
-        axis[fig_row][fig_col].set_title(property_name, color=color)
-        fig_row += 1
-        if fig_row % fig_row_cnt == 0:
-            fig_col += 1
-            fig_row = 0
-    figure.tight_layout(rect=[0, 0.03, 1, 0.95])
-    figure.suptitle("Final Population Histograms")
-    fig_name = "histograms_all" if plot_all else "histograms"
     plt.savefig("{}/{}.png".format(save_loc, fig_name), bbox_inches='tight', transparent=transparent)
     plt.close()
 
@@ -156,8 +114,8 @@ def main(config_dir):
     
     eval_obj = Evaluation(config_file)
     eval_funcs = config_file["eval_funcs"]
-    final_pop_histograms(eval_obj, final_pops, eval_funcs, data_path, plot_all=True)
-    final_pop_histograms(eval_obj, final_pops, eval_funcs, data_path, plot_all=False)
+    final_pop_histogram(eval_obj, final_pops, eval_funcs, data_path, plot_all=True)
+    final_pop_histogram(eval_obj, final_pops, eval_funcs, data_path, plot_all=False)
     final_pop_distributions(eval_obj, final_pops, eval_funcs, data_path, plot_all=True)
     final_pop_distributions(eval_obj, final_pops, eval_funcs, data_path, plot_all=False)
     plot_fitnesses_sep(fitness_logs, eval_funcs.keys(), data_path)

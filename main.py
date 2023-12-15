@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from bintools import numBins
 from eval_functions import Evaluation
 from ga import run
-from plot_utils import calculate_standard_error, T
+from plot_utils import calculate_standard_error, final_pop_histogram, T
 
 
 def plot_distributions_error(eval_obj, final_pop, eval_funcs, save_loc, transparent=False):
@@ -62,49 +62,6 @@ def plot_distributions(eval_obj, final_pop, eval_funcs, save_loc, transparent=Fa
     plt.close()
 
 
-def final_pop_histogram_all(eval_obj, final_pop, eval_funcs, save_loc, transparent=False):
-    all_property_names = [func for func in dir(Evaluation) if callable(getattr(Evaluation, func)) and not (func.startswith("__") or func.endswith("distribution"))]
-    figure, axis = plt.subplots(5, 3, figsize=(12, 15))
-    fig_row = 0
-    fig_col = 0
-    for property_name in all_property_names:
-        is_eval_func = property_name in eval_funcs.keys()
-        eval_func = getattr(eval_obj, property_name)
-        func_fitnesses = [eval_func(org) for org in final_pop]
-        color = "forestgreen" if is_eval_func else "sienna"
-        axis[fig_row][fig_col].hist(func_fitnesses, bins=numBins(func_fitnesses), color=color)
-        if is_eval_func:
-            ideal_val = eval_funcs[property_name]["target"] if "target" in eval_funcs[property_name].keys() else 0
-            axis[fig_row][fig_col].axvline(ideal_val, color="black", linestyle="--")
-        axis[fig_row][fig_col].set_title(property_name)
-        fig_row += 1
-        if fig_row % 5 == 0:
-            fig_col += 1
-            fig_row = 0
-    figure.tight_layout(rect=[0, 0.03, 1, 0.95])
-    figure.suptitle('Final Population Histograms')
-    plt.savefig("{}/histograms_all.png".format(save_loc), transparent=transparent)
-    plt.close()
-
-
-def final_pop_histogram(eval_obj, final_pop, eval_funcs, save_loc, transparent=False):
-    num_plots = len(eval_funcs)
-    figure, axis = plt.subplots(1, num_plots, figsize=(4*num_plots,5)) #TODO: dynamically add new rows when columns are full
-    i = 0
-    for func_name, func_params in eval_funcs.items():
-        eval_func = getattr(eval_obj, func_name)
-        func_fitnesses = [eval_func(org) for org in final_pop]
-        ideal_val = func_params["target"] if "target" in func_params.keys() else 0
-        axis[i].hist(func_fitnesses, bins=numBins(func_fitnesses), color="forestgreen")
-        axis[i].axvline(ideal_val, color="black", linestyle="--")
-        axis[i].set_title(func_name)
-        i += 1
-    figure.tight_layout(rect=[0, 0.03, 1, 0.95])
-    figure.suptitle('Final Population Histograms')
-    plt.savefig("{}/histograms.png".format(save_loc), transparent=transparent)
-    plt.close()
-
-
 def plot_fitness(fitness_log, eval_func_names, save_loc, transparent=False):
     figure, axis = plt.subplots(1, 1)
     for func_name in eval_func_names:
@@ -154,7 +111,8 @@ def run_rep(i, save_loc, config):
     if config["plot_data"] == 1:
         eval_obj = Evaluation(config)
         plot_fitness(fitness_log, config["eval_funcs"].keys(), save_loc_i)
-        final_pop_histogram_all(eval_obj, final_pop, config["eval_funcs"], save_loc_i)
+        final_pop_histogram(eval_obj, final_pop, config["eval_funcs"], save_loc_i, plot_all=True)
+        final_pop_histogram(eval_obj, final_pop, config["eval_funcs"], save_loc_i, plot_all=False)
         plot_distributions(eval_obj, final_pop, config["eval_funcs"], save_loc_i)
         plot_distributions_error(eval_obj, final_pop, config["eval_funcs"], save_loc_i)
         plotParetoFront(final_pop, config, save_loc_i)
