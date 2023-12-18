@@ -34,7 +34,8 @@ def plotParetoFront(population, config, save_loc=None):
     funcNames = list(config["eval_funcs"].keys())
     for i, feature1 in enumerate(funcNames):
         for j, feature2 in enumerate(funcNames):
-            if j >= 1: continue
+            print(i,j,feature1,feature2)
+            if j <= i: continue
             R = sorted(sorted([(org.evaluationScores[feature1], org.evaluationScores[feature2]) for org in paretoFront], key=lambda r: r[1], reverse=True), key=lambda r: r[0])
             plt.plot(*T(R), marker="o", linestyle="--")
             plt.title(feature1+" "+feature2)
