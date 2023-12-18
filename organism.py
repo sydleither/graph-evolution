@@ -146,29 +146,17 @@ class Organism:
         for name, evaluationPack in evaluationDict.items():
             evalFunc, targetValue = evaluationPack
             if name not in self.evaluationScores:
-                self.evaluationScores[name] = (evalFunc(self) - targetValue)**2
+                if name.endswith("distribution"):
+                    org_dist = evalFunc(self)
+                    self.evaluationScores[name] = sum([(org_dist[i]-targetValue[i])**2 for i in range(len(org_dist))])
+                else:
+                    self.evaluationScores[name] = (evalFunc(self) - targetValue)**2
         return self.evaluationScores
 
 
     def getNetworkxObject(self) -> nx.DiGraph:
         G = nx.DiGraph(np.array(self.adjacencyMatrix))
         return G
-    
-
-    def getDegreeDistribution(self, kind:str) -> list[float]:
-        networkx_obj = self.getNetworkxObject()
-        num_nodes = self.numNodes
-        if kind == "in_degree_distribution":
-            degree_sequence = list(d for _, d in networkx_obj.in_degree())
-        elif kind == "out_degree_distribution":
-            degree_sequence = list(d for _, d in networkx_obj.out_degree())
-        else:
-            degree_sequence = list(d for _, d in networkx_obj.degree())
-            num_nodes = 2*num_nodes
-        freq = [0]*(num_nodes+1)
-        for d in degree_sequence:
-            freq[d] += 1/num_nodes
-        return freq
 
 
     def saveGraphFigure(self, path:str):

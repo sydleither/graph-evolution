@@ -9,7 +9,7 @@ class Evaluation:
 
         dist_dict = {}
         for eval_func_name, eval_func_params in config["eval_funcs"].items():
-            if "name" in eval_func_params.keys():
+            if "name" in eval_func_params.keys(): #if endswith distribution
                 dist_dict[eval_func_name] = self.__get_distribution__(eval_func_params, config["network_size"])
         self.dist_dict = dist_dict
 
@@ -19,23 +19,37 @@ class Evaluation:
             gamma = dist_info["gamma"]
             offset = dist_info["offset"]
             return [0]+[(x+offset)**-gamma for x in range(num_nodes)]
+        #if dist_info is a list
 
 
     #node-level topological properties
     def in_degree_distribution(self, network:Organism) -> float:
-        dist = self.dist_dict["in_degree_distribution"]
-        degree_sequence = network.getDegreeDistribution("in_degree_distribution")
-        squares = sum([(dist[i]-degree_sequence[i])**2 for i in range(network.numNodes+1)])
-        return squares
+        networkx_obj = network.getNetworkxObject()
+        num_nodes = network.numNodes
+        degree_sequence = list(d for _, d in networkx_obj.in_degree())
+        freq = [0]*(num_nodes+1)
+        for d in degree_sequence:
+            freq[d] += 1/num_nodes
+        return freq
     
 
     def out_degree_distribution(self, network:Organism) -> float:
-        dist = self.dist_dict["out_degree_distribution"]
-        degree_sequence = network.getDegreeDistribution("out_degree_distribution")
-        squares = sum([(dist[i]-degree_sequence[i])**2 for i in range(network.numNodes+1)])
-        return squares
-    
+        networkx_obj = network.getNetworkxObject()
+        num_nodes = network.numNodes
+        degree_sequence = list(d for _, d in networkx_obj.out_degree())
+        freq = [0]*(num_nodes+1)
+        for d in degree_sequence:
+            freq[d] += 1/num_nodes
+        return freq
 
+
+    def avg_shortest_path_length_distribution(self, network:Organism) -> int:
+        weight = 1/network.numNodes**2
+        shortest_path = dict(nx.shortest_path_length(network.getNetworkxObject()))
+        avg_shortest = sorted([weight*np.mean(list(shortest_path[i].values())) for i in range(len(shortest_path))], reverse=True)
+        return avg_shortest
+
+    
     #topological properties
     def strong_components(self, network:Organism) -> int:
         return len(list(nx.strongly_connected_components(network.getNetworkxObject())))
