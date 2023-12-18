@@ -10,6 +10,15 @@ from organism import Organism
 def T(LL:list[list]) -> list[list]:
     return list(zip(*LL))
 
+#inspired by: Deb, Kalyanmoy, et al.
+#"A fast and elitist multiobjective genetic algorithm: NSGA-II."
+#IEEE transactions on evolutionary computation 6.2 (2002): 182-197.
+def crowdingDistance(organismList:list[Organism]) -> list[float]:
+    L = len(organismList)
+    distances = [0 for _ in range(L)]
+
+
+
 
 def epsilonLexicase(population:list[Organism], numParents:int, popsize:int, eval_funcs:dict, epsilon:float) -> list[Organism]:
     parents:list[Organism] = []
@@ -27,6 +36,7 @@ def epsilonLexicase(population:list[Organism], numParents:int, popsize:int, eval
                 parents.append(population[cut[0]])
                 break
         if len(cut) > 1:
+            print("RANDOM")
             parents.append(population[sample(cut,k=1)[0]]) #if choices remain after all objectives, choose randomly
 
     return parents

@@ -34,7 +34,6 @@ def plotParetoFront(population, config, save_loc=None):
     funcNames = list(config["eval_funcs"].keys())
     for i, feature1 in enumerate(funcNames):
         for j, feature2 in enumerate(funcNames):
-            print(i,j,feature1,feature2)
             if j <= i: continue
             R = sorted(sorted([(org.evaluationScores[feature1], org.evaluationScores[feature2]) for org in paretoFront], key=lambda r: r[1], reverse=True), key=lambda r: r[0])
             plt.plot(*T(R), marker="o", linestyle="--")
@@ -55,7 +54,8 @@ def diversity(population:list[Organism],eval_obj:Evaluation,config:dict,save_loc
                           not func.startswith("__")]
     for eval_func_name in all_evaluation_funcs:
         eval_func = getattr(eval_obj, eval_func_name)
-        typeCounter = Counter([eval_func(organism) if "distribution" not in eval_func_name else tuple(eval_func(organism)) for organism in population])
+        typeCounter = Counter([organism.getProperty(eval_func_name,eval_func) if "distribution" not in eval_func_name 
+                               else tuple(organism.getProperty(eval_func_name,eval_func)) for organism in population])
         entropy = -sum([(count/N)*log2(count/N) for count in typeCounter.values()])
         print(eval_func_name,"entropy:",entropy,"bits.")
 

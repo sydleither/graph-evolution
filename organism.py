@@ -54,6 +54,7 @@ class Organism:
         self.weightRange = weightRange
 
         self.evaluationScores:dict[str:float] = {}
+        self.properties:dict = {}
 
         self.adjacencyMatrix:list[list[float]] = [[sparsify(val,self.sparsity,self.weightRange) for val in row] for row in self.genotypeMatrix]
 
@@ -142,15 +143,21 @@ class Organism:
         return Organism(self.numNodes, self.sparsity, self.weightRange, newGenome)
 
 
+    def getProperty(self,propertyName,evalFunc):
+        if propertyName not in self.properties:
+            self.properties[propertyName] = evalFunc(self)
+        return self.properties[propertyName]
+
+
     def getEvaluationScores(self, evaluationDict:dict[str:tuple[Callable,float]]) -> dict[str:float]:
         for name, evaluationPack in evaluationDict.items():
             evalFunc, targetValue = evaluationPack
             if name not in self.evaluationScores:
                 if name.endswith("distribution"):
-                    org_dist = evalFunc(self)
+                    org_dist = self.getProperty(name,evalFunc)
                     self.evaluationScores[name] = sum([(org_dist[i]-targetValue[i])**2 for i in range(len(org_dist))])
                 else:
-                    self.evaluationScores[name] = (evalFunc(self) - targetValue)**2
+                    self.evaluationScores[name] = (self.getProperty(name,evalFunc) - targetValue)**2
         return self.evaluationScores
 
 
