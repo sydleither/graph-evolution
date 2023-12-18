@@ -39,7 +39,7 @@ def run(config):
     eval_funcs:dict[str:tuple[Callable,float]] = {}
     for eval_func_name, eval_func_params in config["eval_funcs"].items():
         if eval_func_name.endswith("distribution"):
-            target = eval_obj.dist_dict[eval_func_name]
+            target = eval_obj.target_dist_dict[eval_func_name]
         else:
             target = eval_func_params["target"] if "target" in eval_func_params.keys() else 0
         eval_funcs[eval_func_name] = (getattr(eval_obj, eval_func_name), target)

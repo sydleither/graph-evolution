@@ -7,23 +7,27 @@ class Evaluation:
     def __init__(self, config) -> None:
         self.config = config
 
-        dist_dict = {}
+        target_dist_dict = {}
         for eval_func_name, eval_func_params in config["eval_funcs"].items():
-            if "name" in eval_func_params.keys(): #if endswith distribution
-                dist_dict[eval_func_name] = self.__get_distribution__(eval_func_params, config["network_size"])
-        self.dist_dict = dist_dict
+            if eval_func_name.endswith("distribution"):
+                target_dist_dict[eval_func_name] = self.__get_target_distribution__(eval_func_params, config["network_size"])
+        self.target_dist_dict = target_dist_dict
 
 
-    def __get_distribution__(self, dist_info:dict, num_nodes:int) -> list[float]:
-        if dist_info["name"] == "scale-free":
-            gamma = dist_info["gamma"]
-            offset = dist_info["offset"]
-            return [0]+[(x+offset)**-gamma for x in range(num_nodes)]
-        #if dist_info is a list
+    def __get_target_distribution__(self, dist_info:dict, num_nodes:int) -> list[float]:
+        if "name" in dist_info.keys():
+            if dist_info["name"] == "scale-free":
+                gamma = dist_info["gamma"]
+                offset = dist_info["offset"]
+                return [0]+[(x+offset)**-gamma for x in range(num_nodes)]
+        if "target" in dist_info.keys():
+            return dist_info["target"]
+        print("Invalid distribution config")
+        exit()
 
 
     #node-level topological properties
-    def in_degree_distribution(self, network:Organism) -> float:
+    def in_degree_distribution(self, network:Organism) -> list[float]:
         networkx_obj = network.getNetworkxObject()
         num_nodes = network.numNodes
         degree_sequence = list(d for _, d in networkx_obj.in_degree())
@@ -33,7 +37,7 @@ class Evaluation:
         return freq
     
 
-    def out_degree_distribution(self, network:Organism) -> float:
+    def out_degree_distribution(self, network:Organism) -> list[float]:
         networkx_obj = network.getNetworkxObject()
         num_nodes = network.numNodes
         degree_sequence = list(d for _, d in networkx_obj.out_degree())
@@ -43,20 +47,33 @@ class Evaluation:
         return freq
 
 
-    def avg_shortest_path_length_distribution(self, network:Organism) -> int:
+    def avg_shortest_path_length_distribution(self, network:Organism) -> list[float]:
         weight = 1/network.numNodes**2
         shortest_path = dict(nx.shortest_path_length(network.getNetworkxObject()))
         avg_shortest = sorted([weight*np.mean(list(shortest_path[i].values())) for i in range(len(shortest_path))], reverse=True)
         return avg_shortest
+    
 
+    def betweenness_distribution(self, network:Organism) -> list[float]:
+        networkx_obj = network.getNetworkxObject()
+        return sorted(list(nx.betweenness_centrality(networkx_obj).values()), reverse=True)
+    
     
     #topological properties
     def strong_components(self, network:Organism) -> int:
         return len(list(nx.strongly_connected_components(network.getNetworkxObject())))
 
 
+    def weak_components(self, network:Organism) -> int:
+        return len(list(nx.weakly_connected_components(network.getNetworkxObject())))
+
+
     def connectance(self, network:Organism) -> float:
         return network.numInteractions / network.numNodes**2
+
+
+    def clustering_coefficient(self, network:Organism) -> float:
+        return nx.average_clustering(network.getNetworkxObject())
 
 
     def proportion_of_self_loops(self, network:Organism) -> float:
