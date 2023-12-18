@@ -9,17 +9,21 @@ class Evaluation:
 
         dist_dict = {}
         for eval_func_name, eval_func_params in config["eval_funcs"].items():
-            if "name" in eval_func_params.keys(): #if endswith distribution
+            if eval_func_name.endswith("distribution"):
                 dist_dict[eval_func_name] = self.__get_distribution__(eval_func_params, config["network_size"])
         self.dist_dict = dist_dict
 
 
     def __get_distribution__(self, dist_info:dict, num_nodes:int) -> list[float]:
-        if dist_info["name"] == "scale-free":
-            gamma = dist_info["gamma"]
-            offset = dist_info["offset"]
-            return [0]+[(x+offset)**-gamma for x in range(num_nodes)]
-        #if dist_info is a list
+        if "name" in dist_info.keys():
+            if dist_info["name"] == "scale-free":
+                gamma = dist_info["gamma"]
+                offset = dist_info["offset"]
+                return [0]+[(x+offset)**-gamma for x in range(num_nodes)]
+        if "target" in dist_info.keys():
+            return dist_info["target"]
+        print("Invalid distribution config")
+        exit()
 
 
     #node-level topological properties
