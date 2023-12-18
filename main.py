@@ -4,16 +4,10 @@ import pickle
 import sys
 
 import matplotlib.pyplot as plt
-import numpy as np
 from bintools import numBins
 from eval_functions import Evaluation
 from ga import run
-from plot_utils import calculate_standard_error
-
-
-#transpose a matrix (list of list)
-def T(LL:list[list])->list[list]:
-    return list(zip(*LL))
+from plot_utils import calculate_standard_error, T
 
 
 def plot_distributions_error(eval_obj, final_pop, eval_funcs, save_loc, transparent=False):
@@ -142,39 +136,39 @@ def plotParetoFront(population, config, save_loc=None):
             plt.show()
 
 
-def run_rep(i, config):
-    save_loc = "{}/{}/{}".format(config["data_dir"], config["name"], i)
-    if not os.path.exists(save_loc):
-        os.makedirs(save_loc)
+def run_rep(i, save_loc, config):
+    save_loc_i = "{}/{}".format(save_loc, i)
+    if not os.path.exists(save_loc_i):
+        os.makedirs(save_loc_i)
 
     final_pop, fitness_log = run(config)
 
     if config["save_data"] == 1:
-        with open("{}/final_pop.pkl".format(save_loc), "wb") as f:
+        with open("{}/final_pop.pkl".format(save_loc_i), "wb") as f:
             pickle.dump(final_pop, f)
-        with open("{}/fitness_log.pkl".format(save_loc), "wb") as f:
+        with open("{}/fitness_log.pkl".format(save_loc_i), "wb") as f:
             pickle.dump(fitness_log, f)
 
     if config["plot_data"] == 1:
         eval_obj = Evaluation(config)
-        plot_fitness(fitness_log, config["eval_funcs"].keys(), save_loc)
-        final_pop_histogram_all(eval_obj, final_pop, config["eval_funcs"], save_loc)
-        plot_distributions(eval_obj, final_pop, config["eval_funcs"], save_loc)
-        plot_distributions_error(eval_obj, final_pop, config["eval_funcs"], save_loc)
-        plotParetoFront(final_pop, config, save_loc)
-        final_pop[0].saveGraphFigure("{}/graphFigure.png".format(save_loc))
+        plot_fitness(fitness_log, config["eval_funcs"].keys(), save_loc_i)
+        final_pop_histogram_all(eval_obj, final_pop, config["eval_funcs"], save_loc_i)
+        plot_distributions(eval_obj, final_pop, config["eval_funcs"], save_loc_i)
+        plot_distributions_error(eval_obj, final_pop, config["eval_funcs"], save_loc_i)
+        plotParetoFront(final_pop, config, save_loc_i)
+        final_pop[0].saveGraphFigure("{}/graphFigure.png".format(save_loc_i))
 
 
 def main(config, rep=None):
-    config_path = "{}/{}/config.json".format(config["data_dir"], config["name"])
-    if not os.path.exists(config_path):
-        with open(config_path, "w") as f:
-            json.dump(config, f, indent=4)
+    save_loc = "{}/{}".format(config["data_dir"], config["name"])
     if rep:
-        run_rep(rep, config)
+        run_rep(rep, save_loc, config)
     else:
         for i in range(config["reps"]):
-            run_rep(i, config)
+            run_rep(i, save_loc, config)
+    config_path = "{}/config.json".format(save_loc)
+    with open(config_path, "w") as f:
+        json.dump(config, f, indent=4)
 
 
 if __name__ == "__main__":

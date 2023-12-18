@@ -6,6 +6,7 @@ cp /mnt/home/leithers/graph_evolution/graph-evolution/ga.py .
 cp /mnt/home/leithers/graph_evolution/graph-evolution/eval_functions.py .
 cp /mnt/home/leithers/graph_evolution/graph-evolution/organism.py .
 cp /mnt/home/leithers/graph_evolution/graph-evolution/bintools.py .
+cp /mnt/home/leithers/graph_evolution/graph-evolution/plot_utils.py .
 
 sbatch /mnt/home/leithers/graph_evolution/graph-evolution/hpcc.sb ${1}
 find /mnt/scratch/leithers/graph-evolution -type f -empty -delete

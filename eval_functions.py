@@ -18,7 +18,7 @@ class Evaluation:
         if dist_info["name"] == "scale-free":
             gamma = dist_info["gamma"]
             offset = dist_info["offset"]
-            return [(x+offset)**-gamma for x in range(num_nodes+1)]
+            return [0]+[(x+offset)**-gamma for x in range(num_nodes)]
 
 
     #node-level topological properties
@@ -52,7 +52,7 @@ class Evaluation:
     def diameter(self, network:Organism) -> int:
         shortest_path = dict(nx.shortest_path_length(network.getNetworkxObject()))
         return max([max(shortest_path[i].values()) for i in range(len(shortest_path))])
-    
+
 
     #node-level interaction strength properties
     # def pos_in_weight_distribution(self, network:Organism) -> float:
