@@ -2,12 +2,14 @@ import json
 import os
 import pickle
 import sys
+from collections import Counter
 
 import matplotlib.pyplot as plt
 from eval_functions import Evaluation
 from ga import run
-from plot_utils import final_pop_distribution, final_pop_histogram, T
+from numpy import log2
 from organism import Organism
+from plot_utils import T, final_pop_distribution, final_pop_histogram
 
 
 def plot_fitness(fitness_log, eval_func_names, save_loc, transparent=False):
@@ -45,8 +47,19 @@ def plotParetoFront(population, config, save_loc=None):
                 plt.show()
 
 
-def diversity(population:list[Organism]) :
-    pass
+def diversity(population:list[Organism],eval_obj:Evaluation,config:dict,save_loc_i:str) :
+    N = config["popsize"]
+    all_evaluation_funcs = [func for func in dir(Evaluation) 
+                          if callable(getattr(Evaluation, func)) and
+                          not func.startswith("__")]
+    for eval_func_name in all_evaluation_funcs:
+        eval_func = getattr(eval_obj, eval_func_name)
+        typeCounter = Counter([eval_func(organism) if "distribution" not in eval_func_name else tuple(eval_func(organism)) for organism in population])
+        entropy = -sum([(count/N)*log2(count/N) for count in typeCounter.values()])
+        print(eval_func_name,"entropy:",entropy,"bits.")
+
+
+
 
 def run_rep(i, save_loc, config):
     save_loc_i = "{}/{}".format(save_loc, i)
@@ -71,7 +84,7 @@ def run_rep(i, save_loc, config):
         plotParetoFront(final_pop, config, save_loc_i)
         final_pop[0].saveGraphFigure("{}/graphFigure.png".format(save_loc_i))
         ###
-        diversity(final_pop)
+        diversity(final_pop,eval_obj,config,save_loc_i)
         ###
 
 

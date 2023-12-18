@@ -1,7 +1,7 @@
+from collections import deque
 from copy import deepcopy
 from random import randint, random, sample
 from typing import Callable
-from collections import deque
 
 import matplotlib.pyplot as plt
 import networkx as nx
