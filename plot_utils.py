@@ -88,9 +88,9 @@ def final_pop_distribution(eval_obj, final_pop, eval_funcs, save_loc, plot_all=T
     num_plots = len(distributions)
     if num_plots == 0:
         return
-    fig_col_cnt = 1 if num_plots == 1 else 2 if num_plots <= 4 else 4
-    fig_row_cnt = ceil(num_plots/fig_col_cnt)
-    figure, axis = plt.subplots(fig_row_cnt, fig_col_cnt, figsize=(4*fig_row_cnt, 3*fig_col_cnt), squeeze=False)
+    fig_row_cnt = 1 if num_plots == 1 else 2 if num_plots <= 4 else 4
+    fig_col_cnt = ceil(num_plots/fig_row_cnt)
+    figure, axis = plt.subplots(fig_row_cnt, fig_col_cnt, figsize=(4*fig_row_cnt, 4*fig_col_cnt), squeeze=False)
     fig_row = 0
     fig_col = 0
     #plot every distribution and if plotting more than the objective distributions, color them differently
@@ -116,7 +116,7 @@ def final_pop_distribution(eval_obj, final_pop, eval_funcs, save_loc, plot_all=T
                         axis[fig_row][fig_col].plot(org_dist, color=color)
                 color = "black"
         if is_eval_func:
-            goal_dist = eval_obj.dist_dict[dist_name]
+            goal_dist = eval_obj.target_dist_dict[dist_name]
             axis[fig_row][fig_col].plot(goal_dist, color="black", linewidth=2)
         axis[fig_row][fig_col].set_title(dist_name, color=color)
         fig_row += 1
