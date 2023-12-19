@@ -1,9 +1,9 @@
 from math import ceil
+
 import matplotlib.pyplot as plt
 import numpy as np
 from bintools import numBins
 from eval_functions import Evaluation
-
 
 lmap = lambda f,x: list(map(f,x))
 
