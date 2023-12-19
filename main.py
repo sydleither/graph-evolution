@@ -40,7 +40,7 @@ def plotParetoFront(population, config, save_loc=None):
             plt.title(feature1+" "+feature2)
             plt.xlabel(feature1 + " MSE")
             plt.ylabel(feature2 + " MSE")
-            if save_loc:
+            if save_loc is not None:
                 plt.savefig("{}/pareto_{}_{}.png".format(save_loc, feature1, feature2))
                 plt.close()
             else:

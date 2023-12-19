@@ -6,7 +6,7 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 from eval_functions import Evaluation
-from plot_utils import calculate_standard_error, final_pop_distribution, final_pop_histogram
+from plot_utils import calculate_standard_error, final_pop_distribution, final_pop_histogram, T
 
 
 def plot_fitnesses_error(fitness_logs, eval_func_names, save_loc, transparent=False):
@@ -48,6 +48,30 @@ def plot_fitnesses_sep(fitness_logs, eval_func_names, save_loc, transparent=Fals
     plt.savefig("{}/fitness.png".format(save_loc))
     plt.close()
 
+def combined_pareto_front(final_pops,config,save_loc=None):
+    paretoFront = []
+    #sort
+    for population in final_pops:
+        for i in range(config["popsize"]):
+            dominatedByPeers = any([population[j] > population[i] for j in range(config["popsize"]) if j != i])
+            dominatedByPareto = any([paretoFront[j] > population[i] for j in range(len(paretoFront))])
+            if not dominatedByPeers and not dominatedByPareto:
+                paretoFront.append(population[i])
+    #plot
+    funcNames = list(config["eval_funcs"].keys())
+    for i, feature1 in enumerate(funcNames):
+        for j, feature2 in enumerate(funcNames):
+            if j <= i: continue
+            R = sorted(sorted([(org.evaluationScores[feature1], org.evaluationScores[feature2]) for org in paretoFront], key=lambda r: r[1], reverse=True), key=lambda r: r[0])
+            plt.plot(*T(R), marker="o", linestyle="--")
+            plt.title(feature1+" "+feature2)
+            plt.xlabel(feature1 + " MSE")
+            plt.ylabel(feature2 + " MSE")
+            if save_loc is not None:
+                plt.savefig("{}/pareto_{}_{}.png".format(save_loc, feature1, feature2))
+                plt.close()
+            else:
+                plt.show()
 
 def main(config_dir): #TODO: get pareto front from all reps
     final_pops = []
@@ -77,6 +101,7 @@ def main(config_dir): #TODO: get pareto front from all reps
     final_pop_distribution(eval_obj, final_pops, eval_funcs, data_path, plot_all=False)
     plot_fitnesses_sep(fitness_logs, eval_funcs.keys(), data_path)
     plot_fitnesses_error(fitness_logs, eval_funcs.keys(), data_path)
+    combined_pareto_front(final_pops,config_file,data_path)
 
 
 if __name__ == "__main__":
