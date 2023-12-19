@@ -49,7 +49,7 @@ def plot_fitnesses_sep(fitness_logs, eval_func_names, save_loc, transparent=Fals
     plt.close()
 
 
-def main(config_dir):
+def main(config_dir): #TODO: get pareto front from all reps
     final_pops = []
     fitness_logs = []
 
@@ -58,10 +58,12 @@ def main(config_dir):
         if run_dir.endswith(".json"):
             config_file = json.load(open(full_path))
         elif not os.path.isfile(full_path):
-            with open("{}/final_pop.pkl".format(full_path), "rb") as f:
-                final_pops.append(pickle.load(f))
-            with open("{}/fitness_log.pkl".format(full_path), "rb") as f:
-                fitness_logs.append(pickle.load(f))
+            if os.path.exists("{}/final_pop.pkl".format(full_path)):
+                with open("{}/final_pop.pkl".format(full_path), "rb") as f:
+                    final_pops.append(pickle.load(f))
+                with open("{}/fitness_log.pkl".format(full_path), "rb") as f:
+                    fitness_logs.append(pickle.load(f))
+
 
     data_path = "{}/{}".format(config_file["data_dir"], config_file["name"])
     if not os.path.exists(data_path):
