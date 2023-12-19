@@ -72,6 +72,7 @@ def run_rep(i, save_loc, config):
             pickle.dump(final_pop, f)
         with open("{}/fitness_log.pkl".format(save_loc_i), "wb") as f:
             pickle.dump(fitness_log, f)
+        diversity(final_pop,config,save_loc_i)
 
     if config["plot_data"] == 1:
         # eval_obj = Evaluation(config)
@@ -82,7 +83,6 @@ def run_rep(i, save_loc, config):
         final_pop_distribution(eval_obj, final_pop, config["eval_funcs"], save_loc_i, plot_all=True, with_error=True)
         plotParetoFront(final_pop, config, save_loc_i)
         final_pop[0].saveGraphFigure("{}/graphFigure.png".format(save_loc_i))
-        diversity(final_pop,config,save_loc_i)
 
 
 def main(config, rep=None):
