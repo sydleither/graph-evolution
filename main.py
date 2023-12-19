@@ -50,7 +50,7 @@ def plotParetoFront(population, config, save_loc=None):
 def diversity(population:list[Organism],config:dict,save_loc_i:str) :
     global eval_obj
     N = config["popsize"]
-    with open("{}/diversity.csv".format(save_loc_i),'w') as diversityFile:
+    with open("{}/entropy.csv".format(save_loc_i),'w') as diversityFile:
         diversityFile.write("Name,Entropy(bits)\n")
         for eval_func_name,eval_func in eval_obj.functions.items():
             typeCounter = Counter([organism.getProperty(eval_func_name,eval_func) if "distribution" not in eval_func_name 
