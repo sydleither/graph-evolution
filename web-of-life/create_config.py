@@ -13,7 +13,9 @@ def extract_properties(org):
         "in_degree_distribution": {"target":eval.in_degree_distribution(org)},
         "out_degree_distribution": {"target":eval.out_degree_distribution(org)},
         "connectance": {"target":eval.connectance(org)},
-        "average_positive_interactions_strength": {"target":eval.average_positive_interactions_strength(org)}
+        "average_positive_interactions_strength": {"target":eval.average_positive_interactions_strength(org)},
+        "diameter": {"target":eval.diameter(org)},
+        "clustering_coefficient": {"target":eval.clustering_coefficient(org)}
     }
     return eval_funcs
 
@@ -48,6 +50,10 @@ def main(network_name, network):
     config_path = "../{}.json".format(network_name)
     with open(config_path, "w") as f:
         json.dump(config, f, indent=4)
+
+    org.saveGraphFigure("{}.png".format(network_name))
+    for row in org.adjacencyMatrix:
+        print(row)
 
 
 if __name__ == "__main__":
