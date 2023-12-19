@@ -13,9 +13,15 @@ def T(LL:list[list]) -> list[list]:
 #inspired by: Deb, Kalyanmoy, et al.
 #"A fast and elitist multiobjective genetic algorithm: NSGA-II."
 #IEEE transactions on evolutionary computation 6.2 (2002): 182-197.
-def crowdingDistance(organismList:list[Organism]) -> list[float]:
-    L = len(organismList)
-    distances = [0 for _ in range(L)]
+def getDiverseChoice(organismList:list[Organism]) -> list[float]:
+    global eval_obj
+    extremeOrganisms = []
+    for funcName,eval_func in eval_obj.functions.items():
+        objectiveScores = sorted([(org.getProperty(funcName,eval_func),org) for org in organismList],key=lambda x:x[0])
+        extremeOrganisms.append(objectiveScores[0][1])
+        extremeOrganisms.append(objectiveScores[-1][1])
+    return sample(extremeOrganisms,k=1)[0]
+
 
 
 
@@ -36,13 +42,14 @@ def epsilonLexicase(population:list[Organism], numParents:int, popsize:int, eval
                 parents.append(population[cut[0]])
                 break
         if len(cut) > 1:
-            print("RANDOM")
-            parents.append(population[sample(cut,k=1)[0]]) #if choices remain after all objectives, choose randomly
+            # parents.append(population[sample(cut,k=1)[0]]) #if choices remain after all objectives, choose randomly
+            parents.append(getDiverseChoice([population[c] for c in cut])) #if choices remain after all objectives, choose diverse
 
     return parents
 
 
 def run(config):
+    global eval_obj
     eval_obj = Evaluation(config)
     popsize = config["popsize"]
 
@@ -52,7 +59,7 @@ def run(config):
             target = eval_obj.target_dist_dict[eval_func_name]
         else:
             target = eval_func_params["target"] if "target" in eval_func_params.keys() else 0
-        eval_funcs[eval_func_name] = (getattr(eval_obj, eval_func_name), target)
+        eval_funcs[eval_func_name] = (eval_obj.functions[eval_func_name], target)
 
     population = [Organism(config["network_size"], config["network_sparsity"], config["weight_range"]) for _ in range(popsize)]
     fitnessLog = {x:[] for x in eval_funcs.keys()}

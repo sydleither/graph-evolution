@@ -47,13 +47,10 @@ def plotParetoFront(population, config, save_loc=None):
                 plt.show()
 
 
-def diversity(population:list[Organism],eval_obj:Evaluation,config:dict,save_loc_i:str) :
+def diversity(population:list[Organism],config:dict,save_loc_i:str) :
+    global eval_obj
     N = config["popsize"]
-    all_evaluation_funcs = [func for func in dir(Evaluation) 
-                          if callable(getattr(Evaluation, func)) and
-                          not func.startswith("__")]
-    for eval_func_name in all_evaluation_funcs:
-        eval_func = getattr(eval_obj, eval_func_name)
+    for eval_func_name,eval_func in eval_obj.functions.items():
         typeCounter = Counter([organism.getProperty(eval_func_name,eval_func) if "distribution" not in eval_func_name 
                                else tuple(organism.getProperty(eval_func_name,eval_func)) for organism in population])
         entropy = -sum([(count/N)*log2(count/N) for count in typeCounter.values()])
@@ -63,6 +60,7 @@ def diversity(population:list[Organism],eval_obj:Evaluation,config:dict,save_loc
 
 
 def run_rep(i, save_loc, config):
+    global eval_obj
     save_loc_i = "{}/{}".format(save_loc, i)
     if not os.path.exists(save_loc_i):
         os.makedirs(save_loc_i)
@@ -76,7 +74,7 @@ def run_rep(i, save_loc, config):
             pickle.dump(fitness_log, f)
 
     if config["plot_data"] == 1:
-        eval_obj = Evaluation(config)
+        # eval_obj = Evaluation(config)
         plot_fitness(fitness_log, config["eval_funcs"].keys(), save_loc_i)
         final_pop_histogram(eval_obj, final_pop, config["eval_funcs"], save_loc_i, plot_all=True)
         final_pop_histogram(eval_obj, final_pop, config["eval_funcs"], save_loc_i, plot_all=False)
@@ -85,7 +83,7 @@ def run_rep(i, save_loc, config):
         plotParetoFront(final_pop, config, save_loc_i)
         final_pop[0].saveGraphFigure("{}/graphFigure.png".format(save_loc_i))
         ###
-        diversity(final_pop,eval_obj,config,save_loc_i)
+        diversity(final_pop,config,save_loc_i)
         ###
 
 
@@ -105,6 +103,7 @@ if __name__ == "__main__":
     try:
         config_file = sys.argv[1]
         config = json.load(open(config_file))
+        eval_obj = Evaluation(config)
     except:
         print("Please give a valid config json to read parameters from.")
         exit()

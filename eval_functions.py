@@ -12,6 +12,9 @@ class Evaluation:
             if eval_func_name.endswith("distribution"):
                 target_dist_dict[eval_func_name] = self.__get_target_distribution__(eval_func_params, config["network_size"])
         self.target_dist_dict = target_dist_dict
+        self.functions = {func:getattr(Evaluation, func) for func in dir(Evaluation) 
+                          if callable(getattr(Evaluation, func)) and
+                          not func.startswith("__")}
 
 
     def __get_target_distribution__(self, dist_info:dict, num_nodes:int) -> list[float]:
