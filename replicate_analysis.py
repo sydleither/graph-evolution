@@ -1,12 +1,15 @@
-import os
 import json
+import os
 import pickle
 import sys
+from csv import reader
+from statistics import mean
 
 import matplotlib.pyplot as plt
 import numpy as np
 from eval_functions import Evaluation
-from plot_utils import calculate_standard_error, final_pop_distribution, final_pop_histogram
+from plot_utils import (T, calculate_standard_error, final_pop_distribution,
+                        final_pop_histogram)
 
 
 def plot_fitnesses_error(fitness_logs, eval_func_names, save_loc, transparent=False):
@@ -49,19 +52,68 @@ def plot_fitnesses_sep(fitness_logs, eval_func_names, save_loc, transparent=Fals
     plt.close()
 
 
-def main(config_dir):
+def combined_pareto_front(final_pops,config,save_loc=None):
+    paretoFront = []
+    #sort
+    for population in final_pops:
+        for i in range(config["popsize"]):
+            dominatedByPeers = any([population[j] > population[i] for j in range(config["popsize"]) if j != i])
+            dominatedByPareto = any([paretoFront[j] > population[i] for j in range(len(paretoFront))])
+            if not dominatedByPeers and not dominatedByPareto:
+                paretoFront.append(population[i])
+    #plot
+    funcNames = list(config["eval_funcs"].keys())
+    for i, feature1 in enumerate(funcNames):
+        for j, feature2 in enumerate(funcNames):
+            if j <= i: continue
+            R = sorted(sorted([(org.evaluationScores[feature1], org.evaluationScores[feature2]) for org in paretoFront], key=lambda r: r[1], reverse=True), key=lambda r: r[0])
+            plt.plot(*T(R), marker="o", linestyle="--")
+            plt.title(feature1+" "+feature2)
+            plt.xlabel(feature1 + " MSE")
+            plt.ylabel(feature2 + " MSE")
+            if save_loc is not None:
+                plt.savefig("{}/pareto_{}_{}.png".format(save_loc, feature1, feature2))
+                plt.close()
+            else:
+                plt.show()
+
+
+def combined_entropy(logs,data_path):
+    scratch = {}
+    for log in logs:
+        for row in log:
+            name,entropy = row
+            if name not in scratch:
+                scratch[name] = []
+            scratch[name].append(float(entropy))
+    for name in scratch:
+        scratch[name] = mean(scratch[name])
+    with open("{}/entropy_all.csv".format(data_path),'w') as entropyFile:
+        entropyFile.write("Name,Entropy(bits)\n")
+        for name,entropy in scratch.items():
+            entropyFile.write("{},{}\n".format(name,entropy))
+
+
+
+def main(config_dir): #TODO: get pareto front from all reps
     final_pops = []
     fitness_logs = []
+    entropy_logs = []
 
     for run_dir in os.listdir(config_dir):
         full_path = "{}/{}".format(config_dir, run_dir)
         if run_dir.endswith(".json"):
             config_file = json.load(open(full_path))
         elif not os.path.isfile(full_path):
-            with open("{}/final_pop.pkl".format(full_path), "rb") as f:
-                final_pops.append(pickle.load(f))
-            with open("{}/fitness_log.pkl".format(full_path), "rb") as f:
-                fitness_logs.append(pickle.load(f))
+            if os.path.exists("{}/final_pop.pkl".format(full_path)):
+                with open("{}/final_pop.pkl".format(full_path), "rb") as f:
+                    final_pops.append(pickle.load(f))
+                with open("{}/fitness_log.pkl".format(full_path), "rb") as f:
+                    fitness_logs.append(pickle.load(f))
+                with open("{}/entropy.csv".format(full_path), "r") as f:
+                    rdr = reader(f)
+                    _ = next(f) #remove header
+                    entropy_logs.append([line for line in rdr])
 
     data_path = "{}/{}".format(config_file["data_dir"], config_file["name"])
     if not os.path.exists(data_path):
@@ -75,6 +127,8 @@ def main(config_dir):
     final_pop_distribution(eval_obj, final_pops, eval_funcs, data_path, plot_all=False)
     plot_fitnesses_sep(fitness_logs, eval_funcs.keys(), data_path)
     plot_fitnesses_error(fitness_logs, eval_funcs.keys(), data_path)
+    combined_pareto_front(final_pops,config_file,data_path)
+    combined_entropy(entropy_logs,data_path)
 
 
 if __name__ == "__main__":
