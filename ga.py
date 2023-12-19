@@ -10,6 +10,7 @@ from organism import Organism
 def T(LL:list[list]) -> list[list]:
     return list(zip(*LL))
 
+
 #inspired by: Deb, Kalyanmoy, et al.
 #"A fast and elitist multiobjective genetic algorithm: NSGA-II."
 #IEEE transactions on evolutionary computation 6.2 (2002): 182-197.
@@ -21,9 +22,6 @@ def getDiverseChoice(organismList:list[Organism]) -> list[float]:
         extremeOrganisms.append(objectiveScores[0][1])
         extremeOrganisms.append(objectiveScores[-1][1])
     return sample(extremeOrganisms,k=1)[0]
-
-
-
 
 
 def epsilonLexicase(population:list[Organism], numParents:int, popsize:int, eval_funcs:dict, epsilon:float) -> list[Organism]:
@@ -42,9 +40,7 @@ def epsilonLexicase(population:list[Organism], numParents:int, popsize:int, eval
                 parents.append(population[cut[0]])
                 break
         if len(cut) > 1:
-            # parents.append(population[sample(cut,k=1)[0]]) #if choices remain after all objectives, choose randomly
             parents.append(getDiverseChoice([population[c] for c in cut])) #if choices remain after all objectives, choose diverse
-
     return parents
 
 

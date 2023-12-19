@@ -48,6 +48,7 @@ def plot_fitnesses_sep(fitness_logs, eval_func_names, save_loc, transparent=Fals
     plt.savefig("{}/fitness.png".format(save_loc))
     plt.close()
 
+
 def combined_pareto_front(final_pops,config,save_loc=None):
     paretoFront = []
     #sort
@@ -73,6 +74,7 @@ def combined_pareto_front(final_pops,config,save_loc=None):
             else:
                 plt.show()
 
+
 def main(config_dir): #TODO: get pareto front from all reps
     final_pops = []
     fitness_logs = []
@@ -87,7 +89,6 @@ def main(config_dir): #TODO: get pareto front from all reps
                     final_pops.append(pickle.load(f))
                 with open("{}/fitness_log.pkl".format(full_path), "rb") as f:
                     fitness_logs.append(pickle.load(f))
-
 
     data_path = "{}/{}".format(config_file["data_dir"], config_file["name"])
     if not os.path.exists(data_path):
