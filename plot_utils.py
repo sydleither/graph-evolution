@@ -39,7 +39,7 @@ def final_pop_histogram(eval_obj, final_pop, eval_funcs, save_loc, plot_all=True
     num_plots = len(property_names)
     if num_plots == 0:
         return
-    fig_col_cnt = 1 if num_plots == 1 else 2 if num_plots <= 4 else 4
+    fig_col_cnt = 2 if num_plots <= 4 else 4
     fig_row_cnt = ceil(num_plots/fig_col_cnt)
     figure, axis = plt.subplots(fig_row_cnt, fig_col_cnt, figsize=(5*fig_row_cnt, 3*fig_col_cnt), squeeze=False)
     fig_row = 0
@@ -88,7 +88,7 @@ def final_pop_distribution(eval_obj, final_pop, eval_funcs, save_loc, plot_all=T
     num_plots = len(distributions)
     if num_plots == 0:
         return
-    fig_row_cnt = 1 if num_plots == 1 else 2 if num_plots <= 4 else 4
+    fig_row_cnt = 2 if num_plots <= 4 else 4
     fig_col_cnt = ceil(num_plots/fig_row_cnt)
     figure, axis = plt.subplots(fig_row_cnt, fig_col_cnt, figsize=(4*fig_row_cnt, 4*fig_col_cnt), squeeze=False)
     fig_row = 0
