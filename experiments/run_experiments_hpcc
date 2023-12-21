@@ -1,0 +1,25 @@
+cd /mnt/scratch/leithers/graph-evolution
+cp /mnt/home/leithers/graph_evolution/graph-evolution/main.py .
+cp /mnt/home/leithers/graph_evolution/graph-evolution/ga.py .
+cp /mnt/home/leithers/graph_evolution/graph-evolution/eval_functions.py .
+cp /mnt/home/leithers/graph_evolution/graph-evolution/organism.py .
+cp /mnt/home/leithers/graph_evolution/graph-evolution/bintools.py .
+cp /mnt/home/leithers/graph_evolution/graph-evolution/plot_utils.py .
+sbatch /mnt/home/leithers/graph_evolution/graph-evolution/experiments/hpcc.sb connectance__025_10.json
+sbatch /mnt/home/leithers/graph_evolution/graph-evolution/experiments/hpcc.sb connectance__025_50.json
+sbatch /mnt/home/leithers/graph_evolution/graph-evolution/experiments/hpcc.sb connectance__025_100.json
+sbatch /mnt/home/leithers/graph_evolution/graph-evolution/experiments/hpcc.sb connectance__05_10.json
+sbatch /mnt/home/leithers/graph_evolution/graph-evolution/experiments/hpcc.sb connectance__05_50.json
+sbatch /mnt/home/leithers/graph_evolution/graph-evolution/experiments/hpcc.sb connectance__05_100.json
+sbatch /mnt/home/leithers/graph_evolution/graph-evolution/experiments/hpcc.sb connectance__075_10.json
+sbatch /mnt/home/leithers/graph_evolution/graph-evolution/experiments/hpcc.sb connectance__075_50.json
+sbatch /mnt/home/leithers/graph_evolution/graph-evolution/experiments/hpcc.sb connectance__075_100.json
+sbatch /mnt/home/leithers/graph_evolution/graph-evolution/experiments/hpcc.sb connectance_DD_025_10.json
+sbatch /mnt/home/leithers/graph_evolution/graph-evolution/experiments/hpcc.sb connectance_DD_025_50.json
+sbatch /mnt/home/leithers/graph_evolution/graph-evolution/experiments/hpcc.sb connectance_DD_025_100.json
+sbatch /mnt/home/leithers/graph_evolution/graph-evolution/experiments/hpcc.sb connectance_DD_05_10.json
+sbatch /mnt/home/leithers/graph_evolution/graph-evolution/experiments/hpcc.sb connectance_DD_05_50.json
+sbatch /mnt/home/leithers/graph_evolution/graph-evolution/experiments/hpcc.sb connectance_DD_05_100.json
+sbatch /mnt/home/leithers/graph_evolution/graph-evolution/experiments/hpcc.sb connectance_DD_075_10.json
+sbatch /mnt/home/leithers/graph_evolution/graph-evolution/experiments/hpcc.sb connectance_DD_075_50.json
+sbatch /mnt/home/leithers/graph_evolution/graph-evolution/experiments/hpcc.sb connectance_DD_075_100.json
