@@ -48,8 +48,8 @@ def connectance_experiment(generate_script):
     }
     configs += connectance_configs(eval_funcs, "DD")
 
-    #generate bash script to run all the configs on the hpcc
     if generate_script:
+        #generate bash script to run all the configs on the hpcc
         with open("experiments/run_experiments_hpcc", "w") as f:
             f.write("cd /mnt/scratch/leithers/graph-evolution\n")
             f.write("cp /mnt/home/leithers/graph_evolution/graph-evolution/main.py .\n"+
@@ -60,6 +60,11 @@ def connectance_experiment(generate_script):
                     "cp /mnt/home/leithers/graph_evolution/graph-evolution/plot_utils.py .\n")
             for config_name in configs:
                 f.write("sbatch /mnt/home/leithers/graph_evolution/graph-evolution/experiments/hpcc.sb {}.json\n".format(config_name))
+        #generate bash script to analyze the runs when they are all done
+        with open("experiments/analyze_experiments", "w") as f:
+            f.write("cd /mnt/home/leithers/graph_evolution/graph-evolution\n")
+            for config_name in configs:
+                f.write("python3 replicate_analysis.py $SCRATCH/graph-evolution/data/{}\n".format(config_name))
 
 
 if __name__ == "__main__":
