@@ -19,3 +19,4 @@
 #SBATCH --array=0-9
 
 python3 main.py ${1} ${SLURM_ARRAY_TASK_ID} > outfile.txt
+rm ${1}

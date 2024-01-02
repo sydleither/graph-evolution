@@ -61,7 +61,7 @@ def run(config):
     population = [Organism(config["network_size"], config["network_sparsity"], config["weight_range"]) for _ in range(popsize)]
     fitnessLog = {x:[] for x in eval_funcs.keys()}
 
-    if False: ## use maran process flag
+    if config["scheme"] == "lexicase": ## use maran process flag
         for gen in range(config["num_generations"]*popsize):
             if gen%popsize == 0:
                 print("Gen", gen//popsize)
@@ -81,7 +81,7 @@ def run(config):
             func_fitnesses = [org.getEvaluationScores({func_name:funcPack})[func_name] for org in population]
             # fitnessLog[func_name].append(mean(func_fitnesses))
 
-    elif True: ## use nsga II flag
+    elif config["scheme"] == "NSGAII": ## use nsga II flag
         #Algorithm from: Deb, Kalyanmoy, et al.
         #"A fast and elitist multiobjective genetic algorithm: NSGA-II."
         #IEEE transactions on evolutionary computation 6.2 (2002): 182-197.

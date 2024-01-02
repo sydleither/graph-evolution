@@ -4,34 +4,36 @@ import sys
 
 def connectance_configs(eval_funcs, property_names):
     exp_names = []
-    for connectance in [0.25, 0.5, 0.75]:
-        for size in [10, 50, 100]:
-            exp_name = "connectance_{}_{}_{}".format(property_names, str(connectance).replace('.', ''), size)
+    for scheme in ["lexicase", "NSGAII"]:
+        for connectance in [0.25, 0.5, 0.75]:
+            for size in [10, 50, 100]:
+                exp_name = "connectance_{}_{}_{}".format(property_names, str(connectance).replace('.', ''), size)
 
-            eval_funcs["connectance"] = {"target":connectance}
+                eval_funcs["connectance"] = {"target":connectance}
 
-            config = {
-                "data_dir": "data",
-                "name": exp_name,
-                "reps": 1,
-                "save_data": 1,
-                "plot_data": 0,
-                "popsize": 100,
-                "mutation_rate": 0.005,
-                "mutation_odds": [1,2,1],
-                "crossover_odds": [1,2,2],
-                "crossover_rate": 0.6,
-                "weight_range": [0,1],
-                "network_size": size,
-                "network_sparsity": 1-connectance,
-                "num_generations": 500,
-                "epsilon": 0.025,
-                "eval_funcs": eval_funcs
-            }
+                config = {
+                    "data_dir": "data",
+                    "name": exp_name,
+                    "reps": 1,
+                    "save_data": 1,
+                    "plot_data": 0,
+                    "scheme": scheme,
+                    "popsize": 250,
+                    "mutation_rate": 0.005,
+                    "mutation_odds": [1,2,1],
+                    "crossover_odds": [1,2,2],
+                    "crossover_rate": 0.6,
+                    "weight_range": [-1,1],
+                    "network_size": size,
+                    "network_sparsity": 1-connectance,
+                    "num_generations": 1000,
+                    "epsilon": 0.025,
+                    "eval_funcs": eval_funcs
+                }
 
-            config_path = "experiments/configs/{}.json".format(exp_name)
-            with open(config_path, "w") as f:
-                json.dump(config, f, indent=4)
+                config_path = "experiments/configs/{}.json".format(exp_name)
+                with open(config_path, "w") as f:
+                    json.dump(config, f, indent=4)
 
             exp_names.append(exp_name)
     return exp_names
