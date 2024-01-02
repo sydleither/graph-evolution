@@ -43,7 +43,13 @@ def sparsify(x, percentSparse:float = 0.5, outputRange:tuple[float]=(-1,1)):
 
 
 class Organism:
+    nextID = 0
     def __init__(self, numNodes:int, sparsity:float, weightRange, genome:list[list[float]]=None) -> None:
+        self.id = Organism.nextID
+        Organism.nextID += 1
+        self.nsga_rank = None
+        self.nsga_distance = None
+
         if genome is None:
             self.genotypeMatrix:list[list[float]] = [[random() for _ in range(numNodes)] for _ in range(numNodes)]
         else:
