@@ -122,6 +122,10 @@ def run(config):
             for func_name, funcPack in eval_funcs.items():
                 func_fitnesses = [org.getEvaluationScores({func_name:funcPack})[func_name] for org in children]
 
+    else:
+        print("Please give a valid selection scheme: lexicase or NSGAII")
+        exit()
+
     return population, fitnessLog
 
 
