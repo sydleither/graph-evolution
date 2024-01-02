@@ -32,6 +32,7 @@ def plot_fitnesses_error(fitness_logs, eval_func_names, save_loc, transparent=Fa
 
 def plot_fitnesses_sep(fitness_logs, eval_func_names, save_loc, transparent=False):
     num_plots = len(eval_func_names)
+    num_plots = num_plots if num_plots > 1 else 2
     figure, axis = plt.subplots(num_plots, 1, figsize=(5,3*num_plots))
     i = 0
     for func_name in eval_func_names:
@@ -92,7 +93,6 @@ def combined_entropy(logs,data_path):
         entropyFile.write("Name,Entropy(bits)\n")
         for name,entropy in scratch.items():
             entropyFile.write("{},{}\n".format(name,entropy))
-
 
 
 def main(config_dir): #TODO: get pareto front from all reps
