@@ -7,7 +7,7 @@ def connectance_configs(eval_funcs, property_names):
     for scheme in ["lexicase", "NSGAII"]:
         for connectance in [0.25, 0.5, 0.75]:
             for size in [10, 50, 100]:
-                exp_name = "connectance_{}_{}_{}".format(property_names, str(connectance).replace('.', ''), size)
+                exp_name = "{}_connectance_{}_{}_{}".format(scheme, property_names, str(connectance).replace('.', ''), size)
 
                 eval_funcs["connectance"] = {"target":connectance}
 
@@ -35,7 +35,7 @@ def connectance_configs(eval_funcs, property_names):
                 with open(config_path, "w") as f:
                     json.dump(config, f, indent=4)
 
-            exp_names.append(exp_name)
+                exp_names.append(exp_name)
     return exp_names
 
 
