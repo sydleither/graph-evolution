@@ -75,7 +75,6 @@ def run_rep(i, save_loc, config):
         diversity(final_pop,config,save_loc_i)
 
     if config["plot_data"] == 1:
-        # eval_obj = Evaluation(config)
         plot_fitness(fitness_log, config["eval_funcs"].keys(), save_loc_i)
         final_pop_histogram(eval_obj, final_pop, config["eval_funcs"], save_loc_i, plot_all=True)
         final_pop_histogram(eval_obj, final_pop, config["eval_funcs"], save_loc_i, plot_all=False)
@@ -87,17 +86,16 @@ def run_rep(i, save_loc, config):
 
 def main(config, rep=None):
     save_loc = "{}/{}".format(config["data_dir"], config["name"])
-    if not os.path.exists(save_loc):
-        os.makedirs(save_loc)
-    config_path = "{}/config.json".format(save_loc)
-    with open(config_path, "w") as f:
-        json.dump(config, f, indent=4)
 
     if rep:
         run_rep(rep, save_loc, config)
     else:
         for i in range(config["reps"]):
             run_rep(i, save_loc, config)
+
+    config_path = "{}/config.json".format(save_loc)
+    with open(config_path, "w") as f:
+        json.dump(config, f, indent=4)
 
 
 if __name__ == "__main__":

@@ -14,13 +14,14 @@ def T(LL:list[list]) -> list[list]:
 #inspired by: Deb, Kalyanmoy, et al.
 #"A fast and elitist multiobjective genetic algorithm: NSGA-II."
 #IEEE transactions on evolutionary computation 6.2 (2002): 182-197.
-def getDiverseChoice(organismList:list[Organism]) -> list[float]:
+def getDiverseChoice(organismList:list[Organism], objective_eval_funcs) -> list[float]:
     global eval_obj
     extremeOrganisms = []
     for funcName,eval_func in eval_obj.functions.items():
-        objectiveScores = sorted([(org.getProperty(funcName,eval_func),org) for org in organismList],key=lambda x:x[0])
-        extremeOrganisms.append(objectiveScores[0][1])
-        extremeOrganisms.append(objectiveScores[-1][1])
+        if funcName not in objective_eval_funcs.keys():
+            objectiveScores = sorted([(org.getProperty(funcName,eval_func),org) for org in organismList],key=lambda x:x[0])
+            extremeOrganisms.append(objectiveScores[0][1])
+            extremeOrganisms.append(objectiveScores[-1][1])
     return sample(extremeOrganisms,k=1)[0]
 
 
@@ -40,7 +41,7 @@ def epsilonLexicase(population:list[Organism], numParents:int, popsize:int, eval
                 parents.append(population[cut[0]])
                 break
         if len(cut) > 1:
-            parents.append(getDiverseChoice([population[c] for c in cut])) #if choices remain after all objectives, choose diverse
+            parents.append(getDiverseChoice([population[c] for c in cut], eval_funcs)) #if choices remain after all objectives, choose diverse
     return parents
 
 
