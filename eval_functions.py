@@ -89,11 +89,61 @@ class Evaluation:
 
 
     #node-level interaction strength properties
-    # def pos_in_weight_distribution(self, network:Organism) -> float:
-    #     nn = network.numNodes
-    #     networkx_obj = network.getNetworkxObject()
-    #     degree_sequence = sorted([networkx_obj.in_degree(n)/nn for n in networkx_obj.nodes()], reverse=True)
-    
+    def pos_out_weight_distribution(self, network:Organism) -> float:
+        networkx_obj = network.getNetworkxObject()
+        matrix = network.adjacencyMatrix
+        num_nodes = network.numNodes
+        degree_sequence = networkx_obj.out_degree()
+        count_weights = [0]*(num_nodes+1)
+        sum_weights = [0]*(num_nodes+1)
+        for n,d in degree_sequence:
+            sum_weights[d] += sum([x for x in matrix[n] if x > 0])
+            count_weights[d] += len([x for x in matrix[n] if x > 0])
+        avg_weights = [sum_weights[i]/count_weights[i] if count_weights[i] > 0 else 0 for i in range(num_nodes+1)]
+        return avg_weights
+
+
+    def pos_in_weight_distribution(self, network:Organism) -> float:
+        networkx_obj = network.getNetworkxObject()
+        matrix_T = list(zip(*network.adjacencyMatrix))
+        num_nodes = network.numNodes
+        degree_sequence = networkx_obj.in_degree()
+        count_weights = [0]*(num_nodes+1)
+        sum_weights = [0]*(num_nodes+1)
+        for n,d in degree_sequence:
+            sum_weights[d] += sum([x for x in matrix_T[n] if x > 0])
+            count_weights[d] += len([x for x in matrix_T[n] if x > 0])
+        avg_weights = [sum_weights[i]/count_weights[i] if count_weights[i] > 0 else 0 for i in range(num_nodes+1)]
+        return avg_weights
+
+
+    def neg_out_weight_distribution(self, network:Organism) -> float:
+        networkx_obj = network.getNetworkxObject()
+        matrix = network.adjacencyMatrix
+        num_nodes = network.numNodes
+        degree_sequence = networkx_obj.out_degree()
+        count_weights = [0]*(num_nodes+1)
+        sum_weights = [0]*(num_nodes+1)
+        for n,d in degree_sequence:
+            sum_weights[d] += sum([x for x in matrix[n] if x < 0])
+            count_weights[d] += len([x for x in matrix[n] if x < 0])
+        avg_weights = [sum_weights[i]/count_weights[i] if count_weights[i] > 0 else 0 for i in range(num_nodes+1)]
+        return avg_weights
+
+
+    def neg_in_weight_distribution(self, network:Organism) -> float:
+        networkx_obj = network.getNetworkxObject()
+        matrix_T = list(zip(*network.adjacencyMatrix))
+        num_nodes = network.numNodes
+        degree_sequence = networkx_obj.in_degree()
+        count_weights = [0]*(num_nodes+1)
+        sum_weights = [0]*(num_nodes+1)
+        for n,d in degree_sequence:
+            sum_weights[d] += sum([x for x in matrix_T[n] if x < 0])
+            count_weights[d] += len([x for x in matrix_T[n] if x < 0])
+        avg_weights = [sum_weights[i]/count_weights[i] if count_weights[i] > 0 else 0 for i in range(num_nodes+1)]
+        return avg_weights
+
 
     #interaction strength properties
     def positive_interactions_proportion(self, network:Organism) -> float:
