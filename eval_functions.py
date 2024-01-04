@@ -1,6 +1,7 @@
 import networkx as nx
 import numpy as np
 from organism import Organism
+from scipy.stats import norm
 
 
 class Evaluation:
@@ -19,10 +20,20 @@ class Evaluation:
 
     def __get_target_distribution__(self, dist_info:dict, num_nodes:int) -> list[float]:
         if "name" in dist_info.keys():
-            if dist_info["name"] == "scale-free":
+            if dist_info["name"] == "scale-free": #this is only appropiate for degree/weight distributions
                 gamma = dist_info["gamma"]
                 offset = dist_info["offset"]
                 return [0]+[(x+offset)**-gamma for x in range(num_nodes)]
+            if dist_info["name"] == "uniform":
+                return [dist_info["value"]]*(num_nodes+1)
+            if dist_info["name"] == "normal":
+                mew = dist_info["mean"]
+                sigma = dist_info["std"]
+                return [norm.pdf(x, loc=mew, scale=sigma) for x in range(num_nodes+1)]
+            if dist_info["name"] == "linear":
+                a = dist_info["a"]
+                b = dist_info["b"]
+                return [a*x+b for x in range(num_nodes+1)]
         if "target" in dist_info.keys():
             return dist_info["target"]
         print("Invalid distribution config")
