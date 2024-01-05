@@ -1,7 +1,7 @@
 import networkx as nx
 import numpy as np
 from organism import Organism
-from scipy.stats import norm
+from scipy.stats import norm, powerlaw
 
 
 class Evaluation:
@@ -20,10 +20,11 @@ class Evaluation:
 
     def __get_target_distribution__(self, dist_info:dict, num_nodes:int) -> list[float]:
         if "name" in dist_info.keys():
-            if dist_info["name"] == "scale-free": #this is only appropiate for degree/weight distributions
-                gamma = dist_info["gamma"]
-                offset = dist_info["offset"]
-                return [0]+[(x+offset)**-gamma for x in range(num_nodes)]
+            if dist_info["name"] == "scale-free":
+                a = dist_info["a"]
+                loc = dist_info["loc"]
+                scale = dist_info["scale"]
+                return [powerlaw.pdf(x, a=a, loc=loc, scale=scale) for x in range(num_nodes+1)]
             if dist_info["name"] == "uniform":
                 return [dist_info["value"]]*(num_nodes+1)
             if dist_info["name"] == "normal":

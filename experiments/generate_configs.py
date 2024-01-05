@@ -3,9 +3,24 @@ import sys
 
 
 def one_objective_configs(objective, target_dicts):
+    if objective == "strong_components":
+        target_dicts = [{"target": 1}]
+    elif objective == "number_of_competiton_pairs":
+        target_dicts = [{"target":x} for x in [0, 5, 10]]
+
     exp_names = []
     for scheme in ["lexicase", "NSGAII"]:
         for network_size in [10, 50, 100]:
+            if objective.endswith("degree_distribution"):
+                target_dicts = [{"name": "normal", "mean": network_size/4, "std": network_size/20}]
+            elif objective.startswith("neg_"):
+                target_dicts = [{"name": "uniform", "value": -0.25},
+                                {"name": "linear", "a":-1/network_size, "b": 0},
+                                {"name": "linear", "a":1/network_size, "b": -1}]
+            elif objective.startswith("pos_"):
+                target_dicts = [{"name": "uniform", "value": 0.25},
+                                {"name": "linear", "a":1/network_size, "b": 0},
+                                {"name": "linear", "a":-1/network_size, "b": 1}]
             for target_val_i in range(len(target_dicts)):
                 exp_name = "{}_{}_{}_{}".format(scheme, objective, target_val_i, network_size)
 
@@ -42,10 +57,7 @@ def one_objective_experiment(objectives, generate_script):
     #generate config files
     config_names = []
     for objective in objectives:
-        if objective.endswith("distribution"):
-            target_dicts = [{"name": "scale-free", "gamma": 2, "offset": 2}] #need to improve this
-        else:
-            target_dicts = [{"target": x} for x in [0.25, 0.5, 0.75]]
+        target_dicts = [{"target": x} for x in [0.25, 0.5, 0.75]]
         config_names += one_objective_configs(objective, target_dicts)
 
     if generate_script:
@@ -68,9 +80,9 @@ def one_objective_experiment(objectives, generate_script):
 
 
 if __name__ == "__main__":
-    objectives = ["connectance", "average_positive_interactions_strength", "number_of_competition_pairs", 
-                  "positive_interactions_proportion", "strong_components", "proportion_of_self_loops",
-                  "in_degree_distribution", "out_degree_distribution", "pos_in_weight_distribution",
+    #objectives = ["connectance", "average_positive_interactions_strength", "number_of_competiton_pairs", 
+                  #"positive_interactions_proportion", "strong_components", "proportion_of_self_loops"]
+    objectives = ["in_degree_distribution", "out_degree_distribution", "pos_in_weight_distribution",
                   "pos_out_weight_distribution", "neg_in_weight_distribution", "neg_out_weight_distribution"]
 
     experiment_name = sys.argv[1]
