@@ -218,7 +218,9 @@ class Organism:
         youInMe = all([theirKey in self.evaluationScores.keys() for theirKey in other.evaluationScores.keys()])
         if meInYou and youInMe:
             #NOTE: potential confusion, gtr defines 'better' based on having smallest score
-            return all([self.evaluationScores[prop] < other.evaluationScores[prop] for prop in self.evaluationScores.keys()])
+            noSelfWorse = all([self.evaluationScores[prop] <= other.evaluationScores[prop] for prop in self.evaluationScores.keys()])
+            someSelfBetter = any([self.evaluationScores[prop] < other.evaluationScores[prop] for prop in self.evaluationScores.keys()])
+            return noSelfWorse and someSelfBetter
         else:
             raise Exception("Organisms must be evaluated on the same criteria.",self.evaluationScores.keys(),other.evaluationScores.keys())
 
