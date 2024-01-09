@@ -161,7 +161,10 @@ class Organism:
             if name not in self.evaluationScores:
                 if name.endswith("distribution"):
                     org_dist = self.getProperty(name,evalFunc)
-                    self.evaluationScores[name] = sum([(org_dist[i]-targetValue[i])**2 for i in range(len(org_dist))])
+                    if name.endswith("weight_distribution"):
+                        self.evaluationScores[name] = sum([(org_dist[i]-targetValue[i])**2 for i in range(len(org_dist)) if org_dist[i] != 0])
+                    else:
+                        self.evaluationScores[name] = sum([(org_dist[i]-targetValue[i])**2 for i in range(len(org_dist))])
                 else:
                     self.evaluationScores[name] = (self.getProperty(name,evalFunc) - targetValue)**2
         return self.evaluationScores

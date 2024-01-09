@@ -50,7 +50,7 @@ def run(config):
     eval_obj = Evaluation(config)
     popsize = config["popsize"]
 
-    eval_funcs:dict[str:tuple[Callable,float]] = {}
+    eval_funcs:dict[str:tuple[Callable,float]] = {} #TODO: remove the dependancy on this object and refactor evaluationScores to take the config object
     for eval_func_name, eval_func_params in config["eval_funcs"].items():
         if eval_func_name.endswith("distribution"):
             target = eval_obj.target_dist_dict[eval_func_name]

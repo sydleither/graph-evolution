@@ -48,7 +48,7 @@ def plotParetoFront(population, config, save_loc=None):
 
 
 def diversity(population:list[Organism],config:dict,save_loc_i:str) :
-    global eval_obj
+    global eval_obj #TODO: this global reference breaks importing this function into other files
     N = config["popsize"]
     with open("{}/entropy.csv".format(save_loc_i),'w') as diversityFile:
         diversityFile.write("Name,Entropy(bits)\n")

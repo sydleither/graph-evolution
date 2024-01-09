@@ -5,22 +5,23 @@ import sys
 def one_objective_configs(objective, target_dicts):
     if objective == "strong_components":
         target_dicts = [{"target": 1}]
-    elif objective == "number_of_competiton_pairs":
-        target_dicts = [{"target":x} for x in [0, 5, 10]]
 
     exp_names = []
-    for scheme in ["lexicase", "NSGAII"]:
+    for scheme in ["NSGAII"]:
         for network_size in [10, 50, 100]:
-            if objective.endswith("degree_distribution"):
+            if objective == "number_of_competiton_pairs":
+                target_dicts = [{"target":x} for x in [0, network_size/5]]
+            elif objective.endswith("degree_distribution"):
                 target_dicts = [{"name": "normal", "mean": network_size/4, "std": network_size/20}]
             elif objective.startswith("neg_"):
                 target_dicts = [{"name": "uniform", "value": -0.25},
                                 {"name": "linear", "a":-1/network_size, "b": 0},
-                                {"name": "linear", "a":1/network_size, "b": -1}]
+                                {"target": [-(x%(network_size/5))/(network_size/5) for x in range(network_size)]}]
             elif objective.startswith("pos_"):
                 target_dicts = [{"name": "uniform", "value": 0.25},
                                 {"name": "linear", "a":1/network_size, "b": 0},
-                                {"name": "linear", "a":-1/network_size, "b": 1}]
+                                {"target": [(x%(network_size/5))/(network_size/5) for x in range(network_size)]}]
+            
             for target_val_i in range(len(target_dicts)):
                 exp_name = "{}_{}_{}_{}".format(scheme, objective, target_val_i, network_size)
 
@@ -40,7 +41,7 @@ def one_objective_configs(objective, target_dicts):
                     "weight_range": [-1,1],
                     "network_size": network_size,
                     "network_sparsity": 0.5,
-                    "num_generations": 500,
+                    "num_generations": 500 if network_size == 10 else 1000,
                     "epsilon": 0.025,
                     "eval_funcs": {objective: target_dict}
                 }
@@ -57,7 +58,7 @@ def one_objective_experiment(objectives, generate_script):
     #generate config files
     config_names = []
     for objective in objectives:
-        target_dicts = [{"target": x} for x in [0.25, 0.5, 0.75]]
+        target_dicts = [{"target": x} for x in [0.25, 0.75]]
         config_names += one_objective_configs(objective, target_dicts)
 
     if generate_script:
@@ -80,14 +81,15 @@ def one_objective_experiment(objectives, generate_script):
 
 
 if __name__ == "__main__":
-    #objectives = ["connectance", "average_positive_interactions_strength", "number_of_competiton_pairs", 
-                  #"positive_interactions_proportion", "strong_components", "proportion_of_self_loops"]
-    objectives = ["in_degree_distribution", "out_degree_distribution", "pos_in_weight_distribution",
-                  "pos_out_weight_distribution", "neg_in_weight_distribution", "neg_out_weight_distribution"]
-
     experiment_name = sys.argv[1]
     generate_script = True if len(sys.argv) == 3 else False
-    if experiment_name == "single":
+    if experiment_name == "single_prop":
+        objectives = ["connectance", "average_positive_interactions_strength", "number_of_competiton_pairs", 
+                      "positive_interactions_proportion", "strong_components", "proportion_of_self_loops"]
+        one_objective_experiment(objectives, generate_script)
+    if experiment_name == "single_dist":
+        objectives = ["in_degree_distribution", "out_degree_distribution", "pos_in_weight_distribution",
+                    "pos_out_weight_distribution", "neg_in_weight_distribution", "neg_out_weight_distribution"]
         one_objective_experiment(objectives, generate_script)
     else:
         print("Please give a valid experiment name.")
