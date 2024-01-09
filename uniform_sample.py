@@ -9,6 +9,7 @@ from collections import Counter
 from numpy import log2
 from typing import Callable
 
+
 def diversity(population:list[Organism],config:dict,save_loc_i:str) :
     global eval_obj
     N = config["popsize"]
@@ -19,6 +20,7 @@ def diversity(population:list[Organism],config:dict,save_loc_i:str) :
                                 else tuple(organism.getProperty(eval_func_name,eval_func)) for organism in population])
             entropy = -sum([(count/N)*log2(count/N) for count in typeCounter.values()])
             diversityFile.write("{},{}\n".format(eval_func_name,entropy))
+
 
 if __name__ == "__main__":
     try:
@@ -37,7 +39,6 @@ if __name__ == "__main__":
 
     print("Generating samples... (This may take some time)")
     samples = [Organism(NUM_NODES,random(),WEIGHT_RANGE) for n in range(numSamples)]
-    
 
     eval_obj = Evaluation(config)
 
@@ -67,11 +68,9 @@ if __name__ == "__main__":
             break
     print(len(cut), "organisms meet the specified requirements within", config["epsilon"], "%")
     
-
-
     #init save location
     if not os.path.exists(save_loc):
-            os.makedirs(save_loc)
+        os.makedirs(save_loc)
 
     print("Plotting data...")
 
