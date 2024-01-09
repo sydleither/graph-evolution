@@ -32,6 +32,7 @@ if __name__ == "__main__":
     numSamples = config["popsize"]
     NUM_NODES = config["network_size"]
     WEIGHT_RANGE = config["weight_range"]
+    E = config["epsilon"]
     save_loc = "{}/{}".format(config["data_dir"], config["name"]+"UNIFORM")
 
     print("Generating samples... (This may take some time)")
@@ -48,9 +49,25 @@ if __name__ == "__main__":
         else:
             target = eval_func_params["target"] if "target" in eval_func_params.keys() else 0
         eval_funcs[eval_func_name] = (eval_obj.functions[eval_func_name], target)
+
     #use eval dict to eval all organisms
     for func_name, funcPack in eval_funcs.items():
         func_fitnesses = [org.getEvaluationScores({func_name:funcPack})[func_name] for org in samples]
+
+    #check how many solutions in the sampled set meet the specified targets
+    cut:list[int] = [i for i in range(numSamples)] #IDs of organisms that 'make the cut'
+    for name, func_params in config["eval_funcs"].items():
+        if name.endswith("distribution"):
+            T = eval_obj.target_dist_dict[name]
+            cut = [i for i in cut if sum([abs(o-t) for o,t in zip(samples[i].getProperty(name,eval_funcs[name]),T)]) <= E] #total absolute error <= epsilon
+        else:
+            T = func_params["target"]
+            cut = [i for i in cut if T*(1-E) <= samples[i].getProperty(name,eval_funcs[name]) <= T*(1+E)]
+        if len(cut) == 0:
+            break
+    print(len(cut), "organisms meet the specified requirements within", config["epsilon"], "%")
+    
+
 
     #init save location
     if not os.path.exists(save_loc):
