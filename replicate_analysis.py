@@ -95,7 +95,7 @@ def combined_entropy(logs,data_path):
             entropyFile.write("{},{}\n".format(name,entropy))
 
 
-def main(config_dir): #TODO: get pareto front from all reps
+def main(config_dir):
     final_pops = []
     fitness_logs = []
     entropy_logs = []
