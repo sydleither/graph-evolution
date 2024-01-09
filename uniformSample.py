@@ -7,6 +7,7 @@ import json
 import os
 from collections import Counter
 from numpy import log2
+from typing import Callable
 
 def diversity(population:list[Organism],config:dict,save_loc_i:str) :
     global eval_obj
@@ -35,19 +36,40 @@ if __name__ == "__main__":
 
     print("Generating samples... (This may take some time)")
     samples = [Organism(NUM_NODES,random(),WEIGHT_RANGE) for n in range(numSamples)]
+    
 
     eval_obj = Evaluation(config)
+
+    #build eval dict
+    eval_funcs:dict[str:tuple[Callable,float]] = {}
+    for eval_func_name, eval_func_params in config["eval_funcs"].items():
+        if eval_func_name.endswith("distribution"):
+            target = eval_obj.target_dist_dict[eval_func_name]
+        else:
+            target = eval_func_params["target"] if "target" in eval_func_params.keys() else 0
+        eval_funcs[eval_func_name] = (eval_obj.functions[eval_func_name], target)
+    #use eval dict to eval all organisms
+    for func_name, funcPack in eval_funcs.items():
+        func_fitnesses = [org.getEvaluationScores({func_name:funcPack})[func_name] for org in samples]
+
+    #init save location
     if not os.path.exists(save_loc):
             os.makedirs(save_loc)
+
     print("Plotting data...")
+
     print("All histograms...")
     final_pop_histogram(eval_obj, samples, config["eval_funcs"], save_loc, plot_all=True)
+
     print("Distributions with error...")
     final_pop_distribution(eval_obj, samples, config["eval_funcs"], save_loc, plot_all=True, with_error=False)
+    
     print("All distributions...")
     final_pop_distribution(eval_obj, samples, config["eval_funcs"], save_loc, plot_all=True, with_error=True)
     
-    # plotParetoFront(samples, config, save_loc)
+    print("Saving Pareto Front")
+    plotParetoFront(samples, config, save_loc)
+
     print("Saving Entropies...")
     diversity(samples,config,save_loc)
 
