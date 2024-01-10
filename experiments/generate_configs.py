@@ -1,3 +1,4 @@
+from itertools import combinations
 import json
 import sys
 
@@ -35,22 +36,13 @@ def experiment_config(objectives_name, objectives, target_dicts, network_size):
     return exp_name
 
 
-def one_objective_experiment(objectives):
-    config_names = []
-    for objective in objectives:
-        for network_size in [10, 50, 100]:
-            target_dicts = set_target_dicts(objective, network_size)
-            for i in range(len(target_dicts)):
-                target_dict = target_dicts[i]
-                config_names.append(experiment_config("{}_{}".format(objective, i), [objective], [target_dict], network_size))
-    return config_names
-
-
 def set_target_dicts(objective, network_size):
     if objective == "strong_components":
         target_dicts = [{"target": 1}]
+    elif objective == "proportion_of_self_loops":
+        target_dicts = [{"target": 0}, {"target": 1}]
     elif objective == "number_of_competiton_pairs":
-        target_dicts = [{"target":x} for x in [0, network_size/5]]
+        target_dicts = [{"target": 0}, {"target": network_size/5}]
     elif objective.endswith("degree_distribution"):
         ns_inv = 1/network_size
         if network_size == 10:
@@ -60,15 +52,11 @@ def set_target_dicts(objective, network_size):
         basically_norm = [ns_inv*np.round(norm.pdf(x, loc=network_size/4, scale=network_size/10)/ns_inv) for x in range(network_size+1)]
         target_dicts = [{"target": basically_norm}, {"target": basically_exp}]
     elif objective.startswith("neg_"):
-        target_dicts = [{"name": "uniform", "value": -0.25},
-                        {"name": "linear", "a":-1/network_size, "b": 0},
-                        {"target": [-(x%(network_size/5))/(network_size/5) for x in range(network_size)]}]
+        target_dicts = [{"name": "uniform", "value": -0.25}, {"name": "linear", "a":-1/network_size, "b": 0}]
     elif objective.startswith("pos_"):
-        target_dicts = [{"name": "uniform", "value": 0.25},
-                        {"name": "linear", "a":1/network_size, "b": 0},
-                        {"target": [(x%(network_size/5))/(network_size/5) for x in range(network_size)]}]
+        target_dicts = [{"name": "uniform", "value": 0.25}, {"name": "linear", "a":1/network_size, "b": 0}]
     else:
-        target_dicts = [{"target": 0.25}, {"target": 0.75}]
+        target_dicts = [{"target": 0.25}]
     return target_dicts
 
 
@@ -91,6 +79,31 @@ def generate_scripts(config_names):
             f.write("python3 replicate_analysis.py $SCRATCH/graph-evolution/data/{}\n".format(config_name))
 
 
+def one_objective_experiment(objectives):
+    config_names = []
+    for objective in objectives:
+        for network_size in [10, 50, 100]:
+            target_dicts = set_target_dicts(objective, network_size)
+            for i in range(len(target_dicts)):
+                target_dict = target_dicts[i]
+                config_names.append(experiment_config("{}_{}".format(objective, i), [objective], [target_dict], network_size))
+    return config_names
+
+
+def two_objectives_experiment(objectives):
+    config_names = []
+    for network_size in [10, 50, 100]:
+        for objective_pair in objectives:
+            target_dicts0 = set_target_dicts(objective_pair[0], network_size)
+            target_dicts1 = set_target_dicts(objective_pair[1], network_size)
+            for i in range(len(target_dicts0)):
+                for j in range(len(target_dicts1)):
+                    experiment_name = "{}_{}_{}_{}".format(objective_pair[0], i, objective_pair[1], j)
+                    config_name = experiment_config(experiment_name, objective_pair, [target_dicts0[i], target_dicts1[j]], network_size)
+                    config_names.append(config_name)
+    return config_names
+
+
 if __name__ == "__main__":
     experiment_name = sys.argv[1]
     generate_script = True if len(sys.argv) == 3 else False
@@ -103,7 +116,15 @@ if __name__ == "__main__":
         objectives = ["in_degree_distribution", "out_degree_distribution", "pos_in_weight_distribution",
                     "pos_out_weight_distribution", "neg_in_weight_distribution", "neg_out_weight_distribution"]
         config_names = one_objective_experiment(objectives)
+    elif experiment_name == "two":
+        objectives = [["in_degree_distribution", "out_degree_distribution"], #interacting distributions
+                      ["in_degree_distribution", "pos_in_weight_distribution"], #independent distributions
+                      ["connectance", "strong_components"], #interacting properties
+                      ["connectance", "positive_interactions_proportion"]] #independent properties
+        config_names = two_objectives_experiment(objectives)
     else:
         print("Please give a valid experiment name.")
+        exit()
+    print(len(config_names))
     if generate_script:
         generate_scripts(config_names)
