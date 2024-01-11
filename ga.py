@@ -1,4 +1,4 @@
-from random import randint, sample, shuffle
+from random import randint, random, sample, shuffle
 from statistics import mean
 from typing import Callable
 
@@ -58,7 +58,7 @@ def run(config):
             target = eval_func_params["target"] if "target" in eval_func_params.keys() else 0
         eval_funcs[eval_func_name] = (eval_obj.functions[eval_func_name], target)
 
-    population = [Organism(config["network_size"], config["network_sparsity"], config["weight_range"]) for _ in range(popsize)]
+    population = [Organism(config["network_size"], random(), config["weight_range"]) for _ in range(popsize)]
     fitnessLog = {x:[] for x in eval_funcs.keys()}
 
     if config["scheme"] == "lexicase": ## use maran process flag
@@ -90,7 +90,7 @@ def run(config):
             func_fitnesses = [org.getEvaluationScores({func_name:funcPack})[func_name] for org in population]
             fitnessLog[func_name].append(mean(func_fitnesses))
         #init some random children
-        children = [Organism(config["network_size"], config["network_sparsity"], config["weight_range"]) for _ in range(popsize)]
+        children = [Organism(config["network_size"], random(), config["weight_range"]) for _ in range(popsize)]
         #evaluate all children
         for func_name, funcPack in eval_funcs.items():
             func_fitnesses = [org.getEvaluationScores({func_name:funcPack})[func_name] for org in children]
