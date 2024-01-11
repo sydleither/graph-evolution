@@ -77,7 +77,6 @@ def run_rep(i, save_loc, config):
     if config["plot_data"] == 1:
         plot_fitness(fitness_log, config["eval_funcs"].keys(), save_loc_i)
         final_pop_histogram(eval_obj, final_pop, config["eval_funcs"], save_loc_i, plot_all=True)
-        final_pop_histogram(eval_obj, final_pop, config["eval_funcs"], save_loc_i, plot_all=False)
         final_pop_distribution(eval_obj, final_pop, config["eval_funcs"], save_loc_i, plot_all=True, with_error=False)
         final_pop_distribution(eval_obj, final_pop, config["eval_funcs"], save_loc_i, plot_all=True, with_error=True)
         plotParetoFront(final_pop, config, save_loc_i)

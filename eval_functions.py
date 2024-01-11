@@ -167,6 +167,12 @@ class Evaluation:
         sum_pos = sum([sum([y for y in x if y > 0]) for x in network.adjacencyMatrix])
         num_pos = network.numPositive
         return  sum_pos / num_pos if num_pos > 0 else 0
+    
+
+    def average_negative_interactions_strength(self, network:Organism) -> float:
+        sum_neg = sum([sum([y for y in x if y < 0]) for x in network.adjacencyMatrix])
+        num_neg = network.numNegative
+        return  sum_neg / num_neg if num_neg > 0 else 0
 
 
     def proportion_of_self_loops_positive(self, network:Organism) -> float:

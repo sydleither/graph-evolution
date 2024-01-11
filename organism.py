@@ -68,6 +68,8 @@ class Organism:
         self.numInteractions:int = sum([sum([1 for val in row if val != 0]) for row in self.adjacencyMatrix])
         #internal number of positive interactions reference
         self.numPositive:int = sum([sum([1 for val in row if val > 0]) for row in self.adjacencyMatrix])
+        #internal number of negative interactions reference
+        self.numNegative:int = sum([sum([1 for val in row if val < 0]) for row in self.adjacencyMatrix])
 
 
     def makeMutatedCopy(self, mutationRate:float, mutationOdds:tuple[int]):
