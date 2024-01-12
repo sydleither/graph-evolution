@@ -16,7 +16,7 @@ def experiment_config(exp_dir, objectives_name, eval_funcs, network_size):
         "save_data": 1,
         "plot_data": 0,
         "scheme": "NSGAII",
-        "popsize": 100,
+        "popsize": 200,
         "mutation_rate": 0.005,
         "mutation_odds": [1,2,1],
         "crossover_odds": [1,2,2],
@@ -243,7 +243,7 @@ def six_objectives_experiment(exp_dir):
             "average_positive_interactions_strength": {"target": 0.75},
             "connectance": {"target": 0.25},
             "number_of_competiton_pairs": {"target": network_size/5},
-            "proportion_of_self_loops": {"target": 1},
+            "proportion_of_self_loops": {"target": 0.1},
         }
         ]
         for i,eval_func in enumerate(eval_funcs):
