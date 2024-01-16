@@ -10,6 +10,7 @@ import numpy as np
 from eval_functions import Evaluation
 from plot_utils import (T, calculate_standard_error, final_pop_distribution,
                         final_pop_histogram)
+from ga import fast_non_dominated_sort
 
 
 def plot_fitnesses_error(fitness_logs, eval_func_names, save_loc, transparent=False):
@@ -53,25 +54,28 @@ def plot_fitnesses_sep(fitness_logs, eval_func_names, save_loc, transparent=Fals
     plt.close()
 
 
-def combined_pareto_front(final_pops,config,save_loc=None):
-    paretoFront = []
+def combined_pareto_front(final_pops,config,save_loc=None,firstFrontOnly=False):
     #sort
-    for population in final_pops:
-        for i in range(config["popsize"]):
-            dominatedByPeers = any([population[j] > population[i] for j in range(config["popsize"]) if j != i])
-            dominatedByPareto = any([paretoFront[j] > population[i] for j in range(len(paretoFront))])
-            if not dominatedByPeers and not dominatedByPareto:
-                paretoFront.append(population[i])
+    allOrgs = [org for pop in final_pops for org in pop ]
+    newID = 0
+    for org in allOrgs:
+        org.id = newID
+        newID+= 1
+    allFronts = fast_non_dominated_sort(allOrgs)
     #plot
     funcNames = list(config["eval_funcs"].keys())
     for i, feature1 in enumerate(funcNames):
         for j, feature2 in enumerate(funcNames):
             if j <= i: continue
-            R = sorted(sorted([(org.evaluationScores[feature1], org.evaluationScores[feature2]) for org in paretoFront], key=lambda r: r[1], reverse=True), key=lambda r: r[0])
-            plt.plot(*T(R), marker="o", linestyle="--")
+            for frontNumber in sorted(allFronts.keys()):
+                R = sorted(sorted([(org.evaluationScores[feature1], org.evaluationScores[feature2]) for org in allFronts[frontNumber]],
+                                    key=lambda r: r[1], reverse=True), key=lambda r: r[0])
+                plt.plot(*T(R), marker="o", linestyle="--",label=frontNumber)
+                if firstFrontOnly: break
             plt.title(feature1+" "+feature2)
             plt.xlabel(feature1 + " MSE")
             plt.ylabel(feature2 + " MSE")
+            plt.legend()
             if save_loc is not None:
                 plt.savefig("{}/pareto_{}_{}.png".format(save_loc, feature1, feature2))
                 plt.close()
