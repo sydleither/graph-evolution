@@ -23,7 +23,7 @@ def experiment_config(exp_dir, objectives_name, eval_funcs, network_size):
         "weight_range": [-1,1],
         "network_size": network_size,
         "network_sparsity": 0.5,
-        "num_generations": 500 if network_size == 10 else 1000,
+        "num_generations": 500 if network_size == 10 else 2500,
         "epsilon": 0.025,
         "eval_funcs": eval_funcs
     }
@@ -76,7 +76,7 @@ def iteration_experiment(exp_dir):
             "out_degree_distribution": {"target": basically_exp},
             "strong_components": {"target": 1},
             "proportion_of_self_loops": {"target": 0},
-            "number_of_competiton_pairs": {"target": network_size/5},
+            #"number_of_competiton_pairs": {"target": network_size/5},
             "positive_interactions_proportion": {"target": 0.75}
         },
         {
@@ -85,7 +85,7 @@ def iteration_experiment(exp_dir):
             "positive_interactions_proportion": {"target": 0.75},
             "average_positive_interactions_strength": {"target": 0.75},
             "average_negative_interactions_strength": {"target": -0.25},
-            "number_of_competiton_pairs": {"target": network_size/5}
+            #"number_of_competiton_pairs": {"target": network_size/5}
         },
         {
             "positive_interactions_proportion": {"target": 0.75},
@@ -98,11 +98,12 @@ def iteration_experiment(exp_dir):
         ]
         for i in range(1,7):
             for j,eval_func in enumerate(eval_funcs):
-                combo = list(combinations(eval_func, i))
-                for k,c in enumerate(combo):
-                    new_eval_func = {c[x]:eval_func[c[x]] for x in range(len(c))}
-                    config_name = experiment_config(exp_dir, "{}_{}_{}".format(i, j, k), new_eval_func, network_size)
-                    config_names.append(config_name)
+                if j == 1:
+                    combo = list(combinations(eval_func, i))
+                    for k,c in enumerate(combo):
+                        new_eval_func = {c[x]:eval_func[c[x]] for x in range(len(c))}
+                        config_name = experiment_config(exp_dir, "{}_{}_{}".format(i, j, k), new_eval_func, network_size)
+                        config_names.append(config_name)
     return config_names
 
 
