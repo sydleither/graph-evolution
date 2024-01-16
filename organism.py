@@ -94,7 +94,9 @@ class Organism:
                     else:
                         print("ERROR: no mutation selected")
                         exit(1)
-        return Organism(self.numNodes,self.sparsity,self.weightRange,newGenome)
+        # sometimes add random offset to sparsity and clamp to [0,1]
+        newSparsity = self.sparsity if random() > mutationRate else min(1,max(0,self.sparsity + (random()/4)-(1/8)))
+        return Organism(self.numNodes,newSparsity,self.weightRange,newGenome)
 
     
     def xover_traversal_helper(self, other, rateFromOther, algorithm):
