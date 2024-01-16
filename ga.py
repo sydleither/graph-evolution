@@ -164,7 +164,7 @@ def fast_non_dominated_sort(population):
 #Algorithm from: Deb, Kalyanmoy, et al.
 #"A fast and elitist multiobjective genetic algorithm: NSGA-II."
 #IEEE transactions on evolutionary computation 6.2 (2002): 182-197.
-def crowding_distance_assignment(I):
+def crowding_distance_assignment(I:list[Organism]):
     l = len(I)
     if l == 0: return []
     for i in I:
@@ -177,7 +177,16 @@ def crowding_distance_assignment(I):
         if rng == 0: continue
         for i in range(1,l-2):
             I[i].nsga_distance += (I[i+1].evaluationScores[m]-I[i-1].evaluationScores[m])/rng
-
+    # additional modifications #
+    for j in range(I[0].numNodes):
+        for k in range(I[0].numNodes):
+            I.sort(key=lambda org: org.genotypeMatrix[j][k])
+            I[0].nsga_distance = float("inf")
+            I[-1].nsga_distance = float('inf')
+            rng = I[-1].genotypeMatrix[j][k] - I[0].genotypeMatrix[j][k]
+            if rng == 0: continue
+            for i in range(1,l-2):
+                I[i].nsga_distance += (I[i+1].genotypeMatrix[j][k]-I[i-1].genotypeMatrix[j][k])/rng
 
 #Algorithm from: Deb, Kalyanmoy, et al.
 #"A fast and elitist multiobjective genetic algorithm: NSGA-II."
