@@ -22,9 +22,8 @@ def experiment_config(exp_dir, objectives_name, eval_funcs, network_size):
         "crossover_rate": 0.6,
         "weight_range": [-1,1],
         "network_size": network_size,
-        "network_sparsity": 0.5,
-        "num_generations": 500 if network_size == 10 else 2500,
-        "epsilon": 0.025,
+        "num_generations": 500 if network_size == 10 else 5000,
+        "epsilon": 0.05,
         "eval_funcs": eval_funcs
     }
 
@@ -70,45 +69,42 @@ def iteration_experiment(exp_dir):
             basically_exp = [ns_inv*np.floor(expon.pdf(x, loc=1, scale=network_size/5)/ns_inv) for x in range(network_size+1)]
         else:
             basically_exp = [ns_inv*np.round(expon.pdf(x, loc=1, scale=network_size/5)/ns_inv) for x in range(network_size+1)]
+        basically_norm = [ns_inv*np.round(norm.pdf(x, loc=network_size/4, scale=network_size/10)/ns_inv) for x in range(network_size+1)]
         eval_funcs = [
         {
             "in_degree_distribution": {"target": basically_exp},
             "out_degree_distribution": {"target": basically_exp},
             "strong_components": {"target": 1},
             "proportion_of_self_loops": {"target": 0},
-            #"number_of_competiton_pairs": {"target": network_size/5},
             "positive_interactions_proportion": {"target": 0.75}
         },
         {
-            "in_degree_distribution": {"target": basically_exp},
-            "out_degree_distribution": {"target": basically_exp},
+            "in_degree_distribution": {"target": basically_norm},
+            "out_degree_distribution": {"target": basically_norm},
             "positive_interactions_proportion": {"target": 0.75},
             "average_positive_interactions_strength": {"target": 0.75},
             "average_negative_interactions_strength": {"target": -0.25},
-            #"number_of_competiton_pairs": {"target": network_size/5}
         },
         {
             "positive_interactions_proportion": {"target": 0.75},
             "average_negative_interactions_strength": {"target": -0.25},
             "average_positive_interactions_strength": {"target": 0.75},
             "connectance": {"target": 0.25},
-            "number_of_competiton_pairs": {"target": network_size/5},
-            "proportion_of_self_loops": {"target": 0.1},
+            "number_of_competiton_pairs": {"target": network_size/5}
         }
         ]
-        for i in range(1,7):
+        for i in range(1,6):
             for j,eval_func in enumerate(eval_funcs):
-                if j == 1:
-                    combo = list(combinations(eval_func, i))
-                    for k,c in enumerate(combo):
-                        new_eval_func = {c[x]:eval_func[c[x]] for x in range(len(c))}
-                        config_name = experiment_config(exp_dir, "{}_{}_{}".format(i, j, k), new_eval_func, network_size)
-                        config_names.append(config_name)
+                combo = list(combinations(eval_func, i))
+                for k,c in enumerate(combo):
+                    new_eval_func = {c[x]:eval_func[c[x]] for x in range(len(c))}
+                    config_name = experiment_config(exp_dir, "{}_{}_{}".format(i, j, k), new_eval_func, network_size)
+                    config_names.append(config_name)
     return config_names
 
 
 if __name__ == "__main__":
-    experiment_name = "iter"
+    experiment_name = "iter2"
     config_names = iteration_experiment(experiment_name)
     print(len(config_names))
     generate_scripts(experiment_name, config_names)

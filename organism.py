@@ -62,7 +62,7 @@ class Organism:
         self.evaluationScores:dict[str:float] = {}
         self.properties:dict = {}
 
-        self.adjacencyMatrix:list[list[float]] = [[sparsify(val,self.sparsity,self.weightRange) for val in row] for row in self.genotypeMatrix]
+        self.adjacencyMatrix:list[list[float]] = [[round(sparsify(val,self.sparsity,self.weightRange), 3) for val in row] for row in self.genotypeMatrix]
 
         #internal number of interactions reference
         self.numInteractions:int = sum([sum([1 for val in row if val != 0]) for row in self.adjacencyMatrix])
