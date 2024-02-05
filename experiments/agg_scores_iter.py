@@ -14,7 +14,7 @@ import matplotlib
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 
-sys.path.insert(0, '/mnt/ufs18/home-221/leithers/graph_evolution/graph-evolution')
+sys.path.insert(0, '/mnt/ufs18/home-221/leithers/graph_evolution/graph-evolution') #TODO fix
 from organism import Organism
 from eval_functions import Evaluation
 
@@ -31,7 +31,6 @@ def entropy_boxplot(df, x, y, hue, group, iter_path, num_obj):
     for g in df[group].unique():
         sns.boxplot(data=df.loc[df[group] == g], x=x, y=y, hue=hue, ax=axis[row][col])
         axis[row][col].set_yscale('log')
-        #axis[row][col].set_title("Experiment {}".format(row+col))
         row += 1
         if row % 4 == 0:
             col += 1
@@ -163,7 +162,7 @@ def save_entropy_df(data_dir):
                     eval_obj = Evaluation(config_file)
                     for property in OBJECTIVES_OF_INTEREST:
                         eval_func = getattr(eval_obj, property)
-                        if property.endswith("distribution"):
+                        if property.endswith("distribution"): #TODO not compatible with current version of getProperty
                             orgs = [tuple(org.getProperty(property, eval_func)) for org in final_pop]
                         else:
                             orgs = [org.getProperty(property, eval_func) for org in final_pop]
@@ -235,9 +234,7 @@ def set_comparison_figure():
     figure, axis = plt.subplots(1, 3, figsize=(16,5))
     col = 0
     for g in sorted(df["iter_path"].unique()):
-        hue_order = ["1", "2", "3", "4", "5"]
         x = sns.boxplot(data=df.loc[df["iter_path"] == g], x="objective", y="MSE", ax=axis[col])
-        #x.set(xlabel=None)
         x.set(ylabel="Error")
         #axis[col].set_yscale("log")
         axis[col].set_yscale('symlog', linthresh=np.min(df.loc[(df["iter_path"] == g) & (df["MSE"] > 0)]["MSE"]))
@@ -245,8 +242,6 @@ def set_comparison_figure():
         axis[col].set_title("Set {}".format(int(g)+1))
         col += 1
     figure.tight_layout(rect=[0, 0.03, 1, 0.95])
-    #figure.supxlabel("Objective")
-    #figure.supylabel("Error")
     figure.suptitle("Performance Over All Experiments For Each Set")
     plt.savefig("set_performance.png")
     plt.close()
@@ -258,10 +253,10 @@ def degree_dist_section_data():
     iter_path = "0"
     num_obj = "4"
 
-    # df1 = df.loc[(df["iter_path"] == iter_path) & (df["network_size"] == network_size) & (df["num_obj"] == num_obj)]
-    # df1 = df1.loc[(df["objective"] == "in_degree_distribution") | (df["objective"] == "out_degree_distribution")]
-    # print(df1[["iter_path", "combo", "num_obj", "objective", "MSE"]].groupby(["iter_path", "num_obj", "combo", "objective"]).mean())
-    # print(np.mean(df1["MSE"].values))
+    df1 = df.loc[(df["iter_path"] == iter_path) & (df["network_size"] == network_size) & (df["num_obj"] == num_obj)]
+    df1 = df1.loc[(df["objective"] == "in_degree_distribution") | (df["objective"] == "out_degree_distribution")]
+    print(df1[["iter_path", "combo", "num_obj", "objective", "MSE"]].groupby(["iter_path", "num_obj", "combo", "objective"]).mean())
+    print(np.mean(df1["MSE"].values))
 
     df1 = df.loc[(df["iter_path"] == iter_path)]
     dd_combos = set(df1.loc[(df1["objective"] == "in_degree_distribution") | (df1["objective"] == "out_degree_distribution")]["experiment_name"].values)
@@ -421,7 +416,7 @@ if __name__ == "__main__":
             save_five_obj_boxplots()
         elif sys.argv[-1] == "dist":
             degree_dist_section_data()
-        elif sys.argv[-1] == "obj":
+        elif sys.argv[-1] == "final":
             final_figures()
         elif sys.argv[-1] == "set":
             set_comparison_figure()

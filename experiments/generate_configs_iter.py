@@ -22,7 +22,7 @@ def experiment_config(exp_dir, objectives_name, eval_funcs, network_size):
         "crossover_rate": 0.6,
         "weight_range": [-1,1],
         "network_size": network_size,
-        "num_generations": 500 if network_size == 10 else 5000,
+        "num_generations": 500 if network_size == 10 else 10000,
         "epsilon": 0.05,
         "eval_funcs": eval_funcs
     }
@@ -41,7 +41,7 @@ def chunks(lst, n):
 
 
 def generate_scripts(exp_dir, config_names):
-    config_chunks = chunks(config_names, 99)
+    config_chunks = chunks(config_names, 93)
     for i,chunk in enumerate(config_chunks):
         #generate bash script to run all the configs on the hpcc
         with open(f"experiments/run_experiments_hpcc{i}", "w") as f:
@@ -104,7 +104,7 @@ def iteration_experiment(exp_dir):
 
 
 if __name__ == "__main__":
-    experiment_name = "iter2"
+    experiment_name = "iter3"
     config_names = iteration_experiment(experiment_name)
     print(len(config_names))
     generate_scripts(experiment_name, config_names)
