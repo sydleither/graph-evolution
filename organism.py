@@ -155,7 +155,7 @@ class Organism:
 
     def getProperty(self,propertyName,evalFunc):
         if propertyName not in self.properties:
-            self.properties[propertyName] = evalFunc(None,self) #i cannot explain why i must pass None here. probably a bug, but it crashes if i don't.
+            self.properties[propertyName] = evalFunc(None, self) #i cannot explain why i must pass None here. probably a bug, but it crashes if i don't.
         return self.properties[propertyName]
 
 

@@ -5,25 +5,27 @@ import sys
 from csv import reader
 from statistics import mean
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from eval_functions import Evaluation
-from plot_utils import (T, calculate_standard_error, final_pop_distribution,
+from plot_utils import (T, calculate_confidence_interval, final_pop_distribution,
                         final_pop_histogram)
 from ga import fast_non_dominated_sort
 
 
 def plot_fitnesses_error(fitness_logs, eval_func_names, save_loc, transparent=False):
+    matplotlib.rcParams.update({'font.size': 12})
     figure, axis = plt.subplots(1, 1)
     num_replicates = len(fitness_logs)
     for func_name in eval_func_names:
         eval_func_data = [fitness_logs[i][func_name] for i in range(num_replicates)]
-        eval_func_data_mean, neg_error, pos_error = calculate_standard_error(eval_func_data)
+        eval_func_data_mean, neg_error, pos_error = calculate_confidence_interval(eval_func_data)
         axis.plot(eval_func_data_mean, label=func_name)
         axis.fill_between(range(len(eval_func_data_mean)), neg_error, pos_error, alpha=0.5)
     axis.set_yscale("log")
     figure.supxlabel("Generations")
-    figure.supylabel("MSE")
+    figure.supylabel("Error")
     figure.legend()
     if transparent:
         figure.patch.set_alpha(0.0)
@@ -47,6 +49,7 @@ def plot_fitnesses_sep(fitness_logs, eval_func_names, save_loc, transparent=Fals
         i += 1
     figure.supxlabel("Generations")
     figure.supylabel("MSE")
+    figure.suptitle("Error Over Time")
     figure.tight_layout(rect=[0, 0.03, 1, 0.95])
     if transparent:
         figure.patch.set_alpha(0.0)

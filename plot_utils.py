@@ -2,6 +2,7 @@ from math import ceil
 
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.stats import t, sem, bootstrap
 from bintools import numBins
 from eval_functions import Evaluation
 
@@ -23,6 +24,19 @@ def calculate_standard_error(data:list[list[float]]) -> (list[float], list[float
     neg_error = [data_mean[i]-data_error[i] for i in range(num_across)]
     pos_error = [data_mean[i]+data_error[i] for i in range(num_across)]
     return data_mean, neg_error, pos_error
+
+
+def calculate_confidence_interval(data:list[list[float]], bootstrapped=False) -> (list[float], list[float], list[float]):
+    num_across = len(data[0])
+    data_t = T(data)
+    data_mean = lmap(np.mean, data_t)
+    if not bootstrapped:
+        intervals = [t.interval(confidence=0.95, df=len(data_t[i])-1, loc=data_mean[i], scale=sem(data_t[i])) for i in range(num_across)]
+    else:
+        intervals = [bootstrap((data_t[i],), np.mean, confidence_level=0.95, method="percentile").confidence_interval for i in range(num_across)]
+    lower = [intervals[i][0] for i in range(num_across)]
+    upper = [intervals[i][1] for i in range(num_across)]
+    return data_mean, lower, upper
 
 
 def final_pop_histogram(eval_obj, final_pop, eval_funcs, save_loc, plot_all=True, transparent=False):
@@ -52,7 +66,7 @@ def final_pop_histogram(eval_obj, final_pop, eval_funcs, save_loc, plot_all=True
         else:
             color = "black" if plotting_replicates else "forestgreen"
         eval_func = getattr(eval_obj, property_name)
-        if plotting_replicates:
+        if plotting_replicates: #TODO change to org.getProperty for efficiency
             data = [[eval_func(org) for org in final_pop[run]] for run in range(len(final_pop))] #TODO: use organism interface for properties so they can be cached
             axis[fig_row][fig_col].hist(data, bins=numBins([d for dd in data for d in dd]), stacked=True)
         else:
@@ -102,8 +116,8 @@ def final_pop_distribution(eval_obj, final_pop, eval_funcs, save_loc, plot_all=T
             color = "black" if plotting_replicates else "forestgreen"
         for pop in final_pop:
             eval_func = getattr(eval_obj, dist_name)
-            org_dists = [eval_func(org) for org in pop]
-            degree_mean, neg_error, pos_error = calculate_standard_error(org_dists)
+            org_dists = [eval_func(org) for org in pop] #TODO change to org.getProperty for efficiency
+            degree_mean, neg_error, pos_error = calculate_confidence_interval(org_dists)
             if plotting_replicates:
                 axis[fig_row][fig_col].plot(degree_mean, label=dist_name)
                 axis[fig_row][fig_col].fill_between(range(len(degree_mean)), neg_error, pos_error, alpha=0.5)
