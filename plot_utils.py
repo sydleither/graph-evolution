@@ -66,8 +66,8 @@ def final_pop_histogram(eval_obj, final_pop, eval_funcs, save_loc, plot_all=True
         else:
             color = "black" if plotting_replicates else "forestgreen"
         eval_func = getattr(eval_obj, property_name)
-        if plotting_replicates: #TODO change to org.getProperty for efficiency
-            data = [[eval_func(org) for org in final_pop[run]] for run in range(len(final_pop))] #TODO: use organism interface for properties so they can be cached
+        if plotting_replicates:
+            data = [[eval_func(org) for org in final_pop[run]] for run in range(len(final_pop))]
             axis[fig_row][fig_col].hist(data, bins=numBins([d for dd in data for d in dd]), stacked=True)
         else:
             data = [eval_func(org) for org in final_pop]
@@ -116,7 +116,7 @@ def final_pop_distribution(eval_obj, final_pop, eval_funcs, save_loc, plot_all=T
             color = "black" if plotting_replicates else "forestgreen"
         for pop in final_pop:
             eval_func = getattr(eval_obj, dist_name)
-            org_dists = [eval_func(org) for org in pop] #TODO change to org.getProperty for efficiency
+            org_dists = [eval_func(org) for org in pop]
             degree_mean, neg_error, pos_error = calculate_confidence_interval(org_dists)
             if plotting_replicates:
                 axis[fig_row][fig_col].plot(degree_mean, label=dist_name)
