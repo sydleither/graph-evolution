@@ -70,7 +70,7 @@ def view_dists():
     #get unique counts of properties in final pop
     config_file = json.load(open("{}/config.json".format(full_obj_path)))
     eval_obj = Evaluation(config_file)
-    for property in set(fitness_log.keys()): #change to objectives of interest and save in separate loc
+    for property in set(fitness_log.keys()):
         eval_func = getattr(eval_obj, property)
         if property.endswith("distribution"):
             orgs = [tuple(org.getProperty(property, eval_func)) for org in final_pop]
@@ -162,10 +162,10 @@ def save_entropy_df(data_dir):
                     eval_obj = Evaluation(config_file)
                     for property in OBJECTIVES_OF_INTEREST:
                         eval_func = getattr(eval_obj, property)
-                        if property.endswith("distribution"): #TODO not compatible with current version of getProperty
-                            orgs = [tuple(org.getProperty(property, eval_func)) for org in final_pop]
+                        if property.endswith("distribution"):
+                            orgs = [tuple(eval_func(org)) for org in final_pop]
                         else:
-                            orgs = [org.getProperty(property, eval_func) for org in final_pop]
+                            orgs = [eval_func(org) for org in final_pop]
                         unique_orgs = len(Counter(orgs))
                         entropy = entropy_df.loc[entropy_df["Name"] == property]["Entropy(bits)"].values[0]
                         if property in fitness_log:
