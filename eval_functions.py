@@ -5,14 +5,15 @@ from scipy.stats import norm, powerlaw
 
 
 class Evaluation:
-    def __init__(self, config) -> None:
-        self.config = config
+    def __init__(self, config=None) -> None:
+        if config is not None:
+            self.config = config
 
-        target_dist_dict = {}
-        for eval_func_name, eval_func_params in config["eval_funcs"].items():
-            if eval_func_name.endswith("distribution"):
-                target_dist_dict[eval_func_name] = self.__get_target_distribution__(eval_func_params, config["network_size"])
-        self.target_dist_dict = target_dist_dict
+            target_dist_dict = {}
+            for eval_func_name, eval_func_params in config["eval_funcs"].items():
+                if eval_func_name.endswith("distribution"):
+                    target_dist_dict[eval_func_name] = self.__get_target_distribution__(eval_func_params, config["network_size"])
+            self.target_dist_dict = target_dist_dict
         self.functions = {func:getattr(Evaluation, func) for func in dir(Evaluation) 
                           if callable(getattr(Evaluation, func)) and
                           not func.startswith("__")}
