@@ -1,7 +1,7 @@
 import networkx as nx
 import numpy as np
 from organism import Organism
-from scipy.stats import norm, powerlaw
+from scipy.stats import norm, powerlaw, expon
 
 
 class Evaluation:
@@ -36,6 +36,16 @@ class Evaluation:
                 a = dist_info["a"]
                 b = dist_info["b"]
                 return [a*x+b for x in range(num_nodes+1)]
+            if dist_info["name"] == "basically_exp":
+                ns_inv = 1/num_nodes
+                if num_nodes == 10:
+                    basically_exp = [ns_inv*np.floor(expon.pdf(x, loc=1, scale=num_nodes/5)/ns_inv) for x in range(num_nodes+1)]
+                else:
+                    basically_exp = [ns_inv*np.round(expon.pdf(x, loc=1, scale=num_nodes/5)/ns_inv) for x in range(num_nodes+1)]
+                return basically_exp
+            if dist_info["name"] == "basically_norm":
+                ns_inv = 1/num_nodes
+                return [ns_inv*np.round(norm.pdf(x, loc=num_nodes/4, scale=num_nodes/10)/ns_inv) for x in range(num_nodes+1)]
         if "target" in dist_info.keys():
             return dist_info["target"]
         print("Invalid distribution config")
