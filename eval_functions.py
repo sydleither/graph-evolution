@@ -100,6 +100,10 @@ class Evaluation:
 
     def clustering_coefficient(self, network:Organism) -> float:
         return nx.average_clustering(network.getNetworkxObject())
+    
+
+    def transitivity(self, network:Organism) -> float:
+        return nx.transitivity(network.getNetworkxObject())
 
 
     def proportion_of_self_loops(self, network:Organism) -> float:
@@ -109,7 +113,14 @@ class Evaluation:
     def diameter(self, network:Organism) -> int:
         shortest_path = dict(nx.shortest_path_length(network.getNetworkxObject()))
         return max([max(shortest_path[i].values()) for i in range(len(shortest_path))])
+    
 
+    def number_of_modules(self, network:Organism) -> int:
+        if network.numInteractions > 0:
+            return len(nx.community.greedy_modularity_communities(network.getNetworkxObject()))
+        else:
+            return 0
+    
 
     #node-level interaction strength properties
     def pos_out_weight_distribution(self, network:Organism) -> float:
