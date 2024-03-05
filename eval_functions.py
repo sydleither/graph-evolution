@@ -1,18 +1,19 @@
 import networkx as nx
 import numpy as np
 from organism import Organism
-from scipy.stats import norm, powerlaw
+from scipy.stats import norm, powerlaw, expon
 
 
 class Evaluation:
-    def __init__(self, config) -> None:
-        self.config = config
+    def __init__(self, config=None) -> None:
+        if config is not None:
+            self.config = config
 
-        target_dist_dict = {}
-        for eval_func_name, eval_func_params in config["eval_funcs"].items():
-            if eval_func_name.endswith("distribution"):
-                target_dist_dict[eval_func_name] = self.__get_target_distribution__(eval_func_params, config["network_size"])
-        self.target_dist_dict = target_dist_dict
+            target_dist_dict = {}
+            for eval_func_name, eval_func_params in config["eval_funcs"].items():
+                if eval_func_name.endswith("distribution"):
+                    target_dist_dict[eval_func_name] = self.__get_target_distribution__(eval_func_params, config["network_size"])
+            self.target_dist_dict = target_dist_dict
         self.functions = {func:getattr(Evaluation, func) for func in dir(Evaluation) 
                           if callable(getattr(Evaluation, func)) and
                           not func.startswith("__")}
@@ -35,6 +36,16 @@ class Evaluation:
                 a = dist_info["a"]
                 b = dist_info["b"]
                 return [a*x+b for x in range(num_nodes+1)]
+            if dist_info["name"] == "basically_exp":
+                ns_inv = 1/num_nodes
+                if num_nodes == 10:
+                    basically_exp = [ns_inv*np.floor(expon.pdf(x, loc=1, scale=num_nodes/5)/ns_inv) for x in range(num_nodes+1)]
+                else:
+                    basically_exp = [ns_inv*np.round(expon.pdf(x, loc=1, scale=num_nodes/5)/ns_inv) for x in range(num_nodes+1)]
+                return basically_exp
+            if dist_info["name"] == "basically_norm":
+                ns_inv = 1/num_nodes
+                return [ns_inv*np.round(norm.pdf(x, loc=num_nodes/4, scale=num_nodes/10)/ns_inv) for x in range(num_nodes+1)]
         if "target" in dist_info.keys():
             return dist_info["target"]
         print("Invalid distribution config")
@@ -89,6 +100,10 @@ class Evaluation:
 
     def clustering_coefficient(self, network:Organism) -> float:
         return nx.average_clustering(network.getNetworkxObject())
+    
+
+    def transitivity(self, network:Organism) -> float:
+        return nx.transitivity(network.getNetworkxObject())
 
 
     def proportion_of_self_loops(self, network:Organism) -> float:
@@ -98,7 +113,14 @@ class Evaluation:
     def diameter(self, network:Organism) -> int:
         shortest_path = dict(nx.shortest_path_length(network.getNetworkxObject()))
         return max([max(shortest_path[i].values()) for i in range(len(shortest_path))])
+    
 
+    def number_of_modules(self, network:Organism) -> int:
+        if network.numInteractions > 0:
+            return len(nx.community.greedy_modularity_communities(network.getNetworkxObject()))
+        else:
+            return 0
+    
 
     #node-level interaction strength properties
     def pos_out_weight_distribution(self, network:Organism) -> float:
