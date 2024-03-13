@@ -11,6 +11,7 @@ from eval_functions import functions
 from ga import fast_non_dominated_sort, run
 from organism import Organism
 from plot_utils import T, final_pop_distribution, final_pop_histogram
+from random import seed
 
 
 def plot_fitness(fitness_log, eval_func_names, save_loc, transparent=False):
@@ -66,6 +67,7 @@ def diversity(population:list[Organism],config:dict,save_loc_i:str) :
 
 
 def run_rep(i, save_loc, config):
+    seed(i)
     save_loc_i = "{}/{}".format(save_loc, i)
     if not os.path.exists(save_loc_i):
         os.makedirs(save_loc_i)
