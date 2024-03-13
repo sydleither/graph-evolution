@@ -1,16 +1,10 @@
 import networkx as nx
 import numpy as np
+
 from organism import Organism
-from scipy.stats import norm, powerlaw, expon
 
 
 class Evaluation:
-    def __init__(self) -> None:
-        self.functions = {func:getattr(Evaluation, func) for func in dir(Evaluation) 
-                        if callable(getattr(Evaluation, func)) and
-                        not func.startswith("__")}
-
-
     #node-level topological properties
     def in_degree_distribution(self, network:Organism) -> list[float]:
         networkx_obj = network.getNetworkxObject()
@@ -176,3 +170,24 @@ class Evaluation:
         adj = network.adjacencyMatrix
         nn = network.numNodes
         return sum([sum([1 for j in range(i+1, nn) if (adj[i][j] < 0 and adj[j][i] > 0) or (adj[i][j] > 0 and adj[j][i] < 0)]) for i in range(nn)])
+    
+
+#all callable evaluation functions
+functions = {funcName:getattr(Evaluation, funcName) for funcName in dir(Evaluation) 
+                if callable(getattr(Evaluation, funcName)) and not funcName.startswith("__")}
+
+#non-distribution callables
+properties = {funcName:getattr(Evaluation, funcName) for funcName in dir(Evaluation) 
+                if callable(getattr(Evaluation, funcName)) and not funcName.startswith("__") and
+                not funcName.endswith("_distribution")}
+
+#distribution callables
+distributions = {funcName:getattr(Evaluation, funcName) for funcName in dir(Evaluation) 
+                if callable(getattr(Evaluation, funcName)) and not funcName.startswith("__") and
+                funcName.endswith("_distribution")}
+
+
+
+if __name__ == "__main__":
+    e = Evaluation()
+    print(e.functions)

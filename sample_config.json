@@ -1,19 +1,18 @@
 {
     "data_dir": "data",
-    "name": "test_new_dists",
-    "reps": 1,
+    "name": "sample",
+    "reps": 2,
     "save_data": 1,
     "plot_data": 1,
-    "scheme": "NSGAII",
-    "popsize": 250,
+    "popsize": 50,
     "mutation_rate": 0.005,
     "mutation_odds": [1,2,1],
     "crossover_odds": [1,2,2],
     "crossover_rate": 0.6,
     "weight_range": [-1,1],
     "network_size": 10,
-    "num_generations": 500,
+    "num_generations": 50,
     "eval_funcs": {
-        "connectance": {"target": 0.25}
+        "connectance": 0.25
     }
 }

@@ -8,10 +8,10 @@ from statistics import mean
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-from eval_functions import Evaluation
-from plot_utils import (T, calculate_confidence_interval, final_pop_distribution,
-                        final_pop_histogram)
+
 from ga import fast_non_dominated_sort
+from plot_utils import (T, calculate_confidence_interval,
+                        final_pop_distribution, final_pop_histogram)
 
 
 def plot_fitnesses_error(fitness_logs, eval_func_names, save_loc, transparent=False):
@@ -126,12 +126,12 @@ def main(config_dir):
     if not os.path.exists(data_path):
         os.makedirs(data_path)
     
-    eval_obj = Evaluation(config_file)
+
     eval_funcs = config_file["eval_funcs"]
-    final_pop_histogram(eval_obj, final_pops, eval_funcs, data_path, plot_all=True)
-    final_pop_histogram(eval_obj, final_pops, eval_funcs, data_path, plot_all=False)
-    final_pop_distribution(eval_obj, final_pops, eval_funcs, data_path, plot_all=True)
-    final_pop_distribution(eval_obj, final_pops, eval_funcs, data_path, plot_all=False)
+    final_pop_histogram(final_pops, eval_funcs, data_path, plot_all=True)
+    final_pop_histogram(final_pops, eval_funcs, data_path, plot_all=False)
+    final_pop_distribution(final_pops, eval_funcs, data_path, plot_all=True)
+    final_pop_distribution(final_pops, eval_funcs, data_path, plot_all=False)
     plot_fitnesses_sep(fitness_logs, eval_funcs.keys(), data_path)
     plot_fitnesses_error(fitness_logs, eval_funcs.keys(), data_path)
     combined_pareto_front(final_pops,config_file,data_path)
