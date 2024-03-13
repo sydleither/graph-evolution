@@ -1,57 +1,10 @@
 import networkx as nx
 import numpy as np
+
 from organism import Organism
-from scipy.stats import norm, powerlaw, expon
 
 
 class Evaluation:
-    def __init__(self, config=None) -> None:
-        if config is not None:
-            self.config = config
-
-            target_dist_dict = {}
-            for eval_func_name, eval_func_params in config["eval_funcs"].items():
-                if eval_func_name.endswith("distribution"):
-                    target_dist_dict[eval_func_name] = self.__get_target_distribution__(eval_func_params, config["network_size"])
-            self.target_dist_dict = target_dist_dict
-        self.functions = {func:getattr(Evaluation, func) for func in dir(Evaluation) 
-                          if callable(getattr(Evaluation, func)) and
-                          not func.startswith("__")}
-
-
-    def __get_target_distribution__(self, dist_info:dict, num_nodes:int) -> list[float]:
-        if "name" in dist_info.keys():
-            if dist_info["name"] == "scale-free":
-                a = dist_info["a"]
-                loc = dist_info["loc"]
-                scale = dist_info["scale"]
-                return [powerlaw.pdf(x, a=a, loc=loc, scale=scale) for x in range(num_nodes+1)]
-            if dist_info["name"] == "uniform":
-                return [dist_info["value"]]*(num_nodes+1)
-            if dist_info["name"] == "normal":
-                mew = dist_info["mean"]
-                sigma = dist_info["std"]
-                return [norm.pdf(x, loc=mew, scale=sigma) for x in range(num_nodes+1)]
-            if dist_info["name"] == "linear":
-                a = dist_info["a"]
-                b = dist_info["b"]
-                return [a*x+b for x in range(num_nodes+1)]
-            if dist_info["name"] == "basically_exp":
-                ns_inv = 1/num_nodes
-                if num_nodes == 10:
-                    basically_exp = [ns_inv*np.floor(expon.pdf(x, loc=1, scale=num_nodes/5)/ns_inv) for x in range(num_nodes+1)]
-                else:
-                    basically_exp = [ns_inv*np.round(expon.pdf(x, loc=1, scale=num_nodes/5)/ns_inv) for x in range(num_nodes+1)]
-                return basically_exp
-            if dist_info["name"] == "basically_norm":
-                ns_inv = 1/num_nodes
-                return [ns_inv*np.round(norm.pdf(x, loc=num_nodes/4, scale=num_nodes/10)/ns_inv) for x in range(num_nodes+1)]
-        if "target" in dist_info.keys():
-            return dist_info["target"]
-        print("Invalid distribution config")
-        exit()
-
-
     #node-level topological properties
     def in_degree_distribution(self, network:Organism) -> list[float]:
         networkx_obj = network.getNetworkxObject()
@@ -217,3 +170,24 @@ class Evaluation:
         adj = network.adjacencyMatrix
         nn = network.numNodes
         return sum([sum([1 for j in range(i+1, nn) if (adj[i][j] < 0 and adj[j][i] > 0) or (adj[i][j] > 0 and adj[j][i] < 0)]) for i in range(nn)])
+    
+
+#all callable evaluation functions
+functions = {funcName:getattr(Evaluation, funcName) for funcName in dir(Evaluation) 
+                if callable(getattr(Evaluation, funcName)) and not funcName.startswith("__")}
+
+#non-distribution callables
+properties = {funcName:getattr(Evaluation, funcName) for funcName in dir(Evaluation) 
+                if callable(getattr(Evaluation, funcName)) and not funcName.startswith("__") and
+                not funcName.endswith("_distribution")}
+
+#distribution callables
+distributions = {funcName:getattr(Evaluation, funcName) for funcName in dir(Evaluation) 
+                if callable(getattr(Evaluation, funcName)) and not funcName.startswith("__") and
+                funcName.endswith("_distribution")}
+
+
+
+if __name__ == "__main__":
+    e = Evaluation()
+    print(e.functions)

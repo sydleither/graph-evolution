@@ -1,11 +1,12 @@
 from collections import deque
 from copy import deepcopy
 from random import randint, random, sample
-from typing import Callable
 
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
+
+import eval_functions as ef
 
 
 # this function is based on:
@@ -44,6 +45,7 @@ def sparsify(x, percentSparse:float = 0.5, outputRange:tuple[float]=(-1,1)):
 
 class Organism:
     nextID = 0
+
     def __init__(self, numNodes:int, sparsity:float, weightRange, genome:list[list[float]]=None) -> None:
         self.id = Organism.nextID
         Organism.nextID += 1
@@ -59,7 +61,7 @@ class Organism:
         self.sparsity = sparsity
         self.weightRange = weightRange
 
-        self.evaluationScores:dict[str:float] = {}
+        self.errors:dict[str:float] = {}
         self.properties:dict = {}
 
         self.adjacencyMatrix:list[list[float]] = [[round(sparsify(val,self.sparsity,self.weightRange), 3) for val in row] for row in self.genotypeMatrix]
@@ -153,25 +155,27 @@ class Organism:
         return Organism(self.numNodes, self.sparsity, self.weightRange, newGenome)
 
 
-    def getProperty(self,propertyName,evalFunc):
+    def getProperty(self,propertyName:str):
         if propertyName not in self.properties:
-            self.properties[propertyName] = evalFunc(None, self) #i cannot explain why i must pass None here. probably a bug, but it crashes if i don't.
+            self.properties[propertyName] = ef.functions[propertyName](None,self)
         return self.properties[propertyName]
 
+    
+    def getError(self,propertyName:str,target) -> float:
+        if propertyName not in self.errors:
 
-    def getEvaluationScores(self, evaluationDict:dict[str:tuple[Callable,float]]) -> dict[str:float]:
-        for name, evaluationPack in evaluationDict.items():
-            evalFunc, targetValue = evaluationPack
-            if name not in self.evaluationScores:
-                if name.endswith("distribution"):
-                    org_dist = self.getProperty(name,evalFunc)
-                    if name.endswith("weight_distribution"):
-                        self.evaluationScores[name] = sum([(org_dist[i]-targetValue[i])**2 for i in range(len(org_dist)) if org_dist[i] != 0])
-                    else:
-                        self.evaluationScores[name] = sum([(org_dist[i]-targetValue[i])**2 for i in range(len(org_dist))])
-                else:
-                    self.evaluationScores[name] = (self.getProperty(name,evalFunc) - targetValue)**2
-        return self.evaluationScores
+            if propertyName.endswith("_weight_distribution"):
+                dist = self.getProperty(propertyName)
+                self.errors[propertyName] = sum([(dist[i]-target[i])**2 for i in range(len(dist)) if dist[i] != 0])
+
+            elif propertyName.endswith("_distribution"):
+                dist = self.getProperty(propertyName)
+                self.errors[propertyName] = sum([(dist[i]-target[i])**2 for i in range(len(dist))])
+
+            else:
+                self.errors[propertyName] = (self.getProperty(propertyName) - target)**2
+
+        return self.errors[propertyName]
 
 
     def getNetworkxObject(self) -> nx.DiGraph:
@@ -218,15 +222,15 @@ class Organism:
     def __gt__(self, other):
         if not isinstance(other,Organism):
             raise TypeError("Invalid comparison of organism to",type(other))
-        meInYou = all([myKey in other.evaluationScores.keys() for myKey in self.evaluationScores.keys()])
-        youInMe = all([theirKey in self.evaluationScores.keys() for theirKey in other.evaluationScores.keys()])
+        meInYou = all([myKey in other.errors.keys() for myKey in self.errors.keys()])
+        youInMe = all([theirKey in self.errors.keys() for theirKey in other.errors.keys()])
         if meInYou and youInMe:
             #NOTE: potential confusion, gtr defines 'better' based on having smallest score
-            noSelfWorse = all([self.evaluationScores[prop] <= other.evaluationScores[prop] for prop in self.evaluationScores.keys()])
-            someSelfBetter = any([self.evaluationScores[prop] < other.evaluationScores[prop] for prop in self.evaluationScores.keys()])
+            noSelfWorse = all([self.errors[prop] <= other.errors[prop] for prop in self.errors.keys()])
+            someSelfBetter = any([self.errors[prop] < other.errors[prop] for prop in self.errors.keys()])
             return noSelfWorse and someSelfBetter
         else:
-            raise Exception("Organisms must be evaluated on the same criteria.",self.evaluationScores.keys(),other.evaluationScores.keys())
+            raise Exception("Organisms must be evaluated on the same criteria.",self.errors.keys(),other.errors.keys())
 
 
     def __eq__(self, other):
