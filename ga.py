@@ -51,7 +51,7 @@ def run(config):
         parents = nsga_tournament(population,2*popsize)
         #end of selection
 
-        #eproduction
+        #repoduction
         children = [parents[i].makeCrossedCopyWith(
             parents[i+popsize],config["crossover_rate"], config["crossover_odds"]).makeMutatedCopy(
             config["mutation_rate"], config["mutation_odds"]) for i in range(popsize)]
@@ -108,13 +108,16 @@ def crowding_distance_assignment(I:list[Organism]):
         i.nsga_distance = 0
     for m in I[0].errors.keys():
         I.sort(key=lambda org: org.errors[m])
-        I[0].nsga_distance = float("inf")
+        I[0].nsga_distance = float("inf") #NOTE: this can be conditioned on rng > 0
         I[-1].nsga_distance = float('inf')
         rng = I[-1].errors[m]-I[0].errors[m]
         if rng == 0: continue
         for i in range(1,l-2):
             I[i].nsga_distance += (I[i+1].errors[m]-I[i-1].errors[m])/rng
+    ############################        
     # additional modifications #
+    ############################
+            
     # genotype matrix diversity
     for j in range(I[0].numNodes):
         for k in range(I[0].numNodes):
@@ -125,6 +128,7 @@ def crowding_distance_assignment(I:list[Organism]):
             if rng == 0: continue
             for i in range(1,l-2):
                 I[i].nsga_distance += (I[i+1].genotypeMatrix[j][k]-I[i-1].genotypeMatrix[j][k])/rng
+
     # sparsity diversity
     I.sort(key=lambda org: org.sparsity)
     I[0].nsga_distance = float("inf")
