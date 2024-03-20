@@ -57,7 +57,7 @@ def plot_fitnesses_sep(fitness_logs, eval_func_names, save_loc, transparent=Fals
     plt.close()
 
 
-def combined_pareto_front(final_pops,config,save_loc=None,firstFrontOnly=False):
+def combined_pareto_front(final_pops, config, save_loc=None, firstFrontOnly=False):
     #sort
     allOrgs = [org for pop in final_pops for org in pop ]
     newID = 0
@@ -71,7 +71,7 @@ def combined_pareto_front(final_pops,config,save_loc=None,firstFrontOnly=False):
         for j, feature2 in enumerate(funcNames):
             if j <= i: continue
             for frontNumber in sorted(allFronts.keys()):
-                R = sorted(sorted([(org.evaluationScores[feature1], org.evaluationScores[feature2]) for org in allFronts[frontNumber]],
+                R = sorted(sorted([(org.getError(feature1,None), org.getError(feature2,None)) for org in allFronts[frontNumber]],
                                     key=lambda r: r[1], reverse=True), key=lambda r: r[0])
                 plt.plot(*T(R), marker="o", linestyle="--",label=frontNumber)
                 if firstFrontOnly: break
@@ -86,20 +86,20 @@ def combined_pareto_front(final_pops,config,save_loc=None,firstFrontOnly=False):
                 plt.show()
 
 
-def combined_entropy(logs,data_path):
+def combined_diversity(logs, data_path):
     scratch = {}
     for log in logs:
         for row in log:
-            name,entropy = row
+            name, entropy, uniformity, spread = row
             if name not in scratch:
                 scratch[name] = []
-            scratch[name].append(float(entropy))
+            scratch[name].append([float(entropy), float(uniformity), float(spread)])
     for name in scratch:
-        scratch[name] = mean(scratch[name])
-    with open("{}/entropy_all.csv".format(data_path),'w') as entropyFile:
-        entropyFile.write("Name,Entropy(bits)\n")
-        for name,entropy in scratch.items():
-            entropyFile.write("{},{}\n".format(name,entropy))
+        scratch[name] = [mean(x) for x in T(scratch[name])]
+    with open("{}/diversity_all.csv".format(data_path), 'w') as entropyFile:
+        entropyFile.write("property,entropy,uniformity,spread\n")
+        for name, measures in scratch.items():
+            entropyFile.write("{},{},{},{}\n".format(name, measures[0], measures[1], measures[2]))
 
 
 def main(config_dir):
@@ -117,7 +117,7 @@ def main(config_dir):
                     final_pops.append(pickle.load(f))
                 with open("{}/fitness_log.pkl".format(full_path), "rb") as f:
                     fitness_logs.append(pickle.load(f))
-                with open("{}/entropy.csv".format(full_path), "r") as f:
+                with open("{}/diversity.csv".format(full_path), "r") as f:
                     rdr = reader(f)
                     _ = next(f) #remove header
                     entropy_logs.append([line for line in rdr])
@@ -125,17 +125,14 @@ def main(config_dir):
     data_path = "{}/{}".format(config_file["data_dir"], config_file["name"])
     if not os.path.exists(data_path):
         os.makedirs(data_path)
-    
 
     eval_funcs = config_file["eval_funcs"]
-    final_pop_histogram(final_pops, eval_funcs, data_path, plot_all=True)
-    final_pop_histogram(final_pops, eval_funcs, data_path, plot_all=False)
-    final_pop_distribution(final_pops, eval_funcs, data_path, plot_all=True)
-    final_pop_distribution(final_pops, eval_funcs, data_path, plot_all=False)
-    plot_fitnesses_sep(fitness_logs, eval_funcs.keys(), data_path)
-    plot_fitnesses_error(fitness_logs, eval_funcs.keys(), data_path)
-    combined_pareto_front(final_pops,config_file,data_path)
-    combined_entropy(entropy_logs,data_path)
+    # final_pop_histogram(final_pops, eval_funcs, data_path, plot_all=True)
+    # final_pop_distribution(final_pops, eval_funcs, data_path, plot_all=True)
+    # plot_fitnesses_sep(fitness_logs, eval_funcs.keys(), data_path)
+    # plot_fitnesses_error(fitness_logs, eval_funcs.keys(), data_path)
+    # combined_pareto_front(final_pops, config_file, data_path)
+    combined_diversity(entropy_logs, data_path)
 
 
 if __name__ == "__main__":
