@@ -11,6 +11,7 @@ from eval_functions import functions
 from ga import fast_non_dominated_sort, run
 from organism import Organism
 from plot_utils import T, final_pop_distribution, final_pop_histogram
+from random import seed
 
 
 def plot_fitness(fitness_log, eval_func_names, save_loc, transparent=False):
@@ -51,21 +52,23 @@ def plotParetoFront(population, config, save_loc=None,firstFrontOnly=False):
                 plt.show()
 
 
-def diversity(population:list[Organism],config:dict,save_loc_i:str) :
-    # global eval_obj #TODO: this global reference breaks importing this function into other files
+def diversity(population:list[Organism], config:dict, save_loc_i:str) :
     N = config["popsize"]
-    with open("{}/entropy.csv".format(save_loc_i),'w') as diversityFile:
-        diversityFile.write("Name,Entropy(bits)\n")
+    with open("{}/diversity.csv".format(save_loc_i), 'w') as diversityFile:
+        diversityFile.write("property,entropy,uniformity,spread\n")
         for name in functions:
             typeCounter = Counter([organism.getProperty(name) 
                                    if "distribution" not in name 
                                    else tuple(organism.getProperty(name)) 
                                    for organism in population])
             entropy = -sum([(count/N)*log2(count/N) for count in typeCounter.values()])
-            diversityFile.write("{},{}\n".format(name,entropy))
+            uniformity = entropy / len(typeCounter)
+            spread = len(typeCounter) / N
+            diversityFile.write("{},{},{},{}\n".format(name, entropy, uniformity, spread))
 
 
 def run_rep(i, save_loc, config):
+    seed(i)
     save_loc_i = "{}/{}".format(save_loc, i)
     if not os.path.exists(save_loc_i):
         os.makedirs(save_loc_i)

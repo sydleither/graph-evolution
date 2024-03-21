@@ -92,7 +92,15 @@ class Organism:
                         offset = (random()/4)-(1/8) #-1/8 to 1/8
                         newGenome[i][j] = min(1,max(0,newGenome[i][j] + offset))
                     elif mutationType <= mutationThresholds[2]:
+                        #sign flip mutation
                         newGenome[i][j] = 1-newGenome[i][j]
+                    elif mutationType <= mutationThresholds[3]:
+                        #weight swap mutation (preserves connectance)
+                        edge1= newGenome[i][j]
+                        iswap = randint(0,self.numNodes-1)
+                        jswap = randint(0,self.numNodes-1)
+                        newGenome[i][j] = newGenome[iswap][jswap]
+                        newGenome[iswap][jswap] = edge1
                     else:
                         print("ERROR: no mutation selected")
                         exit(1)

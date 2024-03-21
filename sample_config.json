@@ -1,17 +1,17 @@
 {
     "data_dir": "data",
     "name": "sample",
-    "reps": 2,
+    "reps": 3,
     "save_data": 1,
     "plot_data": 1,
-    "popsize": 50,
+    "popsize": 250,
     "mutation_rate": 0.005,
-    "mutation_odds": [1,2,1],
+    "mutation_odds": [1,2,1,2],
     "crossover_odds": [1,2,2],
     "crossover_rate": 0.6,
     "weight_range": [-1,1],
     "network_size": 10,
-    "num_generations": 50,
+    "num_generations": 500,
     "eval_funcs": {
         "connectance": 0.25
     }
