@@ -169,7 +169,7 @@ class Organism:
         return self.properties[propertyName]
 
     
-    def getError(self, propertyName:str,target) -> float:
+    def getError(self, propertyName:str, target) -> float:
         if propertyName not in self.errors:
             if propertyName.endswith("_weight_distribution"):
                 dist = self.getProperty(propertyName)
