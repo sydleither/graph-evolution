@@ -163,26 +163,22 @@ class Organism:
         return Organism(self.numNodes, self.sparsity, self.weightRange, newGenome)
 
 
-    def getProperty(self,propertyName:str):
+    def getProperty(self, propertyName:str):
         if propertyName not in self.properties:
             self.properties[propertyName] = ef.functions[propertyName](None,self)
         return self.properties[propertyName]
 
     
-    def getError(self,propertyName:str,target) -> float:
+    def getError(self, propertyName:str,target) -> float:
         if propertyName not in self.errors:
-
             if propertyName.endswith("_weight_distribution"):
                 dist = self.getProperty(propertyName)
                 self.errors[propertyName] = sum([(dist[i]-target[i])**2 for i in range(len(dist)) if dist[i] != 0])
-
             elif propertyName.endswith("_distribution"):
                 dist = self.getProperty(propertyName)
                 self.errors[propertyName] = sum([(dist[i]-target[i])**2 for i in range(len(dist))])
-
             else:
                 self.errors[propertyName] = (self.getProperty(propertyName) - target)**2
-
         return self.errors[propertyName]
 
 

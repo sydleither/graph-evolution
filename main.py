@@ -7,8 +7,9 @@ from collections import Counter
 import matplotlib.pyplot as plt
 from numpy import log2
 
+from elites import run as elitesrun
 from eval_functions import functions
-from ga import fast_non_dominated_sort, run
+from nsga import fast_non_dominated_sort, run as nsgarun
 from organism import Organism
 from plot_utils import T, final_pop_distribution, final_pop_histogram
 from random import seed
@@ -67,13 +68,16 @@ def diversity(population:list[Organism], config:dict, save_loc_i:str) :
             diversityFile.write("{},{},{},{}\n".format(name, entropy, uniformity, spread))
 
 
-def run_rep(i, save_loc, config):
+def run_rep(i, save_loc, config, selection_scheme):
     seed(i)
     save_loc_i = "{}/{}".format(save_loc, i)
     if not os.path.exists(save_loc_i):
         os.makedirs(save_loc_i)
 
-    final_pop, fitness_log = run(config)
+    if selection_scheme == "nsga":
+        final_pop, fitness_log = nsgarun(config)
+    else:
+        final_pop, fitness_log = elitesrun(config)
 
     if config["save_data"] == 1:
         with open("{}/final_pop.pkl".format(save_loc_i), "wb") as f:
@@ -100,11 +104,16 @@ def main(config, rep=None):
     with open(config_path, "w") as f:
         json.dump(config, f, indent=4)
 
+    if "diversity_funcs" in config:
+        selection_scheme = "map-elites"
+    else:
+        selection_scheme = "nsga"
+
     if rep: #cmd specified only
-        run_rep(rep, save_loc, config)
+        run_rep(rep, save_loc, config, selection_scheme)
     else:
         for i in range(config["reps"]):
-            run_rep(i, save_loc, config)
+            run_rep(i, save_loc, config, selection_scheme)
 
 
 if __name__ == "__main__":
