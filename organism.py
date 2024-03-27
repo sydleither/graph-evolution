@@ -238,4 +238,6 @@ class Organism:
 
 
     def __eq__(self, other):
+        if self is None or other is None:
+            return False
         return not (self < other or self > other)

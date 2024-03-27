@@ -29,6 +29,17 @@ def plot_fitness(fitness_log, eval_func_names, save_loc, transparent=False):
     plt.close()
 
 
+def plot_coverage(coverage, save_loc, transparent=False):
+    figure, axis = plt.subplots(1, 1)
+    axis.plot(coverage)
+    figure.supxlabel("Generations")
+    figure.supylabel("Coverage")
+    if transparent:
+        figure.patch.set_alpha(0.0)
+    plt.savefig("{}/coverage.png".format(save_loc))
+    plt.close()
+
+
 def plotParetoFront(population, config, save_loc=None,firstFrontOnly=False):
     #sort
     allFronts = fast_non_dominated_sort(population)
@@ -77,14 +88,20 @@ def run_rep(i, save_loc, config, selection_scheme):
     if selection_scheme == "nsga":
         final_pop, fitness_log = nsgarun(config)
     else:
-        final_pop, fitness_log = elitesrun(config)
+        final_pop, fitness_log, coverage, elites_map = elitesrun(config)
 
     if config["save_data"] == 1:
         with open("{}/final_pop.pkl".format(save_loc_i), "wb") as f:
             pickle.dump(final_pop, f)
         with open("{}/fitness_log.pkl".format(save_loc_i), "wb") as f:
             pickle.dump(fitness_log, f)
-        diversity(final_pop,config,save_loc_i)
+        if selection_scheme == "map-elites":
+            with open("{}/coverage.pkl".format(save_loc_i), "wb") as f:
+                pickle.dump(coverage, f)
+            with open("{}/elites_map.pkl".format(save_loc_i), "wb") as f:
+                pickle.dump(elites_map, f)
+        else:
+            diversity(final_pop,config,save_loc_i)
 
     if config["plot_data"] == 1:
         plot_fitness(fitness_log, config["eval_funcs"].keys(), save_loc_i)
@@ -93,6 +110,8 @@ def run_rep(i, save_loc, config, selection_scheme):
         final_pop_distribution(final_pop, config["eval_funcs"], save_loc_i, plot_all=True, with_error=True)
         plotParetoFront(final_pop, config, save_loc_i)
         final_pop[0].saveGraphFigure("{}/graphFigure.png".format(save_loc_i))
+        if selection_scheme == "map-elites":
+            plot_coverage(coverage, save_loc_i)
 
 
 def main(config, rep=None):
