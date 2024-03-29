@@ -1,11 +1,13 @@
+from itertools import combinations
 import json
 import os
 import pickle
+from statistics import mean
 import sys
 from collections import Counter
 
 import matplotlib.pyplot as plt
-from numpy import log2
+import numpy as np
 
 from elites import run as elitesrun
 from eval_functions import functions
@@ -38,6 +40,67 @@ def plot_coverage(coverage, save_loc, transparent=False):
         figure.patch.set_alpha(0.0)
     plt.savefig("{}/coverage.png".format(save_loc))
     plt.close()
+
+
+def plot_elites_map(elites_map, eval_funcs, features_dict, save_loc, transparent=False):
+    def generate_heatmap(row, col, obj_name, obj_target):
+        mean_heatmap = np.empty([len(row), len(col)])
+        count_heatmap = np.empty([len(row), len(col)])
+        for i in range(len(row)):
+            for j in range(len(col)):
+                cell = elites_map[i, j]
+                orgs = cell[cell != np.array(None)]
+                if len(orgs) > 0:
+                    mean_heatmap[i,j] = mean([round(org.getError(obj_name, obj_target), 3) for org in orgs])
+                else:
+                    mean_heatmap[i,j] = -1
+                count_heatmap[i,j] = len(orgs)
+        return mean_heatmap, count_heatmap
+    
+    def save_heatmaps(mean_heatmap, count_heatmap, features_dict, row_name, col_name, objective, num=None):
+        row_labels = features_dict[row_name]
+        col_labels = features_dict[col_name] if col_name is not None else [0]
+        figure, axis = plt.subplots(1, 2, figsize=(12,7))
+        axis[0].imshow(mean_heatmap, cmap="Greens")
+        axis[0].set_xticks(np.arange(len(row_labels)), labels=row_labels)
+        axis[0].set_yticks(np.arange(len(col_labels)), labels=col_labels)
+        axis[0].set_title("Mean Cell {} Error".format(objective))
+        plt.setp(axis[0].get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+        axis[1].imshow(count_heatmap, cmap="Greens_r")
+        axis[1].set_xticks(np.arange(len(row_labels)), labels=row_labels)
+        axis[1].set_yticks(np.arange(len(col_labels)), labels=col_labels)
+        axis[1].set_title("Count of Organisms in Each Cell")
+        plt.setp(axis[1].get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+        for i in range(len(row_labels)):
+            for j in range(len(col_labels)):
+                _ = axis[0].text(j, i, mean_heatmap[i, j], ha="center", va="center", color="black")
+                _ = axis[1].text(j, i, count_heatmap[i, j], ha="center", va="center", color="black")
+        figure.supxlabel(row_name)
+        figure.supylabel(col_name)
+        figure.tight_layout()
+        if transparent:
+            figure.patch.set_alpha(0.0)
+        if num is not None:
+            plt.savefig("{}/heatmap_{}{}.png".format(save_loc, objective, num))
+        else:
+            plt.savefig("{}/heatmap_{}.png".format(save_loc, objective))
+        plt.close()
+
+    feature_names = list(features_dict.keys())
+    feature_bins = list(features_dict.values())
+    for name,target in eval_funcs.items():
+        if len(features_dict) == 1: #TODO one feature plot doesn't work
+            mean_heatmap, count_heatmap = generate_heatmap(feature_bins[0], [None], name, target)
+            save_heatmaps(mean_heatmap, count_heatmap, features_dict, feature_names[0], None, name, num=None)
+        elif len(features_dict) == 2:
+            mean_heatmap, count_heatmap = generate_heatmap(feature_bins[0], feature_bins[1], name, target)
+            save_heatmaps(mean_heatmap, count_heatmap, features_dict, feature_names[0], feature_names[1], name, num=None)
+        else:
+            for feature_combo_idx in combinations(range(len(features_dict))):
+                f0 = feature_combo_idx[0]
+                f1 = feature_combo_idx[1]
+                mean_heatmap, count_heatmap = generate_heatmap(feature_bins[f0], feature_bins[f1], name, target)
+                save_heatmaps(mean_heatmap, count_heatmap, features_dict, feature_names[f0], feature_names[f1], name, num=str(f0)+str(f1))
 
 
 def plotParetoFront(population, config, save_loc=None,firstFrontOnly=False):
@@ -73,7 +136,7 @@ def diversity(population:list[Organism], config:dict, save_loc_i:str) :
                                    if "distribution" not in name 
                                    else tuple(organism.getProperty(name)) 
                                    for organism in population])
-            entropy = -sum([(count/N)*log2(count/N) for count in typeCounter.values()])
+            entropy = -sum([(count/N)*np.log2(count/N) for count in typeCounter.values()])
             uniformity = entropy / len(typeCounter)
             spread = len(typeCounter) / N
             diversityFile.write("{},{},{},{}\n".format(name, entropy, uniformity, spread))
@@ -112,6 +175,7 @@ def run_rep(i, save_loc, config, selection_scheme):
         final_pop[0].saveGraphFigure("{}/graphFigure.png".format(save_loc_i))
         if selection_scheme == "map-elites":
             plot_coverage(coverage, save_loc_i)
+            plot_elites_map(elites_map, config["eval_funcs"], config["diversity_funcs"], save_loc, transparent=False)
 
 
 def main(config, rep=None):
