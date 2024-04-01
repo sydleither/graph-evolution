@@ -64,7 +64,7 @@ class Organism:
         self.errors:dict[str:float] = {}
         self.properties:dict = {}
 
-        self.adjacencyMatrix:list[list[float]] = [[round(sparsify(val,self.sparsity,self.weightRange), 3) for val in row] for row in self.genotypeMatrix]
+        self.adjacencyMatrix:list[list[float]] = [[round(sparsify(val, self.sparsity, self.weightRange), 3) for val in row] for row in self.genotypeMatrix]
 
         #internal number of interactions reference
         self.numInteractions:int = sum([sum([1 for val in row if val != 0]) for row in self.adjacencyMatrix])
@@ -224,8 +224,8 @@ class Organism:
     #pareto sorting functions #
     ###########################
     def __gt__(self, other):
-        if not isinstance(other,Organism):
-            raise TypeError("Invalid comparison of organism to",type(other))
+        if not isinstance(other, Organism):
+            raise TypeError("Invalid comparison of organism to", type(other))
         if set(self.errors) == set(other.errors):
             #NOTE: potential confusion, gtr defines 'better' based on having smallest score
             someSelfBetter = False
@@ -238,10 +238,8 @@ class Organism:
                     someSelfBetter = True
             return noSelfWorse and someSelfBetter
         else:
-            raise Exception("Organisms must be evaluated on the same criteria.",self.errors.keys(),other.errors.keys())
+            raise Exception("Organisms must be evaluated on the same criteria.", self.errors.keys(), other.errors.keys())
 
 
     def __eq__(self, other):
-        if other is None:
-            return False
         return not (self < other or self > other)

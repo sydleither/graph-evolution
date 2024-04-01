@@ -43,64 +43,55 @@ def plot_coverage(coverage, save_loc, transparent=False):
 
 
 def plot_elites_map(elites_map, eval_funcs, features_dict, save_loc, transparent=False):
-    def generate_heatmap(row, col, obj_name, obj_target):
+    def generate_heatmap(col, row, obj_name, obj_target):
         mean_heatmap = np.empty([len(row), len(col)])
         count_heatmap = np.empty([len(row), len(col)])
-        for i in range(len(row)):
-            for j in range(len(col)):
-                cell = elites_map[i, j]
-                orgs = cell[cell != np.array(None)]
-                if len(orgs) > 0:
-                    mean_heatmap[i,j] = mean([round(org.getError(obj_name, obj_target), 3) for org in orgs])
+        for i in range(len(col)):
+            for j in range(len(row)):
+                cell = elites_map[(col[i], row[j])] if len(row) > 1 else elites_map[(col[i],)]
+                if len(cell) > 0:
+                    mean_heatmap[j,i] = round(mean([org.getError(obj_name, obj_target) for org in cell]), 3)
                 else:
-                    mean_heatmap[i,j] = -1
-                count_heatmap[i,j] = len(orgs)
+                    mean_heatmap[j,i] = 9999
+                count_heatmap[j,i] = len(cell)
         return mean_heatmap, count_heatmap
     
-    def save_heatmaps(mean_heatmap, count_heatmap, features_dict, row_name, col_name, objective, num=None):
-        row_labels = features_dict[row_name]
-        col_labels = features_dict[col_name] if col_name is not None else [0]
+    def save_heatmaps(mean_heatmap, count_heatmap, col_name, row_name, objective):
+        col_labels = features_dict[col_name]
+        row_labels = features_dict[row_name] if row_name is not None else [""]
         figure, axis = plt.subplots(1, 2, figsize=(12,7))
         axis[0].imshow(mean_heatmap, cmap="Greens")
-        axis[0].set_xticks(np.arange(len(row_labels)), labels=row_labels)
-        axis[0].set_yticks(np.arange(len(col_labels)), labels=col_labels)
+        axis[0].set_xticks(np.arange(len(col_labels)), labels=col_labels)
+        axis[0].set_yticks(np.arange(len(row_labels)), labels=row_labels)
         axis[0].set_title("Mean Cell {} Error".format(objective))
-        plt.setp(axis[0].get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
         axis[1].imshow(count_heatmap, cmap="Greens_r")
-        axis[1].set_xticks(np.arange(len(row_labels)), labels=row_labels)
-        axis[1].set_yticks(np.arange(len(col_labels)), labels=col_labels)
+        axis[1].set_xticks(np.arange(len(col_labels)), labels=col_labels)
+        axis[1].set_yticks(np.arange(len(row_labels)), labels=row_labels)
         axis[1].set_title("Count of Organisms in Each Cell")
-        plt.setp(axis[1].get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
-        for i in range(len(row_labels)):
-            for j in range(len(col_labels)):
-                _ = axis[0].text(j, i, mean_heatmap[i, j], ha="center", va="center", color="black")
-                _ = axis[1].text(j, i, count_heatmap[i, j], ha="center", va="center", color="black")
-        figure.supxlabel(row_name)
-        figure.supylabel(col_name)
+        for i in range(len(col_labels)):
+            for j in range(len(row_labels)):
+                _ = axis[0].text(i, j, mean_heatmap[j, i], ha="center", va="center", color="black")
+                _ = axis[1].text(i, j, count_heatmap[j, i], ha="center", va="center", color="black")
+        figure.supxlabel(col_name)
+        figure.supylabel(row_name)
         figure.tight_layout()
         if transparent:
             figure.patch.set_alpha(0.0)
-        if num is not None:
-            plt.savefig("{}/heatmap_{}{}.png".format(save_loc, objective, num))
-        else:
-            plt.savefig("{}/heatmap_{}.png".format(save_loc, objective))
+        plt.savefig("{}/heatmap_{}.png".format(save_loc, objective))
         plt.close()
 
     feature_names = list(features_dict.keys())
     feature_bins = list(features_dict.values())
     for name,target in eval_funcs.items():
-        if len(features_dict) == 1: #TODO one feature plot doesn't work
+        if len(features_dict) == 1:
             mean_heatmap, count_heatmap = generate_heatmap(feature_bins[0], [None], name, target)
-            save_heatmaps(mean_heatmap, count_heatmap, features_dict, feature_names[0], None, name, num=None)
+            save_heatmaps(mean_heatmap, count_heatmap, feature_names[0], None, name)
         elif len(features_dict) == 2:
             mean_heatmap, count_heatmap = generate_heatmap(feature_bins[0], feature_bins[1], name, target)
-            save_heatmaps(mean_heatmap, count_heatmap, features_dict, feature_names[0], feature_names[1], name, num=None)
+            save_heatmaps(mean_heatmap, count_heatmap, feature_names[0], feature_names[1], name)
         else:
-            for feature_combo_idx in combinations(range(len(features_dict))):
-                f0 = feature_combo_idx[0]
-                f1 = feature_combo_idx[1]
-                mean_heatmap, count_heatmap = generate_heatmap(feature_bins[f0], feature_bins[f1], name, target)
-                save_heatmaps(mean_heatmap, count_heatmap, features_dict, feature_names[f0], feature_names[f1], name, num=str(f0)+str(f1))
+            print("Too many features to plot elites map.")
+            return
 
 
 def plotParetoFront(population, config, save_loc=None,firstFrontOnly=False):
@@ -112,7 +103,7 @@ def plotParetoFront(population, config, save_loc=None,firstFrontOnly=False):
         for j, feature2 in enumerate(funcNames):
             if j <= i: continue
             for frontNumber in sorted(allFronts.keys()):
-                R = sorted(sorted([(org.evaluationScores[feature1], org.evaluationScores[feature2]) for org in allFronts[frontNumber]],
+                R = sorted(sorted([(org.errors[feature1], org.errors[feature2]) for org in allFronts[frontNumber]],
                                     key=lambda r: r[1], reverse=True), key=lambda r: r[0])
                 plt.plot(*T(R), marker="o", linestyle="--",label=frontNumber)
                 if firstFrontOnly: break
@@ -169,13 +160,12 @@ def run_rep(i, save_loc, config, selection_scheme):
     if config["plot_data"] == 1:
         plot_fitness(fitness_log, config["eval_funcs"].keys(), save_loc_i)
         final_pop_histogram(final_pop, config["eval_funcs"], save_loc_i, plot_all=True)
-        final_pop_distribution(final_pop, config["eval_funcs"], save_loc_i, plot_all=True, with_error=False)
         final_pop_distribution(final_pop, config["eval_funcs"], save_loc_i, plot_all=True, with_error=True)
         plotParetoFront(final_pop, config, save_loc_i)
         final_pop[0].saveGraphFigure("{}/graphFigure.png".format(save_loc_i))
         if selection_scheme == "map-elites":
             plot_coverage(coverage, save_loc_i)
-            plot_elites_map(elites_map, config["eval_funcs"], config["diversity_funcs"], save_loc, transparent=False)
+            plot_elites_map(elites_map, config["eval_funcs"], config["diversity_funcs"], save_loc_i, transparent=False)
 
 
 def main(config, rep=None):
