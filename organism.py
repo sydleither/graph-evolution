@@ -17,9 +17,9 @@ import eval_functions as ef
 # ALIFE 2023: Ghost in the Machine: Proceedings of the 2023 Artificial Life Conference. 
 # Online. (pp. 53). ASME. https://doi.org/10.1162/isal_a_00655
 def sparsify(x, percentSparse:float = 0.5, outputRange:tuple[float]=(-1,1)):
-    assert 0 <= percentSparse <= 1
-    assert outputRange[0] <= 0 <= outputRange[1]
-    assert outputRange[0] != 0 or outputRange[1] != 0
+    # assert 0 <= percentSparse <= 1
+    # assert outputRange[0] <= 0 <= outputRange[1]
+    # assert outputRange[0] != 0 or outputRange[1] != 0
 
     percentNonZero = 1-percentSparse
     neg = abs(outputRange[0])
@@ -33,13 +33,13 @@ def sparsify(x, percentSparse:float = 0.5, outputRange:tuple[float]=(-1,1)):
 
     if x <= 0:
         return -neg
-    if 0 < x <= t1:
+    elif 0 < x <= t1:
         return (neg/a)*x- neg
-    if t1 < x <= t2:
+    elif t1 < x <= t2:
         return 0
-    if t2 < x <= 1:
+    elif t2 < x <= 1:
         return (pos/b)*(x-t2)
-    if 1 < x:
+    else: #1 < x:
         return pos
 
 
@@ -226,12 +226,16 @@ class Organism:
     def __gt__(self, other):
         if not isinstance(other,Organism):
             raise TypeError("Invalid comparison of organism to",type(other))
-        meInYou = all([myKey in other.errors.keys() for myKey in self.errors.keys()])
-        youInMe = all([theirKey in self.errors.keys() for theirKey in other.errors.keys()])
-        if meInYou and youInMe:
+        if set(self.errors) == set(other.errors):
             #NOTE: potential confusion, gtr defines 'better' based on having smallest score
-            noSelfWorse = all([self.errors[prop] <= other.errors[prop] for prop in self.errors.keys()])
-            someSelfBetter = any([self.errors[prop] < other.errors[prop] for prop in self.errors.keys()])
+            someSelfBetter = False
+            noSelfWorse = True
+            for prop in self.errors:
+                if self.errors[prop] > other.errors[prop]:
+                    noSelfWorse = False
+                    break
+                elif self.errors[prop] < other.errors[prop]:
+                    someSelfBetter = True
             return noSelfWorse and someSelfBetter
         else:
             raise Exception("Organisms must be evaluated on the same criteria.",self.errors.keys(),other.errors.keys())
