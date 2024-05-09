@@ -11,7 +11,6 @@ Here we explain each parameter of the sample config.
 - `"reps"`: specifies how many replicates to conduct of the run. Note that this will generate a directory with the number of each replicate, i.e. if `"reps": 3`, then three directories of names 0, 1, and 2 will be generated in `graph-evolution/[data_dir]/[name]`. Replicates can also instead be specified when calling `main.py` using the format `main.py sample_config.json [rep]`. Providing a replicate number when calling `main.py` will ignore the number of replicates set in the config. Giving the replicate directly to `main.py` is useful when pushing graph generation jobs to high-performance computing clusters (it allows each replicate to be a separate job).
 - `"save_data"`: a boolean 0 or 1 that indicates whether or not to save the final population and fitness log of the run.
 - `"plot_data"`: a boolean 0 or 1 that indicates whether or not to create plots of the run. The plots created include histograms of the properties of the graphs in the final population, the pareto front, fitness over time, and the diversity of the final population.
-- `"scheme"`: whether to use NSGAII or lexicase as the selection scheme.
 - `"popsize"`: the population size.
 - `"mutation_rate"`: the mutation rate. Mutations occur on individual edges of the genotype matrix.
 - `"mutation_odds"`: the odds of each mutation type when a mutation happens (mutation types are point mutation, offset mutation, and flipping the pos/neg sign).

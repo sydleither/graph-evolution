@@ -137,16 +137,15 @@ def main(config_dir):
                     final_pops.append(pickle.load(f))
                 with open("{}/fitness_log.pkl".format(full_path), "rb") as f:
                     fitness_logs.append(pickle.load(f))
+                with open("{}/diversity.csv".format(full_path), "r") as f:
+                    rdr = reader(f)
+                    _ = next(f) #remove header
+                    entropy_logs.append([line for line in rdr])
             if os.path.exists("{}/elites_map.pkl".format(full_path)):
                 with open("{}/elites_map.pkl".format(full_path), "rb") as f:
                     elites_maps.append(pickle.load(f))
                 with open("{}/coverage.pkl".format(full_path), "rb") as f:
                     coverages.append(pickle.load(f))
-            else: #TODO this is temp until diversity measures are fixed
-                with open("{}/diversity.csv".format(full_path), "r") as f:
-                    rdr = reader(f)
-                    _ = next(f) #remove header
-                    entropy_logs.append([line for line in rdr])
 
     data_path = "{}/{}".format(config_file["data_dir"], config_file["name"])
     if not os.path.exists(data_path):
@@ -158,6 +157,7 @@ def main(config_dir):
     plot_fitnesses_sep(fitness_logs, eval_funcs.keys(), data_path)
     plot_fitnesses_error(fitness_logs, eval_funcs.keys(), data_path)
     combined_pareto_front(final_pops, config_file, data_path)
+    combined_diversity(entropy_logs, data_path)
     if "diversity_funcs" in config_file:
         plot_coverage(coverages, data_path)
         combo_elites_map = {}
@@ -166,8 +166,6 @@ def main(config_dir):
             all_cells = [elite_map[map_key] for elite_map in elites_maps]
             combo_elites_map[map_key] = [org for cell in all_cells for org in cell]
         plot_elites_map(combo_elites_map, config_file["eval_funcs"], config_file["diversity_funcs"], data_path)
-    else:
-        combined_diversity(entropy_logs, data_path)
 
 
 if __name__ == "__main__":

@@ -65,8 +65,8 @@ def plotParetoFront(population, config, save_loc=None,firstFrontOnly=False):
                 plt.show()
 
 
-def diversity(population:list[Organism], config:dict, save_loc_i:str) :
-    N = config["popsize"]
+def diversity(population:list[Organism], save_loc_i:str) :
+    N = len(population)
     with open("{}/diversity.csv".format(save_loc_i), 'w') as diversityFile:
         diversityFile.write("property,entropy,uniformity,spread\n")
         for name in functions:
@@ -101,8 +101,7 @@ def run_rep(i, save_loc, config, selection_scheme):
                 pickle.dump(coverage, f)
             with open("{}/elites_map.pkl".format(save_loc_i), "wb") as f:
                 pickle.dump(elites_map, f)
-        else:
-            diversity(final_pop,config,save_loc_i)
+        diversity(final_pop, save_loc_i)
 
     if config["plot_data"] == 1:
         plot_fitness(fitness_log, config["eval_funcs"].keys(), save_loc_i)
