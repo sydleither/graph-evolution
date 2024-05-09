@@ -154,13 +154,17 @@ def final_pop_distribution(final_pop, eval_funcs, save_loc, plot_all=True, with_
 
 
 def plot_elites_map(elites_map, eval_funcs, features_dict, save_loc, transparent=False):
-    def generate_heatmap(col, row, obj_name, obj_target):
+    def generate_heatmap(col, row, obj_name, obj_target, constant_val=None, constant_idx=None):
         mean_heatmap = np.empty([len(row), len(col)])
         count_heatmap = np.empty([len(row), len(col)])
         two_dim = len(row) > 1
+        third = constant_val is not None and constant_idx is not None
         for i in range(len(col)):
             for j in range(len(row)):
-                cell = elites_map[(col[i], row[j])] if two_dim else elites_map[(col[i],)]
+                cell_idx = [col[i], row[j]] if two_dim else [col[i],]
+                if third:
+                    cell_idx.insert(constant_idx, constant_val)
+                cell = elites_map[tuple(cell_idx)]
                 num_orgs_in_cell = len(cell)
                 if num_orgs_in_cell > 0:
                     mean_heatmap[j,i] = round(mean([org.getError(obj_name, obj_target) for org in cell]), 3)
@@ -169,7 +173,7 @@ def plot_elites_map(elites_map, eval_funcs, features_dict, save_loc, transparent
                 count_heatmap[j,i] = num_orgs_in_cell
         return mean_heatmap, count_heatmap
     
-    def save_heatmaps(mean_heatmap, count_heatmap, col_name, row_name, objective):
+    def save_heatmaps(mean_heatmap, count_heatmap, col_name, row_name, objective, title):
         col_labels = features_dict[col_name]
         row_labels = features_dict[row_name] if row_name is not None else [""]
         figure, axis = plt.subplots(1, 2, figsize=(12,7))
@@ -187,21 +191,27 @@ def plot_elites_map(elites_map, eval_funcs, features_dict, save_loc, transparent
                 _ = axis[1].text(i, j, count_heatmap[j, i], ha="center", va="center", color="black", fontsize="small")
         figure.supxlabel(col_name)
         figure.supylabel(row_name)
+        figure.suptitle(title)
         figure.tight_layout()
         if transparent:
             figure.patch.set_alpha(0.0)
-        plt.savefig("{}/heatmap_{}.png".format(save_loc, objective))
+        plt.savefig("{}/heatmap_{}.png".format(save_loc, name+"_"+title))
         plt.close()
 
     feature_names = list(features_dict.keys())
     feature_bins = list(features_dict.values())
     for name,target in eval_funcs.items():
-        if len(features_dict) == 1:
+        num_features = len(features_dict)
+        if num_features == 1:
             mean_heatmap, count_heatmap = generate_heatmap(feature_bins[0], [None], name, target)
-            save_heatmaps(mean_heatmap, count_heatmap, feature_names[0], None, name)
-        elif len(features_dict) == 2:
+            save_heatmaps(mean_heatmap, count_heatmap, feature_names[0], None, name, "")
+        elif num_features == 2:
             mean_heatmap, count_heatmap = generate_heatmap(feature_bins[0], feature_bins[1], name, target)
-            save_heatmaps(mean_heatmap, count_heatmap, feature_names[0], feature_names[1], name)
+            save_heatmaps(mean_heatmap, count_heatmap, feature_names[0], feature_names[1], name, "")
+        elif num_features == 3:
+            for fval in feature_bins[2]:
+                mean_heatmap, count_heatmap = generate_heatmap(feature_bins[0], feature_bins[1], name, target, fval, 2)
+                save_heatmaps(mean_heatmap, count_heatmap, feature_names[0], feature_names[1], name, f"{feature_names[2]}={fval}")
         else:
             print("Too many features to plot elites map.")
             return
