@@ -71,63 +71,6 @@ class Evaluation:
             return len(nx.community.greedy_modularity_communities(network.getNetworkxObject()))
         else:
             return 0
-    
-
-    #node-level interaction strength properties
-    def pos_out_weight_distribution(self, network) -> float:
-        networkx_obj = network.getNetworkxObject()
-        matrix = network.adjacencyMatrix
-        num_nodes = network.numNodes
-        degree_sequence = networkx_obj.out_degree()
-        count_weights = [0]*(num_nodes+1)
-        sum_weights = [0]*(num_nodes+1)
-        for n,d in degree_sequence:
-            sum_weights[d] += sum([x for x in matrix[n] if x > 0])
-            count_weights[d] += len([x for x in matrix[n] if x > 0])
-        avg_weights = [sum_weights[i]/count_weights[i] if count_weights[i] > 0 else 0 for i in range(num_nodes+1)]
-        return avg_weights
-
-
-    def pos_in_weight_distribution(self, network) -> float:
-        networkx_obj = network.getNetworkxObject()
-        matrix_T = list(zip(*network.adjacencyMatrix))
-        num_nodes = network.numNodes
-        degree_sequence = networkx_obj.in_degree()
-        count_weights = [0]*(num_nodes+1)
-        sum_weights = [0]*(num_nodes+1)
-        for n,d in degree_sequence:
-            sum_weights[d] += sum([x for x in matrix_T[n] if x > 0])
-            count_weights[d] += len([x for x in matrix_T[n] if x > 0])
-        avg_weights = [sum_weights[i]/count_weights[i] if count_weights[i] > 0 else 0 for i in range(num_nodes+1)]
-        return avg_weights
-
-
-    def neg_out_weight_distribution(self, network) -> float:
-        networkx_obj = network.getNetworkxObject()
-        matrix = network.adjacencyMatrix
-        num_nodes = network.numNodes
-        degree_sequence = networkx_obj.out_degree()
-        count_weights = [0]*(num_nodes+1)
-        sum_weights = [0]*(num_nodes+1)
-        for n,d in degree_sequence:
-            sum_weights[d] += sum([x for x in matrix[n] if x < 0])
-            count_weights[d] += len([x for x in matrix[n] if x < 0])
-        avg_weights = [sum_weights[i]/count_weights[i] if count_weights[i] > 0 else 0 for i in range(num_nodes+1)]
-        return avg_weights
-
-
-    def neg_in_weight_distribution(self, network) -> float:
-        networkx_obj = network.getNetworkxObject()
-        matrix_T = list(zip(*network.adjacencyMatrix))
-        num_nodes = network.numNodes
-        degree_sequence = networkx_obj.in_degree()
-        count_weights = [0]*(num_nodes+1)
-        sum_weights = [0]*(num_nodes+1)
-        for n,d in degree_sequence:
-            sum_weights[d] += sum([x for x in matrix_T[n] if x < 0])
-            count_weights[d] += len([x for x in matrix_T[n] if x < 0])
-        avg_weights = [sum_weights[i]/count_weights[i] if count_weights[i] > 0 else 0 for i in range(num_nodes+1)]
-        return avg_weights
 
 
     #interaction strength properties
@@ -150,24 +93,6 @@ class Evaluation:
 
     def proportion_of_self_loops_positive(self, network) -> float:
         return sum([1 for i in range(network.numNodes) if network.adjacencyMatrix[i][i] > 0]) / network.numNodes
-
-
-    def number_of_mutualistic_pairs(self, network) -> int:
-        adj = network.adjacencyMatrix
-        nn = network.numNodes
-        return sum([sum([1 for j in range(i+1, nn) if adj[i][j] > 0 and adj[j][i] > 0]) for i in range(nn)])
-
-
-    def number_of_competiton_pairs(self, network) -> int:
-        adj = network.adjacencyMatrix
-        nn = network.numNodes
-        return sum([sum([1 for j in range(i+1, nn) if adj[i][j] < 0 and adj[j][i] < 0]) for i in range(nn)])
-
-
-    def number_of_parasitism_pairs(self, network) -> int:
-        adj = network.adjacencyMatrix
-        nn = network.numNodes
-        return sum([sum([1 for j in range(i+1, nn) if (adj[i][j] < 0 and adj[j][i] > 0) or (adj[i][j] > 0 and adj[j][i] < 0)]) for i in range(nn)])
     
 
 #all callable evaluation functions
@@ -183,7 +108,6 @@ properties = {funcName:getattr(Evaluation, funcName) for funcName in dir(Evaluat
 distributions = {funcName:getattr(Evaluation, funcName) for funcName in dir(Evaluation) 
                 if callable(getattr(Evaluation, funcName)) and not funcName.startswith("__") and
                 funcName.endswith("_distribution")}
-
 
 
 if __name__ == "__main__":

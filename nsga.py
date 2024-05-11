@@ -117,7 +117,7 @@ def crowding_distance_assignment(I:list[Organism]):
     ############################        
     # additional modifications #
     ############################
-            
+    
     # genotype matrix diversity
     for j in range(I[0].numNodes):
         for k in range(I[0].numNodes):

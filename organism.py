@@ -64,7 +64,7 @@ class Organism:
         self.errors:dict[str:float] = {}
         self.properties:dict = {}
 
-        self.adjacencyMatrix:list[list[float]] = [[round(sparsify(val,self.sparsity,self.weightRange), 3) for val in row] for row in self.genotypeMatrix]
+        self.adjacencyMatrix:list[list[float]] = [[round(sparsify(val, self.sparsity, self.weightRange), 3) for val in row] for row in self.genotypeMatrix]
 
         #internal number of interactions reference
         self.numInteractions:int = sum([sum([1 for val in row if val != 0]) for row in self.adjacencyMatrix])
@@ -163,26 +163,22 @@ class Organism:
         return Organism(self.numNodes, self.sparsity, self.weightRange, newGenome)
 
 
-    def getProperty(self,propertyName:str):
+    def getProperty(self, propertyName:str):
         if propertyName not in self.properties:
             self.properties[propertyName] = ef.functions[propertyName](None,self)
         return self.properties[propertyName]
 
     
-    def getError(self,propertyName:str,target) -> float:
+    def getError(self, propertyName:str, target) -> float:
         if propertyName not in self.errors:
-
             if propertyName.endswith("_weight_distribution"):
                 dist = self.getProperty(propertyName)
                 self.errors[propertyName] = sum([(dist[i]-target[i])**2 for i in range(len(dist)) if dist[i] != 0])
-
             elif propertyName.endswith("_distribution"):
                 dist = self.getProperty(propertyName)
                 self.errors[propertyName] = sum([(dist[i]-target[i])**2 for i in range(len(dist))])
-
             else:
                 self.errors[propertyName] = (self.getProperty(propertyName) - target)**2
-
         return self.errors[propertyName]
 
 
@@ -228,8 +224,8 @@ class Organism:
     #pareto sorting functions #
     ###########################
     def __gt__(self, other):
-        if not isinstance(other,Organism):
-            raise TypeError("Invalid comparison of organism to",type(other))
+        if not isinstance(other, Organism):
+            raise TypeError("Invalid comparison of organism to", type(other))
         if set(self.errors) == set(other.errors):
             #NOTE: potential confusion, gtr defines 'better' based on having smallest score
             someSelfBetter = False
@@ -242,7 +238,7 @@ class Organism:
                     someSelfBetter = True
             return noSelfWorse and someSelfBetter
         else:
-            raise Exception("Organisms must be evaluated on the same criteria.",self.errors.keys(),other.errors.keys())
+            raise Exception("Organisms must be evaluated on the same criteria.", self.errors.keys(), other.errors.keys())
 
 
     def __eq__(self, other):
