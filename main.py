@@ -120,8 +120,9 @@ def main(config, rep=None):
         os.makedirs(save_loc)
 
     config_path = "{}/config.json".format(save_loc)
-    with open(config_path, "w") as f:
-        json.dump(config, f, indent=4)
+    if not os.path.exists(config_path):
+        with open(config_path, "w") as f:
+            json.dump(config, f, indent=4)
 
     if "diversity_funcs" in config:
         selection_scheme = "map-elites"
