@@ -95,6 +95,31 @@ class Evaluation:
         return sum([1 for i in range(network.numNodes) if network.adjacencyMatrix[i][i] > 0]) / network.numNodes
     
 
+    #motifs
+    def proportion_of_mutualistic_pairs(self, network) -> int:
+        adj = network.adjacencyMatrix
+        nn = network.numNodes
+        count_pairs = sum([sum([1 for j in range(i+1, nn) if adj[i][j] > 0 and adj[j][i] > 0]) for i in range(nn)])
+        possible_pairs = ((nn)*(nn-1))/2
+        return count_pairs / possible_pairs
+
+
+    def proportion_of_competition_pairs(self, network) -> int:
+        adj = network.adjacencyMatrix
+        nn = network.numNodes
+        count_pairs = sum([sum([1 for j in range(i+1, nn) if adj[i][j] < 0 and adj[j][i] < 0]) for i in range(nn)])
+        possible_pairs = ((nn)*(nn-1))/2
+        return count_pairs / possible_pairs
+
+
+    def proportion_of_parasitism_pairs(self, network) -> int:
+        adj = network.adjacencyMatrix
+        nn = network.numNodes
+        count_pairs = sum([sum([1 for j in range(i+1, nn) if (adj[i][j] < 0 and adj[j][i] > 0) or (adj[i][j] > 0 and adj[j][i] < 0)]) for i in range(nn)])
+        possible_pairs = ((nn)*(nn-1))/2
+        return count_pairs / possible_pairs
+    
+
 #all callable evaluation functions
 functions = {funcName:getattr(Evaluation, funcName) for funcName in dir(Evaluation) 
                 if callable(getattr(Evaluation, funcName)) and not funcName.startswith("__")}
