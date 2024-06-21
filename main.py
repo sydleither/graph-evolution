@@ -15,6 +15,19 @@ from plot_utils import T, final_pop_distribution, final_pop_histogram, plot_elit
 from random import seed
 
 
+def plot_diversity(diversity_log, save_loc, transparent=False):
+    figure, axis = plt.subplots(1, 1)
+    for func_name in diversity_log.keys():
+        axis.plot(diversity_log[func_name], label=func_name)
+    figure.supxlabel("Generations")
+    figure.supylabel("Count of Unique Types")
+    figure.legend()
+    if transparent:
+        figure.patch.set_alpha(0.0)
+    plt.savefig("{}/spread.png".format(save_loc))
+    plt.close()
+
+
 def plot_fitness(fitness_log, eval_func_names, save_loc, transparent=False):
     figure, axis = plt.subplots(1, 1)
     for func_name in eval_func_names:
@@ -87,7 +100,7 @@ def run_rep(i, save_loc, config, selection_scheme):
         os.makedirs(save_loc_i)
 
     if selection_scheme == "nsga":
-        final_pop, fitness_log = nsgarun(config)
+        final_pop, fitness_log, diversity_log = nsgarun(config)
     else:
         final_pop, fitness_log, coverage, elites_map = elitesrun(config)
 
@@ -95,6 +108,8 @@ def run_rep(i, save_loc, config, selection_scheme):
         with open("{}/final_pop.pkl".format(save_loc_i), "wb") as f:
             pickle.dump(final_pop, f)
         with open("{}/fitness_log.pkl".format(save_loc_i), "wb") as f:
+            pickle.dump(diversity_log, f)
+        with open("{}/diversity_log.pkl".format(save_loc_i), "wb") as f:
             pickle.dump(fitness_log, f)
         if selection_scheme == "map-elites":
             with open("{}/coverage.pkl".format(save_loc_i), "wb") as f:
@@ -105,6 +120,7 @@ def run_rep(i, save_loc, config, selection_scheme):
 
     if config["plot_data"] == 1:
         plot_fitness(fitness_log, config["eval_funcs"].keys(), save_loc_i)
+        plot_diversity(diversity_log, save_loc_i)
         final_pop_histogram(final_pop, config["eval_funcs"], save_loc_i, plot_all=True)
         final_pop_distribution(final_pop, config["eval_funcs"], save_loc_i, plot_all=True, with_error=True)
         plotParetoFront(final_pop, config, save_loc_i)
@@ -143,7 +159,7 @@ if __name__ == "__main__":
     except:
         print("Please give a valid config json to read parameters from.")
         exit()
-    
+
     if len(sys.argv) == 2:
         main(config)
     elif len(sys.argv) == 3:

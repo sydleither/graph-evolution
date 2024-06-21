@@ -1,3 +1,4 @@
+from collections import Counter
 from random import random, sample
 from statistics import mean
 
@@ -15,6 +16,7 @@ def run(config):
 
     population = [Organism(config["network_size"], random(), config["weight_range"]) for _ in range(popsize)]
     fitnessLog = {funcName:[] for funcName in objectives}
+    diversityLog = {"connectance": [], "positive_interactions_proportion":[]}
 
     #Algorithm from: Deb, Kalyanmoy, et al.
     #"A fast and elitist multiobjective genetic algorithm: NSGA-II."
@@ -34,6 +36,7 @@ def run(config):
 
     for gen in range(config["num_generations"]):
         print("Gen:",gen)
+
         #begin of selection
         R = population+children
         F = fast_non_dominated_sort(R)
@@ -61,9 +64,14 @@ def run(config):
             popFitnesses = [org.getError(name, target) for org in population]
             fitnessLog[name].append(mean(popFitnesses))
             _ = [org.getError(name,target) for org in children]
+        connectance_spread = len(Counter([organism.getProperty("connectance") 
+                                          for organism in population]))
+        pip_spread = len(Counter([organism.getProperty("positive_interactions_proportion") 
+                                  for organism in population]))
+        diversityLog["connectance"].append(connectance_spread)
+        diversityLog["positive_interactions_proportion"].append(pip_spread)
 
-
-    return population, fitnessLog
+    return population, fitnessLog, diversityLog
 
 
 #Algorithm from: Deb, Kalyanmoy, et al.
