@@ -75,8 +75,8 @@ def diversity(population:list[Organism], save_loc_i:str) :
                                    else tuple(organism.getProperty(name)) 
                                    for organism in population])
             entropy = -sum([(count/N)*np.log2(count/N) for count in typeCounter.values()])
-            uniformity = entropy / len(typeCounter)
-            spread = len(typeCounter) / N
+            uniformity = entropy / np.log2(len(typeCounter))
+            spread = len(typeCounter)
             diversityFile.write("{},{},{},{}\n".format(name, entropy, uniformity, spread))
 
 
