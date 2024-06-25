@@ -15,46 +15,47 @@ from plot_utils import (T, calculate_confidence_interval,
                         plot_elites_map)
 
 
-def plot_fitnesses_error(fitness_logs, eval_func_names, save_loc, transparent=False):
-    matplotlib.rcParams.update({'font.size': 12})
+def plot_lines_error(logs, ylabel, title, save_loc, logscale=False, transparent=False):
     figure, axis = plt.subplots(1, 1)
-    num_replicates = len(fitness_logs)
-    for func_name in eval_func_names:
-        eval_func_data = [fitness_logs[i][func_name] for i in range(num_replicates)]
-        eval_func_data_mean, neg_error, pos_error = calculate_confidence_interval(eval_func_data)
-        axis.plot(eval_func_data_mean, label=func_name)
-        axis.fill_between(range(len(eval_func_data_mean)), neg_error, pos_error, alpha=0.5)
-    axis.set_yscale("log")
+    num_replicates = len(logs)
+    for func_name in logs[0].keys():
+        func_data = [logs[i][func_name] for i in range(num_replicates)]
+        func_data_mean, neg_error, pos_error = calculate_confidence_interval(func_data)
+        axis.plot(func_data_mean, label=func_name)
+        axis.fill_between(range(len(func_data_mean)), neg_error, pos_error, alpha=0.5)
+    if logscale:
+        axis.set_yscale("log")
     figure.supxlabel("Generations")
-    figure.supylabel("Error")
+    figure.supylabel(ylabel)
     figure.legend()
     if transparent:
         figure.patch.set_alpha(0.0)
-    plt.savefig("{}/fitness_w_error.png".format(save_loc))
+    plt.savefig("{}/{}.png".format(save_loc, title))
     plt.close()
 
 
-def plot_fitnesses_sep(fitness_logs, eval_func_names, save_loc, transparent=False):
-    num_plots = len(eval_func_names)
+def plot_lines_sep(logs, ylabel, title, save_loc, logscale=False, transparent=False):
+    num_plots = len(logs[0])
     num_plots = num_plots if num_plots > 1 else 2
     figure, axis = plt.subplots(num_plots, 1, figsize=(5,3*num_plots))
     sp = 0
-    for func_name in eval_func_names:
-        for run in range(len(fitness_logs)):
-            axis[sp].plot(fitness_logs[run][func_name], alpha=0.5, color='gray')
-        eval_func_data = [fitness_logs[i][func_name] for i in range(len(fitness_logs))]
-        eval_func_data_mean = [np.mean([eval_func_data[i][j] for i in range(len(eval_func_data))]) for j in range(len(eval_func_data[0]))]
-        axis[sp].plot(eval_func_data_mean, color="forestgreen")
+    for func_name in logs[0].keys():
+        for run in range(len(logs)):
+            axis[sp].plot(logs[run][func_name], alpha=0.5, color='gray')
+        func_data = [logs[i][func_name] for i in range(len(logs))]
+        func_data_mean = [np.mean([func_data[i][j] for i in range(len(func_data))]) for j in range(len(func_data[0]))]
+        axis[sp].plot(func_data_mean, color="forestgreen")
         axis[sp].set_title(func_name)
-        axis[sp].set_yscale("log")
+        if logscale:
+            axis[sp].set_yscale("log")
         sp += 1
     figure.supxlabel("Generations")
-    figure.supylabel("Error")
+    figure.supylabel(ylabel)
     figure.suptitle("Error Over Time")
     figure.tight_layout(rect=[0, 0.03, 1, 0.95])
     if transparent:
         figure.patch.set_alpha(0.0)
-    plt.savefig("{}/fitness.png".format(save_loc))
+    plt.savefig("{}/{}.png".format(save_loc, title))
     plt.close()
 
 
@@ -123,6 +124,7 @@ def combined_diversity(logs, data_path):
 def main(config_dir):
     final_pops = []
     fitness_logs = []
+    diversity_logs = []
     entropy_logs = []
     elites_maps = []
     coverages = []
@@ -137,6 +139,8 @@ def main(config_dir):
                     final_pops.append(pickle.load(f))
                 with open("{}/fitness_log.pkl".format(full_path), "rb") as f:
                     fitness_logs.append(pickle.load(f))
+                with open("{}/diversity_log.pkl".format(full_path), "rb") as f:
+                    diversity_logs.append(pickle.load(f))
                 with open("{}/diversity.csv".format(full_path), "r") as f:
                     rdr = reader(f)
                     _ = next(f) #remove header
@@ -154,8 +158,15 @@ def main(config_dir):
     eval_funcs = config_file["eval_funcs"]
     final_pop_histogram(final_pops, eval_funcs, data_path, plot_all=True)
     final_pop_distribution(final_pops, eval_funcs, data_path, plot_all=True)
-    plot_fitnesses_sep(fitness_logs, eval_funcs.keys(), data_path)
-    plot_fitnesses_error(fitness_logs, eval_funcs.keys(), data_path)
+    plot_lines_sep(fitness_logs, "Error", "error_sep", data_path, logscale=True)
+    plot_lines_error(fitness_logs, "Error", "error_ci", data_path, logscale=True)
+    spread_subset = [{"connectance":x["connectance"], 
+                        "positive_interactions_proportion":x["positive_interactions_proportion"]} for x in diversity_logs]
+    plot_lines_sep(spread_subset, "Count of Unique Types", "spread_sep", data_path)
+    plot_lines_error(spread_subset, "Count of Unique Types", "spread_ci", data_path)
+    distance_subset = [{"distance": x["distance"]} for x in diversity_logs]
+    plot_lines_sep(distance_subset, "Distance", "distance_sep", data_path)
+    plot_lines_error(distance_subset, "Distance", "distance_ci", data_path)
     combined_pareto_front(final_pops, config_file, data_path)
     combined_diversity(entropy_logs, data_path)
     if "diversity_funcs" in config_file:

@@ -15,17 +15,18 @@ from plot_utils import T, final_pop_distribution, final_pop_histogram, plot_elit
 from random import seed
 
 
-def plot_fitness(fitness_log, eval_func_names, save_loc, transparent=False):
+def plot_line(log:dict, ylabel, title, save_loc, logscale=False, transparent=False):
     figure, axis = plt.subplots(1, 1)
-    for func_name in eval_func_names:
-        axis.plot(fitness_log[func_name], label=func_name)
-    axis.set_yscale("log")
+    for func_name in log.keys():
+        axis.plot(log[func_name], label=func_name)
+    if logscale:
+        axis.set_yscale("log")
     figure.supxlabel("Generations")
-    figure.supylabel("Error")
+    figure.supylabel(ylabel)
     figure.legend()
     if transparent:
         figure.patch.set_alpha(0.0)
-    plt.savefig("{}/fitness.png".format(save_loc))
+    plt.savefig("{}/{}.png".format(save_loc, title))
     plt.close()
 
 
@@ -75,8 +76,8 @@ def diversity(population:list[Organism], save_loc_i:str) :
                                    else tuple(organism.getProperty(name)) 
                                    for organism in population])
             entropy = -sum([(count/N)*np.log2(count/N) for count in typeCounter.values()])
-            uniformity = entropy / len(typeCounter)
-            spread = len(typeCounter) / N
+            uniformity = entropy / np.log2(len(typeCounter))
+            spread = len(typeCounter)
             diversityFile.write("{},{},{},{}\n".format(name, entropy, uniformity, spread))
 
 
@@ -87,7 +88,7 @@ def run_rep(i, save_loc, config, selection_scheme):
         os.makedirs(save_loc_i)
 
     if selection_scheme == "nsga":
-        final_pop, fitness_log = nsgarun(config)
+        final_pop, fitness_log, diversity_log = nsgarun(config)
     else:
         final_pop, fitness_log, coverage, elites_map = elitesrun(config)
 
@@ -96,6 +97,8 @@ def run_rep(i, save_loc, config, selection_scheme):
             pickle.dump(final_pop, f)
         with open("{}/fitness_log.pkl".format(save_loc_i), "wb") as f:
             pickle.dump(fitness_log, f)
+        with open("{}/diversity_log.pkl".format(save_loc_i), "wb") as f:
+            pickle.dump(diversity_log, f)
         if selection_scheme == "map-elites":
             with open("{}/coverage.pkl".format(save_loc_i), "wb") as f:
                 pickle.dump(coverage, f)
@@ -104,7 +107,12 @@ def run_rep(i, save_loc, config, selection_scheme):
         diversity(final_pop, save_loc_i)
 
     if config["plot_data"] == 1:
-        plot_fitness(fitness_log, config["eval_funcs"].keys(), save_loc_i)
+        plot_line(fitness_log, "Error", "error", save_loc_i, logscale=True)
+        spread_subset = {"connectance":diversity_log["connectance"], 
+                         "positive_interactions_proportion":diversity_log["positive_interactions_proportion"]}
+        plot_line(spread_subset, "Count of Unique Types", "spread", save_loc_i)
+        distance_subset = {"distance": diversity_log["distance"]}
+        plot_line(distance_subset, "Distance", "distance", save_loc_i)
         final_pop_histogram(final_pop, config["eval_funcs"], save_loc_i, plot_all=True)
         final_pop_distribution(final_pop, config["eval_funcs"], save_loc_i, plot_all=True, with_error=True)
         plotParetoFront(final_pop, config, save_loc_i)
@@ -143,7 +151,7 @@ if __name__ == "__main__":
     except:
         print("Please give a valid config json to read parameters from.")
         exit()
-    
+
     if len(sys.argv) == 2:
         main(config)
     elif len(sys.argv) == 3:
