@@ -51,7 +51,6 @@ def plot_lines_sep(logs, ylabel, title, save_loc, logscale=False, transparent=Fa
         sp += 1
     figure.supxlabel("Generations")
     figure.supylabel(ylabel)
-    figure.suptitle("Error Over Time")
     figure.tight_layout(rect=[0, 0.03, 1, 0.95])
     if transparent:
         figure.patch.set_alpha(0.0)
@@ -160,13 +159,7 @@ def main(config_dir):
     final_pop_distribution(final_pops, eval_funcs, data_path, plot_all=True)
     plot_lines_sep(fitness_logs, "Error", "error_sep", data_path, logscale=True)
     plot_lines_error(fitness_logs, "Error", "error_ci", data_path, logscale=True)
-    spread_subset = [{"connectance":x["connectance"], 
-                        "positive_interactions_proportion":x["positive_interactions_proportion"]} for x in diversity_logs]
-    plot_lines_sep(spread_subset, "Count of Unique Types", "spread_sep", data_path)
-    plot_lines_error(spread_subset, "Count of Unique Types", "spread_ci", data_path)
-    distance_subset = [{"distance": x["distance"]} for x in diversity_logs]
-    plot_lines_sep(distance_subset, "Distance", "distance_sep", data_path)
-    plot_lines_error(distance_subset, "Distance", "distance_ci", data_path)
+    plot_lines_sep(diversity_logs, "", "spread_sep", data_path)
     combined_pareto_front(final_pops, config_file, data_path)
     combined_diversity(entropy_logs, data_path)
     if "diversity_funcs" in config_file:

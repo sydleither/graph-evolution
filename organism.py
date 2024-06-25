@@ -51,6 +51,9 @@ class Organism:
         Organism.nextID += 1
         self.nsga_rank = None
         self.nsga_distance = None
+        self.crowding_distance = None
+        self.genotype_distance = None
+        self.sparsity_distance = None
 
         if genome is None:
             self.genotypeMatrix:list[list[float]] = [[random() for _ in range(numNodes)] for _ in range(numNodes)]

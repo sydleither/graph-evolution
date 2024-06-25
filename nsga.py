@@ -16,7 +16,8 @@ def run(config):
 
     population = [Organism(config["network_size"], random(), config["weight_range"]) for _ in range(popsize)]
     fitnessLog = {funcName:[] for funcName in objectives}
-    diversityLog = {"connectance": [], "positive_interactions_proportion":[], "distance":[]}
+    diversityLog = {"connectance": [], "positive_interactions_proportion":[],
+                    "crowding_distance":[], "genotype_distance":[], "sparsity_distance":[]}
 
     #Algorithm from: Deb, Kalyanmoy, et al.
     #"A fast and elitist multiobjective genetic algorithm: NSGA-II."
@@ -69,8 +70,9 @@ def run(config):
                                   for org in population]))
         diversityLog["connectance"].append(connectance_spread)
         diversityLog["positive_interactions_proportion"].append(pip_spread)
-        mean_distance = mean([org.nsga_distance for org in population])
-        diversityLog["distance"].append(mean_distance if mean_distance != float("inf") else 1000)
+        diversityLog["crowding_distance"].append(mean([org.crowding_distance for org in population]))
+        diversityLog["sparsity_distance"].append(mean([org.sparsity_distance for org in population]))
+        diversityLog["genotype_distance"].append(mean([org.genotype_distance for org in population]))
 
     return population, fitnessLog, diversityLog
 
@@ -114,38 +116,44 @@ def crowding_distance_assignment(I:list[Organism]):
     l = len(I)
     if l == 0: return []
     for i in I:
-        i.nsga_distance = 0
+        i.crowding_distance = 0
+        i.genotype_distance = 0
+        i.sparsity_distance = 0
+
+    num_obj = len(I[0].errors.keys())
     for m in I[0].errors.keys():
         I.sort(key=lambda org: org.errors[m])
-        I[0].nsga_distance = float("inf") #NOTE: this can be conditioned on rng > 0
-        I[-1].nsga_distance = float('inf')
         rng = I[-1].errors[m]-I[0].errors[m]
+        I[0].crowding_distance = rng/num_obj
+        I[-1].crowding_distance = rng/num_obj
         if rng == 0: continue
         for i in range(1,l-2):
-            I[i].nsga_distance += (I[i+1].errors[m]-I[i-1].errors[m])/rng
-    ############################        
-    # additional modifications #
-    ############################
-    
+            I[i].crowding_distance += (I[i+1].errors[m]-I[i-1].errors[m])/(rng*num_obj)
+
     # genotype matrix diversity
+    num_vals = I[0].numNodes**2
     for j in range(I[0].numNodes):
         for k in range(I[0].numNodes):
             I.sort(key=lambda org: org.genotypeMatrix[j][k])
-            I[0].nsga_distance = float("inf")
-            I[-1].nsga_distance = float('inf')
             rng = I[-1].genotypeMatrix[j][k] - I[0].genotypeMatrix[j][k]
+            I[0].genotype_distance = rng/num_vals
+            I[-1].genotype_distance = rng/num_vals
             if rng == 0: continue
             for i in range(1,l-2):
-                I[i].nsga_distance += (I[i+1].genotypeMatrix[j][k]-I[i-1].genotypeMatrix[j][k])/rng
+                I[i].genotype_distance += (I[i+1].genotypeMatrix[j][k]-I[i-1].genotypeMatrix[j][k])/(rng*num_vals)
 
     # sparsity diversity
     I.sort(key=lambda org: org.sparsity)
-    I[0].nsga_distance = float("inf")
-    I[-1].nsga_distance = float('inf')
     rng = I[-1].sparsity - I[0].sparsity
+    I[0].sparsity_distance = rng
+    I[-1].sparsity_distance = rng
     if rng != 0:
         for i in range(1,l-2):
-            I[i].nsga_distance += (I[i+1].sparsity-I[i-1].sparsity)/rng
+            I[i].sparsity_distance += (I[i+1].sparsity-I[i-1].sparsity)/rng
+
+    # add up
+    for i in I:
+        i.nsga_distance = i.crowding_distance + i.genotype_distance + i.sparsity_distance
 
 
 #Algorithm from: Deb, Kalyanmoy, et al.

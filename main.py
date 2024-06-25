@@ -108,10 +108,10 @@ def run_rep(i, save_loc, config, selection_scheme):
 
     if config["plot_data"] == 1:
         plot_line(fitness_log, "Error", "error", save_loc_i, logscale=True)
-        spread_subset = {"connectance":diversity_log["connectance"], 
-                         "positive_interactions_proportion":diversity_log["positive_interactions_proportion"]}
+        spread_obj = ["connectance", "positive_interactions_proportion"]
+        spread_subset = {k:diversity_log[k] for k in spread_obj}
+        distance_subset = {k:diversity_log[k] for k in diversity_log if k not in spread_obj}
         plot_line(spread_subset, "Count of Unique Types", "spread", save_loc_i)
-        distance_subset = {"distance": diversity_log["distance"]}
         plot_line(distance_subset, "Distance", "distance", save_loc_i)
         final_pop_histogram(final_pop, config["eval_funcs"], save_loc_i, plot_all=True)
         final_pop_distribution(final_pop, config["eval_funcs"], save_loc_i, plot_all=True, with_error=True)
