@@ -1,6 +1,7 @@
 from itertools import product
 from random import random, sample
 from statistics import mean
+from sys import maxsize
 
 import numpy as np
 
@@ -9,6 +10,11 @@ from organism import Organism
 #multi-objective map-elites based on:
 #"Illuminating search spaces by mapping elites" (Mouret & Clune, 2015)
 #"Multi-Objective Quality Diversity Optimization" (Pierrot et al., 2023)
+
+
+def get_features_dict(hash_resolution):
+    return {"sparsity":np.round(np.linspace(0, 1, 11), decimals=1), 
+            "genome_hash":np.linspace(0, maxsize, hash_resolution)}
 
 
 def get_orgs_in_map(elites_map):
@@ -21,7 +27,7 @@ def bin_value(bins, value):
     return bins[(np.abs(bins - value)).argmin()]
 
 
-def pareto_front(population):
+def first_front(population):
     F = []
     S = {}
     n = {}
@@ -40,14 +46,14 @@ def pareto_front(population):
 
 def crowding_distance_assignment(I:list[Organism]):
     l = len(I)
-    if l == 0: return []
+    if l == 0: return
     for i in I:
         i.nsga_distance = 0
     for m in I[0].errors.keys():
         I.sort(key=lambda org: org.errors[m])
         I[0].nsga_distance = float("inf")
         I[-1].nsga_distance = float("inf")
-        rng = I[-1].errors[m]-I[0].errors[m]
+        rng = I[-1].errors[m] - I[0].errors[m]
         if rng == 0: continue
         for i in range(1,l-2):
             I[i].nsga_distance += (I[i+1].errors[m]-I[i-1].errors[m])/rng
@@ -56,18 +62,16 @@ def crowding_distance_assignment(I:list[Organism]):
 def run(config):
     #extract relevant config information for efficiency
     objectives = config["eval_funcs"]
-    features = config["diversity_funcs"]
-    pareto_size = config["pareto_size"]
+    cell_capacity = config["cell_capacity"]
     mutation_rate = config["mutation_rate"]
     mutation_odds = config["mutation_odds"]
     crossover_rate = config["crossover_rate"]
     crossover_odds = config["crossover_odds"]
-    #extract features (np array required for bin_values())
+    features = get_features_dict(config["hash_resolution"])
     feature_bins = list(features.values())
-    features = {name:np.asarray(bins) for name,bins in features.items()}
     #initalize elites map
     elites_map = {x:[] for x in product(*feature_bins)}
-    elites_map_max_size = len(elites_map) * pareto_size
+    elites_map_max_size = len(elites_map) * cell_capacity
     #initalize tracking performance over time
     fitnessLog = {funcName:[] for funcName in objectives}
     coverage = []
@@ -85,16 +89,19 @@ def run(config):
         [org.getError(name, target) for name, target in objectives.items()]
 
         #get the organism's value for each feature, round that value to the nearest bin, convert the bin into its elites map index
-        cell_idx = tuple(bin_value(features[name], org.getProperty(name)) for name in features)
+        genotype_tuple = tuple([tuple([val for val in row]) for row in org.genotypeMatrix])
+        cell_idx_0 = bin_value(features["sparsity"], org.sparsity)
+        cell_idx_1 = bin_value(features["genome_hash"], hash(genotype_tuple))
+        cell_idx = tuple([cell_idx_0, cell_idx_1])
         #calculate pareto front of cell when including the new organism
         cell = elites_map[cell_idx]
         cell.append(org)
-        new_front = pareto_front(cell)
+        new_front = first_front(cell)
         #replace the cell with the new pareto front
-        if len(new_front) > pareto_size:
+        if len(new_front) > cell_capacity:
             crowding_distance_assignment(new_front)
             new_front.sort(key=lambda org: org.nsga_distance,reverse=True)
-            new_cell = new_front[:pareto_size]
+            new_cell = new_front[:cell_capacity]
         else:
             new_cell = new_front
         elites_map[cell_idx] = new_cell
