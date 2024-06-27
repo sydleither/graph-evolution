@@ -65,19 +65,22 @@ def plotParetoFront(population, config, save_loc=None, first_front_only=False):
                 plt.show()
 
 
-def diversity(population:list[Organism], save_loc_i:str):
-    N = len(population)
+def diversity(population:list[Organism], perfect_pop:list[Organism], save_loc_i:str):
+    N = len(perfect_pop)
     with open("{}/diversity.csv".format(save_loc_i), 'w') as diversityFile:
-        diversityFile.write("property,entropy,uniformity,spread\n")
+        diversityFile.write("property,entropy,uniformity,spread,final_pop_size,optimized_size\n")
         for name in functions:
             typeCounter = Counter([organism.getProperty(name) 
                                    if "distribution" not in name 
                                    else tuple(organism.getProperty(name)) 
-                                   for organism in population])
+                                   for organism in perfect_pop])
             entropy = -sum([(count/N)*np.log2(count/N) for count in typeCounter.values()])
             uniformity = entropy / np.log2(len(typeCounter))
             spread = len(typeCounter)
-            diversityFile.write("{},{},{},{}\n".format(name, entropy, uniformity, spread))
+            final_pop_size = len(population)
+            optimized_size = N
+            diversityFile.write("{},{},{},{},{},{}\n".format(name, entropy, uniformity, 
+                                                             spread, final_pop_size, optimized_size))
 
 
 def run_rep(i, save_loc, config):
@@ -99,7 +102,7 @@ def run_rep(i, save_loc, config):
             pickle.dump(coverage, f)
         with open("{}/elites_map.pkl".format(save_loc_i), "wb") as f:
             pickle.dump(elites_map, f)
-        diversity(perfect_pop, save_loc_i)
+        diversity(final_pop, perfect_pop, save_loc_i)
 
     if config["plot_data"] == 1:
         plot_fitness(fitness_log, objectives.keys(), save_loc_i)

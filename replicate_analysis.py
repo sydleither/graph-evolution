@@ -108,16 +108,18 @@ def combined_diversity(logs, data_path):
     scratch = {}
     for log in logs:
         for row in log:
-            name, entropy, uniformity, spread = row
+            name, entropy, uniformity, spread, final_pop_size, perfect_pop_size = row
             if name not in scratch:
                 scratch[name] = []
-            scratch[name].append([float(entropy), float(uniformity), float(spread)])
+            scratch[name].append([float(entropy), float(uniformity), float(spread), 
+                                  float(final_pop_size), float(perfect_pop_size)])
     for name in scratch:
         scratch[name] = [mean(x) for x in T(scratch[name])]
     with open("{}/diversity_all.csv".format(data_path), 'w') as entropyFile:
-        entropyFile.write("property,entropy,uniformity,spread\n")
+        entropyFile.write("property,entropy,uniformity,spread,final_pop_size,optimized_size\n")
         for name, measures in scratch.items():
-            entropyFile.write("{},{},{},{}\n".format(name, measures[0], measures[1], measures[2]))
+            entropyFile.write("{},{},{},{},{},{}\n".format(name, measures[0], measures[1], 
+                                                     measures[2], measures[3], measures[4]))
 
 
 def main(config_dir):
