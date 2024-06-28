@@ -90,9 +90,9 @@ def run(config):
 
         #get the organism's value for each feature, round that value to the nearest bin, convert the bin into its elites map index
         flat_genome = [x for y in org.genotypeMatrix for x in y]
-        cell_idx_0 = bin_value(features["sparsity"], org.sparsity)
-        cell_idx_1 = bin_value(features["mean_edge"], mean(flat_genome))
-        cell_idx_2 = bin_value(features["var_edge"], variance(flat_genome))
+        cell_idx_0 = bin_value(features["mean_edge"], mean(flat_genome))
+        cell_idx_1 = bin_value(features["var_edge"], variance(flat_genome))
+        cell_idx_2 = bin_value(features["sparsity"], org.sparsity)
         cell_idx = tuple([cell_idx_0, cell_idx_1, cell_idx_2])
         #calculate pareto front of cell when including the new organism
         cell = elites_map[cell_idx]
