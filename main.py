@@ -10,8 +10,8 @@ import numpy as np
 from elites import get_features_dict, run
 from eval_functions import functions
 from organism import Organism
-from plot_utils import (fast_non_dominated_sort, final_pop_distribution, 
-                        final_pop_histogram, get_perfect_pop, plot_elites_map, T)
+from plot_utils import (fast_non_dominated_sort, final_pop_histogram, 
+                        get_perfect_pop, plot_elites_map, T)
 from random import seed
 
 
@@ -107,10 +107,8 @@ def run_rep(i, save_loc, config):
     if config["plot_data"] == 1:
         plot_fitness(fitness_log, objectives.keys(), save_loc_i)
         final_pop_histogram(perfect_pop, objectives, save_loc_i, plot_all=True)
-        final_pop_distribution(perfect_pop, objectives, save_loc_i, plot_all=True, with_error=True)
-        plotParetoFront(perfect_pop, config, save_loc_i)
         plot_coverage(coverage, save_loc_i)
-        plot_elites_map(elites_map, objectives, get_features_dict(config["hash_resolution"]), save_loc_i, transparent=False)
+        plot_elites_map(elites_map, objectives, get_features_dict(), save_loc_i, transparent=False)
 
 
 def main(config, rep=None):
