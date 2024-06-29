@@ -10,7 +10,8 @@ import numpy as np
 
 from elites import get_features_dict
 from plot_utils import (calculate_confidence_interval, fast_non_dominated_sort, 
-                        final_pop_histogram, get_perfect_pop, plot_elites_map, T)
+                        final_pop_distribution, final_pop_histogram, 
+                        get_perfect_pop, plot_elites_map, T)
 
 
 def plot_fitnesses_error(fitness_logs, eval_func_names, save_loc, transparent=False):
@@ -155,11 +156,13 @@ def main(config_dir):
     perfect_pops = []
     for final_pop in final_pops:
         perfect_pops.append(get_perfect_pop(final_pop, eval_funcs))
-    features_dict = get_features_dict()
+    features_dict = get_features_dict(config_file["hash_resolution"])
 
     final_pop_histogram(perfect_pops, eval_funcs, data_path, plot_all=True)
+    final_pop_distribution(perfect_pops, eval_funcs, data_path, plot_all=True)
     plot_fitnesses_sep(fitness_logs, eval_funcs.keys(), data_path)
     plot_fitnesses_error(fitness_logs, eval_funcs.keys(), data_path)
+    combined_pareto_front(final_pops, config_file, data_path)
     combined_diversity(diversity_logs, data_path)
     plot_coverage(coverages, data_path)
     combo_elites_map = {}
