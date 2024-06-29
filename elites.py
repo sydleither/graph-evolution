@@ -12,8 +12,8 @@ from organism import Organism
 
 
 def get_features_dict():
-    return {"mean_edge":np.round(np.linspace(0, 1, 11), decimals=1),
-            "var_edge":np.round(np.linspace(0, 1, 11), decimals=1),
+    return {"mean_edge":np.round(np.linspace(0.3, 0.7, 11), decimals=1),
+            "var_edge":np.round(np.linspace(0, 0.2, 11), decimals=1),
             "sparsity":np.round(np.linspace(0, 1, 11), decimals=1)}
 
 
