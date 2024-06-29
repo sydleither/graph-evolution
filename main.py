@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from elites import get_features_dict, run
-from eval_functions import functions, properties
+from eval_functions import functions
 from organism import Organism
 from plot_utils import (fast_non_dominated_sort, final_pop_distribution, 
                         final_pop_histogram, get_perfect_pop, plot_elites_map, T)
@@ -90,13 +90,9 @@ def run_rep(i, save_loc, config):
         os.makedirs(save_loc_i)
 
     objectives = config["eval_funcs"]
-    drift_properties = [p for p in properties if p not in objectives]
-    if len(drift_properties) > 18:
-        print("Too many drift properties to hash.")
-        exit()
     final_pop, fitness_log, coverage, elites_map = run(config)
     perfect_pop = get_perfect_pop(final_pop, objectives)
-    features = get_features_dict(config["hash_resolution"], float("1"+"9"*len(drift_properties)))
+    features = get_features_dict(config["hash_resolution"])
 
     if config["save_data"] == 1:
         with open("{}/final_pop.pkl".format(save_loc_i), "wb") as f:

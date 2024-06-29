@@ -1,20 +1,20 @@
 from itertools import product
 from random import random, sample
 from statistics import mean
+from sys import maxsize
 
 import numpy as np
 
 from organism import Organism
-from eval_functions import properties
 
 #multi-objective map-elites based on:
 #"Illuminating search spaces by mapping elites" (Mouret & Clune, 2015)
 #"Multi-Objective Quality Diversity Optimization" (Pierrot et al., 2023)
 
 
-def get_features_dict(hash_resolution, max_hash):
+def get_features_dict(hash_resolution):
     return {"sparsity":np.round(np.linspace(0, 1, 11), decimals=1), 
-            "genome_hash":np.linspace(0, max_hash, hash_resolution)}
+            "genome_hash":np.linspace(0, maxsize, hash_resolution)}
 
 
 def get_orgs_in_map(elites_map):
@@ -59,15 +59,13 @@ def crowding_distance_assignment(I:list[Organism]):
             I[i].nsga_distance += (I[i+1].errors[m]-I[i-1].errors[m])/rng
 
 
-def genome_hash(org, drift_properties):
-    hash_id = "1"
-    for property_name in drift_properties:
-        property_val = org.getProperty(property_name)
-        if type(property_val) == float:
-            hash_id += str(abs(property_val))[2]
-        elif type(property_val) == int:
-            hash_id += str(property_val%10)[0]
-    return int(hash_id)
+def genome_hash(genotype_matrix, num_nodes):
+    hash_sum = 0
+    nn2 = num_nodes**2
+    for i in range(num_nodes):
+        for j in range(num_nodes):
+            hash_sum += hash(genotype_matrix[i][j]) / nn2
+    return hash_sum
 
 
 def run(config):
@@ -78,8 +76,8 @@ def run(config):
     mutation_odds = config["mutation_odds"]
     crossover_rate = config["crossover_rate"]
     crossover_odds = config["crossover_odds"]
-    drift_properties = [p for p in properties if p not in objectives]
-    features = get_features_dict(config["hash_resolution"], float("1"+"9"*len(drift_properties)))
+    num_nodes = config["network_size"]
+    features = get_features_dict(config["hash_resolution"])
     feature_bins = list(features.values())
     #initalize elites map
     elites_map = {x:[] for x in product(*feature_bins)}
@@ -102,7 +100,7 @@ def run(config):
 
         #get the organism's value for each feature, round that value to the nearest bin, convert the bin into its elites map index
         cell_idx_0 = bin_value(features["sparsity"], org.sparsity)
-        cell_idx_1 = bin_value(features["genome_hash"], genome_hash(org, drift_properties))
+        cell_idx_1 = bin_value(features["genome_hash"], genome_hash(org.genotypeMatrix, num_nodes))
         cell_idx = tuple([cell_idx_0, cell_idx_1])
         #calculate pareto front of cell when including the new organism
         cell = elites_map[cell_idx]
