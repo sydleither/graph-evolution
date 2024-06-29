@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from elites import get_features_dict, run
-from eval_functions import functions
+from eval_functions import functions, properties
 from organism import Organism
 from plot_utils import (fast_non_dominated_sort, final_pop_distribution, 
                         final_pop_histogram, get_perfect_pop, plot_elites_map, T)
@@ -89,9 +89,14 @@ def run_rep(i, save_loc, config):
     if not os.path.exists(save_loc_i):
         os.makedirs(save_loc_i)
 
-    final_pop, fitness_log, coverage, elites_map = run(config)
     objectives = config["eval_funcs"]
+    drift_properties = [p for p in properties if p not in objectives]
+    if len(drift_properties) > 18:
+        print("Too many drift properties to hash.")
+        exit()
+    final_pop, fitness_log, coverage, elites_map = run(config)
     perfect_pop = get_perfect_pop(final_pop, objectives)
+    features = get_features_dict(config["hash_resolution"], float("1"+"9"*len(drift_properties)))
 
     if config["save_data"] == 1:
         with open("{}/final_pop.pkl".format(save_loc_i), "wb") as f:
@@ -108,9 +113,8 @@ def run_rep(i, save_loc, config):
         plot_fitness(fitness_log, objectives.keys(), save_loc_i)
         final_pop_histogram(perfect_pop, objectives, save_loc_i, plot_all=True)
         final_pop_distribution(perfect_pop, objectives, save_loc_i, plot_all=True, with_error=True)
-        plotParetoFront(perfect_pop, config, save_loc_i)
         plot_coverage(coverage, save_loc_i)
-        plot_elites_map(elites_map, objectives, get_features_dict(config["hash_resolution"]), save_loc_i, transparent=False)
+        plot_elites_map(elites_map, objectives, features, save_loc_i, transparent=False)
 
 
 def main(config, rep=None):
