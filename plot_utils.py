@@ -205,7 +205,7 @@ def plot_elites_map(elites_map, eval_funcs, features_dict, save_loc, transparent
                 cell = elites_map[tuple(cell_idx)]
                 num_orgs_in_cell = len(cell)
                 if num_orgs_in_cell > 0:
-                    mean_heatmap[j,i] = round(mean([org.getError(obj_name, obj_target) for org in cell]), 3)
+                    mean_heatmap[j,i] = mean([org.getError(obj_name, obj_target) for org in cell])
                 else:
                     mean_heatmap[j,i] = None
                 count_heatmap[j,i] = num_orgs_in_cell
@@ -226,8 +226,8 @@ def plot_elites_map(elites_map, eval_funcs, features_dict, save_loc, transparent
             axis[1].set_yticks(np.arange(len(row_labels)), labels=row_labels)
         for i in range(len(col_labels)):
             for j in range(len(row_labels)):
-                _ = axis[0].text(i, j, mean_heatmap[j, i], ha="center", va="center", color="black", fontsize="small")
-                _ = axis[1].text(i, j, count_heatmap[j, i], ha="center", va="center", color="black", fontsize="small")
+                _ = axis[0].text(i, j, round(mean_heatmap[j, i], 3), ha="center", va="center", color="black", fontsize="x-small")
+                _ = axis[1].text(i, j, int(count_heatmap[j, i]), ha="center", va="center", color="black", fontsize="small")
         figure.supxlabel(col_name)
         figure.supylabel(row_name)
         figure.suptitle(title)

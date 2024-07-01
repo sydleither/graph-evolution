@@ -1,8 +1,8 @@
 from itertools import product
 from random import random, sample
 from statistics import mean
-from sys import maxsize
 
+import networkx as nx
 import numpy as np
 
 from organism import Organism
@@ -14,7 +14,7 @@ from organism import Organism
 
 def get_features_dict(hash_resolution):
     return {"sparsity":np.round(np.linspace(0, 1, 11), decimals=1), 
-            "genome_hash":np.linspace(0, maxsize, hash_resolution)}
+            "genome_hash":np.linspace(0, int("F"*12, 16), hash_resolution)}
 
 
 def get_orgs_in_map(elites_map):
@@ -60,12 +60,9 @@ def crowding_distance_assignment(I:list[Organism]):
 
 
 def genome_hash(genotype_matrix, num_nodes):
-    hash_sum = 0
-    nn2 = num_nodes**2
-    for i in range(num_nodes):
-        for j in range(num_nodes):
-            hash_sum += hash(genotype_matrix[i][j]) / nn2
-    return hash_sum
+    G = nx.DiGraph(np.array(genotype_matrix))
+    hash_hex = nx.weisfeiler_lehman_graph_hash(G, edge_attr="weight", iterations=num_nodes//10, digest_size=6)
+    return int(hash_hex, 16)
 
 
 def run(config):
