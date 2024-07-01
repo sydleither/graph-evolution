@@ -14,7 +14,8 @@ from organism import Organism
 
 def get_features_dict(hash_resolution):
     return {"sparsity":np.round(np.linspace(0, 1, 11), decimals=1), 
-            "genome_hash":np.linspace(0, int("F"*12, 16), hash_resolution)}
+            "genome_hash":np.linspace(0, int("F"*12, 16), hash_resolution),
+            "avg_genome_val":np.round(np.linspace(0, 1, 11), decimals=1)}
 
 
 def get_orgs_in_map(elites_map):
@@ -98,7 +99,8 @@ def run(config):
         #get the organism's value for each feature, round that value to the nearest bin, convert the bin into its elites map index
         cell_idx_0 = bin_value(features["sparsity"], org.sparsity)
         cell_idx_1 = bin_value(features["genome_hash"], genome_hash(org.genotypeMatrix, num_nodes))
-        cell_idx = tuple([cell_idx_0, cell_idx_1])
+        cell_idx_2 = bin_value(features["avg_genome_val"], mean([x for y in org.genotypeMatrix for x in y]))
+        cell_idx = tuple([cell_idx_0, cell_idx_1, cell_idx_2])
         #calculate pareto front of cell when including the new organism
         cell = elites_map[cell_idx]
         cell.append(org)
@@ -113,7 +115,7 @@ def run(config):
         elites_map[cell_idx] = new_cell
 
         #statistics over time
-        if gen % 10 == 0:
+        if gen % 100 == 0:
             print("Gen: ", gen)
             for name, target in objectives.items():
                 popFitnesses = [org.getError(name, target) for org in orgs_in_map]
