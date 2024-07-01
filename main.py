@@ -7,11 +7,11 @@ from collections import Counter
 import matplotlib.pyplot as plt
 import numpy as np
 
-from elites import run as elitesrun
+from elites import get_features_dict, run
 from eval_functions import functions
-from nsga import fast_non_dominated_sort, run as nsgarun
 from organism import Organism
-from plot_utils import T, final_pop_distribution, final_pop_histogram, plot_elites_map
+from plot_utils import (fast_non_dominated_sort, final_pop_distribution, 
+                        final_pop_histogram, get_perfect_pop, plot_elites_map, T)
 from random import seed
 
 
@@ -41,7 +41,7 @@ def plot_coverage(coverage, save_loc, transparent=False):
     plt.close()
 
 
-def plotParetoFront(population, config, save_loc=None,firstFrontOnly=False):
+def plotParetoFront(population, config, save_loc=None, first_front_only=False):
     #sort
     allFronts = fast_non_dominated_sort(population)
     #plot
@@ -53,8 +53,8 @@ def plotParetoFront(population, config, save_loc=None,firstFrontOnly=False):
                 R = sorted(sorted([(org.errors[feature1], org.errors[feature2]) for org in allFronts[frontNumber]],
                                     key=lambda r: r[1], reverse=True), key=lambda r: r[0])
                 plt.plot(*T(R), marker="o", linestyle="--",label=frontNumber)
-                if firstFrontOnly: break
-            plt.title(feature1+" "+feature2)
+                if first_front_only: break
+            plt.title(feature1 + " " + feature2)
             plt.xlabel(feature1 + " Error")
             plt.ylabel(feature2 + " Error")
             plt.legend()
@@ -65,53 +65,52 @@ def plotParetoFront(population, config, save_loc=None,firstFrontOnly=False):
                 plt.show()
 
 
-def diversity(population:list[Organism], save_loc_i:str) :
-    N = len(population)
+def diversity(population:list[Organism], perfect_pop:list[Organism], save_loc_i:str):
+    N = len(perfect_pop)
     with open("{}/diversity.csv".format(save_loc_i), 'w') as diversityFile:
-        diversityFile.write("property,entropy,uniformity,spread\n")
+        diversityFile.write("property,entropy,uniformity,spread,final_pop_size,optimized_size\n")
         for name in functions:
             typeCounter = Counter([organism.getProperty(name) 
                                    if "distribution" not in name 
                                    else tuple(organism.getProperty(name)) 
-                                   for organism in population])
+                                   for organism in perfect_pop])
             entropy = -sum([(count/N)*np.log2(count/N) for count in typeCounter.values()])
-            uniformity = entropy / len(typeCounter)
-            spread = len(typeCounter) / N
-            diversityFile.write("{},{},{},{}\n".format(name, entropy, uniformity, spread))
+            uniformity = entropy / np.log2(len(typeCounter))
+            spread = len(typeCounter)
+            final_pop_size = len(population)
+            optimized_size = N
+            diversityFile.write("{},{},{},{},{},{}\n".format(name, entropy, uniformity, 
+                                                             spread, final_pop_size, optimized_size))
 
 
-def run_rep(i, save_loc, config, selection_scheme):
+def run_rep(i, save_loc, config):
     seed(i)
     save_loc_i = "{}/{}".format(save_loc, i)
     if not os.path.exists(save_loc_i):
         os.makedirs(save_loc_i)
 
-    if selection_scheme == "nsga":
-        final_pop, fitness_log = nsgarun(config)
-    else:
-        final_pop, fitness_log, coverage, elites_map = elitesrun(config)
+    objectives = config["eval_funcs"]
+    final_pop, fitness_log, coverage, elites_map = run(config)
+    perfect_pop = get_perfect_pop(final_pop, objectives)
+    features = get_features_dict(config["hash_resolution"])
 
     if config["save_data"] == 1:
         with open("{}/final_pop.pkl".format(save_loc_i), "wb") as f:
             pickle.dump(final_pop, f)
         with open("{}/fitness_log.pkl".format(save_loc_i), "wb") as f:
             pickle.dump(fitness_log, f)
-        if selection_scheme == "map-elites":
-            with open("{}/coverage.pkl".format(save_loc_i), "wb") as f:
-                pickle.dump(coverage, f)
-            with open("{}/elites_map.pkl".format(save_loc_i), "wb") as f:
-                pickle.dump(elites_map, f)
-        diversity(final_pop, save_loc_i)
+        with open("{}/coverage.pkl".format(save_loc_i), "wb") as f:
+            pickle.dump(coverage, f)
+        with open("{}/elites_map.pkl".format(save_loc_i), "wb") as f:
+            pickle.dump(elites_map, f)
+        diversity(final_pop, perfect_pop, save_loc_i)
 
     if config["plot_data"] == 1:
-        plot_fitness(fitness_log, config["eval_funcs"].keys(), save_loc_i)
-        final_pop_histogram(final_pop, config["eval_funcs"], save_loc_i, plot_all=True)
-        final_pop_distribution(final_pop, config["eval_funcs"], save_loc_i, plot_all=True, with_error=True)
-        plotParetoFront(final_pop, config, save_loc_i)
-        final_pop[0].saveGraphFigure("{}/graphFigure.png".format(save_loc_i))
-        if selection_scheme == "map-elites":
-            plot_coverage(coverage, save_loc_i)
-            plot_elites_map(elites_map, config["eval_funcs"], config["diversity_funcs"], save_loc_i, transparent=False)
+        plot_fitness(fitness_log, objectives.keys(), save_loc_i)
+        final_pop_histogram(perfect_pop, objectives, save_loc_i, plot_all=True)
+        final_pop_distribution(perfect_pop, objectives, save_loc_i, plot_all=True, with_error=True)
+        plot_coverage(coverage, save_loc_i)
+        plot_elites_map(elites_map, objectives, features, save_loc_i, transparent=False)
 
 
 def main(config, rep=None):
@@ -120,20 +119,14 @@ def main(config, rep=None):
         os.makedirs(save_loc)
 
     config_path = "{}/config.json".format(save_loc)
-    if not os.path.exists(config_path):
-        with open(config_path, "w") as f:
-            json.dump(config, f, indent=4)
-
-    if "diversity_funcs" in config:
-        selection_scheme = "map-elites"
-    else:
-        selection_scheme = "nsga"
+    with open(config_path, "w") as f:
+        json.dump(config, f, indent=4)
 
     if rep: #cmd specified only
-        run_rep(rep, save_loc, config, selection_scheme)
+        run_rep(rep, save_loc, config)
     else:
         for i in range(config["reps"]):
-            run_rep(i, save_loc, config, selection_scheme)
+            run_rep(i, save_loc, config)
 
 
 if __name__ == "__main__":

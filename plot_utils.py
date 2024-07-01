@@ -16,6 +16,44 @@ def T(LL:list[list])->list[list]:
     return list(zip(*LL))
 
 
+#Algorithm from: Deb, Kalyanmoy, et al.
+#"A fast and elitist multiobjective genetic algorithm: NSGA-II."
+#IEEE transactions on evolutionary computation 6.2 (2002): 182-197.
+def fast_non_dominated_sort(population):
+    F = {1:[]}
+    S = {}
+    n = {}
+    for p in population:
+        S[p.id] = []
+        n[p.id] = 0
+        for q in population:
+            if p > q:
+                S[p.id].append(q)
+            elif q > p:
+                n[p.id] += 1
+        if n[p.id] == 0:
+            p.nsga_rank = 1
+            F[1].append(p)
+    i = 1
+    while len(F[i]) > 0:
+        Q = []
+        for p in F[i]:
+            for q in S[p.id]:
+                n[q.id] -= 1
+                if n[q.id] == 0:
+                    q.nsga_rank = i+1
+                    Q.append(q)
+        i += 1
+        F[i] = Q[:]
+    return F
+
+
+def get_perfect_pop(final_pop, objectives):
+    return [final_pop[i] for i in range(len(final_pop)) 
+            if all([final_pop[i].getError(name, target) == 0 
+                    for name,target in objectives.items()])]
+
+
 def calculate_standard_error(data:list[list[float]]) -> tuple[list[float], list[float], list[float]]:
     num_within = len(data)
     num_across = len(data[0])
@@ -167,28 +205,29 @@ def plot_elites_map(elites_map, eval_funcs, features_dict, save_loc, transparent
                 cell = elites_map[tuple(cell_idx)]
                 num_orgs_in_cell = len(cell)
                 if num_orgs_in_cell > 0:
-                    mean_heatmap[j,i] = round(mean([org.getError(obj_name, obj_target) for org in cell]), 3)
+                    mean_heatmap[j,i] = mean([org.getError(obj_name, obj_target) for org in cell])
                 else:
-                    mean_heatmap[j,i] = 999
+                    mean_heatmap[j,i] = None
                 count_heatmap[j,i] = num_orgs_in_cell
         return mean_heatmap, count_heatmap
     
     def save_heatmaps(mean_heatmap, count_heatmap, col_name, row_name, objective, title):
         col_labels = features_dict[col_name]
         row_labels = features_dict[row_name] if row_name is not None else [""]
-        figure, axis = plt.subplots(1, 2, figsize=(12,7))
-        axis[0].imshow(mean_heatmap, cmap="Greens")
+        figure, axis = plt.subplots(1, 2, figsize=(16,48))
+        axis[0].imshow(mean_heatmap, cmap="summer_r")
         axis[0].set_xticks(np.arange(len(col_labels)), labels=col_labels)
-        axis[0].set_yticks(np.arange(len(row_labels)), labels=row_labels)
         axis[0].set_title("Mean Cell {} Error".format(objective))
-        axis[1].imshow(count_heatmap, cmap="Greens_r")
+        axis[1].imshow(count_heatmap, cmap="summer")
         axis[1].set_xticks(np.arange(len(col_labels)), labels=col_labels)
-        axis[1].set_yticks(np.arange(len(row_labels)), labels=row_labels)
         axis[1].set_title("Count of Organisms in Each Cell")
+        if row_name != "genome_hash":
+            axis[0].set_yticks(np.arange(len(row_labels)), labels=row_labels)
+            axis[1].set_yticks(np.arange(len(row_labels)), labels=row_labels)
         for i in range(len(col_labels)):
             for j in range(len(row_labels)):
-                _ = axis[0].text(i, j, mean_heatmap[j, i], ha="center", va="center", color="black", fontsize="small")
-                _ = axis[1].text(i, j, count_heatmap[j, i], ha="center", va="center", color="black", fontsize="small")
+                _ = axis[0].text(i, j, round(mean_heatmap[j, i], 3), ha="center", va="center", color="black", fontsize="x-small")
+                _ = axis[1].text(i, j, int(count_heatmap[j, i]), ha="center", va="center", color="black", fontsize="small")
         figure.supxlabel(col_name)
         figure.supylabel(row_name)
         figure.suptitle(title)

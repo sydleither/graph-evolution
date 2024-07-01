@@ -96,7 +96,7 @@ class Evaluation:
     
 
     #motifs
-    def proportion_of_mutualistic_pairs(self, network) -> int:
+    def proportion_of_mutualistic_pairs(self, network) -> float:
         adj = network.adjacencyMatrix
         nn = network.numNodes
         count_pairs = sum([sum([1 for j in range(i+1, nn) if adj[i][j] > 0 and adj[j][i] > 0]) for i in range(nn)])
@@ -104,7 +104,7 @@ class Evaluation:
         return count_pairs / possible_pairs
 
 
-    def proportion_of_competition_pairs(self, network) -> int:
+    def proportion_of_competition_pairs(self, network) -> float:
         adj = network.adjacencyMatrix
         nn = network.numNodes
         count_pairs = sum([sum([1 for j in range(i+1, nn) if adj[i][j] < 0 and adj[j][i] < 0]) for i in range(nn)])
@@ -112,7 +112,7 @@ class Evaluation:
         return count_pairs / possible_pairs
 
 
-    def proportion_of_parasitism_pairs(self, network) -> int:
+    def proportion_of_parasitism_pairs(self, network) -> float:
         adj = network.adjacencyMatrix
         nn = network.numNodes
         count_pairs = sum([sum([1 for j in range(i+1, nn) if (adj[i][j] < 0 and adj[j][i] > 0) or (adj[i][j] > 0 and adj[j][i] < 0)]) for i in range(nn)])
