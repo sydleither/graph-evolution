@@ -13,7 +13,7 @@ from organism import Organism
 
 def get_features_dict(hash_resolution):
     return {"sparsity":np.round(np.linspace(0, 1, 11), decimals=1), 
-            "genome_hash":np.round(np.linspace(0, 10, 11), decimals=1)}
+            "genome_hash":np.round(np.linspace(1, 9, hash_resolution), decimals=1)}
 
 
 def get_orgs_in_map(elites_map):
