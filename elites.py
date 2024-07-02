@@ -2,7 +2,6 @@ from itertools import product
 from random import random, sample
 from statistics import mean
 
-import networkx as nx
 import numpy as np
 
 from organism import Organism
@@ -14,8 +13,7 @@ from organism import Organism
 
 def get_features_dict(hash_resolution):
     return {"sparsity":np.round(np.linspace(0, 1, 11), decimals=1), 
-            "genome_hash":np.linspace(0, int("F"*12, 16), hash_resolution),
-            "avg_genome_val":np.round(np.linspace(0, 1, 11), decimals=1)}
+            "genome_hash":np.round(np.linspace(0, 10, 11), decimals=1)}
 
 
 def get_orgs_in_map(elites_map):
@@ -61,9 +59,11 @@ def crowding_distance_assignment(I:list[Organism]):
 
 
 def genome_hash(genotype_matrix, num_nodes):
-    G = nx.DiGraph(np.array(genotype_matrix))
-    hash_hex = nx.weisfeiler_lehman_graph_hash(G, edge_attr="weight", iterations=num_nodes//10, digest_size=6)
-    return int(hash_hex, 16)
+    sos = 0
+    for i in range(num_nodes):
+        for j in range(num_nodes):
+            sos += (genotype_matrix[i][j])**2
+    return np.sqrt(sos)
 
 
 def run(config):
@@ -99,8 +99,7 @@ def run(config):
         #get the organism's value for each feature, round that value to the nearest bin, convert the bin into its elites map index
         cell_idx_0 = bin_value(features["sparsity"], org.sparsity)
         cell_idx_1 = bin_value(features["genome_hash"], genome_hash(org.genotypeMatrix, num_nodes))
-        cell_idx_2 = bin_value(features["avg_genome_val"], mean([x for y in org.genotypeMatrix for x in y]))
-        cell_idx = tuple([cell_idx_0, cell_idx_1, cell_idx_2])
+        cell_idx = tuple([cell_idx_0, cell_idx_1])
         #calculate pareto front of cell when including the new organism
         cell = elites_map[cell_idx]
         cell.append(org)
