@@ -216,14 +216,15 @@ def plot_elites_map(elites_map, eval_funcs, features_dict, save_loc, transparent
         row_labels = features_dict[row_name] if row_name is not None else [""]
         figure, axis = plt.subplots(1, 2, figsize=(48,24))
         axis[0].imshow(mean_heatmap, cmap="summer_r")
-        axis[0].set_xticks(np.arange(len(col_labels)), labels=col_labels)
         axis[0].set_title("Mean Cell {} Error".format(objective))
         axis[1].imshow(count_heatmap, cmap="summer")
-        axis[1].set_xticks(np.arange(len(col_labels)), labels=col_labels)
         axis[1].set_title("Count of Organisms in Each Cell")
-        if row_name != "genome_hash":
+        if "genome_hash" not in row_name:
             axis[0].set_yticks(np.arange(len(row_labels)), labels=row_labels)
             axis[1].set_yticks(np.arange(len(row_labels)), labels=row_labels)
+        if "genome_hash" not in col_name:
+            axis[0].set_xticks(np.arange(len(col_labels)), labels=col_labels)
+            axis[1].set_xticks(np.arange(len(col_labels)), labels=col_labels)
         for i in range(len(col_labels)):
             for j in range(len(row_labels)):
                 _ = axis[0].text(i, j, round(mean_heatmap[j, i], 3), ha="center", va="center", color="black", fontsize="x-small")

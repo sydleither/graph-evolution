@@ -1,6 +1,7 @@
 from itertools import product
 from random import random, sample
 from statistics import mean
+import sys
 
 import numpy as np
 
@@ -12,8 +13,9 @@ from organism import Organism
 
 
 def get_features_dict(hash_resolution):
-    return {"genome_hash":np.round(np.linspace(1, 9, hash_resolution), decimals=1), 
-            "pheno_hash":np.round(np.linspace(0, 11, hash_resolution), decimals=1)}
+    return {"genome_hash1":np.round(np.linspace(0, sys.maxsize, hash_resolution), decimals=1),
+            "genome_hash2":np.round(np.linspace(0, sys.maxsize, hash_resolution), decimals=1),
+            "sparsity":np.round(np.linspace(0, 1, 11), decimals=1)}
 
 
 def get_orgs_in_map(elites_map):
@@ -59,11 +61,10 @@ def crowding_distance_assignment(I:list[Organism]):
 
 
 def genome_hash(genotype_matrix, num_nodes):
-    sos = 0
-    for i in range(num_nodes):
-        for j in range(num_nodes):
-            sos += (genotype_matrix[i][j])**2
-    return np.sqrt(sos)
+    flat_genome = [x for y in genotype_matrix for x in y]
+    g1 = tuple(flat_genome[:num_nodes//2])
+    g2 = tuple(flat_genome[num_nodes//2:])
+    return hash(g1), hash(g2)
 
 
 def run(config):
@@ -97,9 +98,11 @@ def run(config):
         [org.getError(name, target) for name, target in objectives.items()]
 
         #get the organism's value for each feature, round that value to the nearest bin, convert the bin into its elites map index
-        cell_idx_0 = bin_value(features["genome_hash"], genome_hash(org.genotypeMatrix, num_nodes))
-        cell_idx_1 = bin_value(features["pheno_hash"], genome_hash(org.adjacencyMatrix, num_nodes))
-        cell_idx = tuple([cell_idx_0, cell_idx_1])
+        g1, g2 = genome_hash(org.genotypeMatrix, num_nodes)
+        cell_idx_0 = bin_value(features["genome_hash1"], g1)
+        cell_idx_1 = bin_value(features["genome_hash2"], g2)
+        cell_idx_2 = bin_value(features["sparsity"], org.sparsity)
+        cell_idx = tuple([cell_idx_0, cell_idx_1, cell_idx_2])
         #calculate pareto front of cell when including the new organism
         cell = elites_map[cell_idx]
         cell.append(org)
