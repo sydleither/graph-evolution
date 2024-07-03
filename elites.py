@@ -12,8 +12,8 @@ from organism import Organism
 
 
 def get_features_dict(hash_resolution):
-    return {"genome_hash":np.round(np.linspace(0, 10, hash_resolution), decimals=1), 
-            "pheno_hash":np.round(np.linspace(1, 9, hash_resolution), decimals=1)}
+    return {"genome_hash":np.round(np.linspace(1, 9, hash_resolution), decimals=1), 
+            "pheno_hash":np.round(np.linspace(0, 11, hash_resolution), decimals=1)}
 
 
 def get_orgs_in_map(elites_map):

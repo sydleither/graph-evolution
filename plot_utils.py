@@ -214,7 +214,7 @@ def plot_elites_map(elites_map, eval_funcs, features_dict, save_loc, transparent
     def save_heatmaps(mean_heatmap, count_heatmap, col_name, row_name, objective, title):
         col_labels = features_dict[col_name]
         row_labels = features_dict[row_name] if row_name is not None else [""]
-        figure, axis = plt.subplots(1, 2, figsize=(16,48))
+        figure, axis = plt.subplots(1, 2, figsize=(48,24))
         axis[0].imshow(mean_heatmap, cmap="summer_r")
         axis[0].set_xticks(np.arange(len(col_labels)), labels=col_labels)
         axis[0].set_title("Mean Cell {} Error".format(objective))
