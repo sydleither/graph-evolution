@@ -12,8 +12,8 @@ from organism import Organism
 
 
 def get_features_dict(hash_resolution):
-    return {"sparsity":np.round(np.linspace(0, 1, 11), decimals=1), 
-            "genome_hash":np.round(np.linspace(1, 9, hash_resolution), decimals=1)}
+    return {"genome_hash":np.round(np.linspace(0, 10, hash_resolution), decimals=1), 
+            "pheno_hash":np.round(np.linspace(1, 9, hash_resolution), decimals=1)}
 
 
 def get_orgs_in_map(elites_map):
@@ -97,8 +97,8 @@ def run(config):
         [org.getError(name, target) for name, target in objectives.items()]
 
         #get the organism's value for each feature, round that value to the nearest bin, convert the bin into its elites map index
-        cell_idx_0 = bin_value(features["sparsity"], org.sparsity)
-        cell_idx_1 = bin_value(features["genome_hash"], genome_hash(org.genotypeMatrix, num_nodes))
+        cell_idx_0 = bin_value(features["genome_hash"], genome_hash(org.genotypeMatrix, num_nodes))
+        cell_idx_1 = bin_value(features["pheno_hash"], genome_hash(org.adjacencyMatrix, num_nodes))
         cell_idx = tuple([cell_idx_0, cell_idx_1])
         #calculate pareto front of cell when including the new organism
         cell = elites_map[cell_idx]
