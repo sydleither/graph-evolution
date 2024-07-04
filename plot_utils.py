@@ -3,7 +3,7 @@ from statistics import mean
 
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.stats import bootstrap, sem, t
+from scipy.stats import sem, t
 
 from bintools import numBins
 import eval_functions as ef
@@ -66,14 +66,11 @@ def calculate_standard_error(data:list[list[float]]) -> tuple[list[float], list[
     return data_mean, neg_error, pos_error
 
 
-def calculate_confidence_interval(data:list[list[float]], bootstrapped=False) -> tuple[list[float], list[float], list[float]]:
+def calculate_confidence_interval(data:list[list[float]]) -> tuple[list[float], list[float], list[float]]:
     num_across = len(data[0])
     data_t = T(data)
     data_mean = lmap(np.mean, data_t)
-    if not bootstrapped:
-        intervals = [t.interval(confidence=0.95, df=len(data_t[i])-1, loc=data_mean[i], scale=sem(data_t[i])) for i in range(num_across)]
-    else:
-        intervals = [bootstrap((data_t[i],), np.mean, confidence_level=0.95, method="percentile").confidence_interval for i in range(num_across)]
+    intervals = [t.interval(confidence=0.95, df=len(data_t[i])-1, loc=data_mean[i], scale=sem(data_t[i])) for i in range(num_across)]
     lower = [intervals[i][0] for i in range(num_across)]
     upper = [intervals[i][1] for i in range(num_across)]
     return data_mean, lower, upper

@@ -1,5 +1,5 @@
 from itertools import product
-from random import random, sample
+from random import randint, random, sample
 from statistics import mean
 import sys
 
@@ -76,24 +76,25 @@ def run(config):
     crossover_rate = config["crossover_rate"]
     crossover_odds = config["crossover_odds"]
     num_nodes = config["network_size"]
-    features = get_features_dict(config["hash_resolution"])
+    hash_resolution = config["hash_resolution"]
+    features = get_features_dict(hash_resolution)
     feature_bins = list(features.values())
     #initalize elites map
     elites_map = {x:[] for x in product(*feature_bins)}
     elites_map_max_size = len(elites_map) * cell_capacity
+    cells_with_orgs = []
     #initalize tracking performance over time
     fitnessLog = {funcName:[] for funcName in objectives}
     coverage = []
 
     for gen in range(1, config["num_generations"]+1):
-        #list of all organisms in elites map
-        orgs_in_map = list(get_orgs_in_map(elites_map))
-
         #get new organism to potentially place in map
         if gen < config["initial_popsize"]:
             org = Organism(config["network_size"], random(), config["weight_range"])
         else:
-            porg1, porg2 = sample(orgs_in_map, 2)
+            pcell_idx_1, pcell_idx_2 = sample(cells_with_orgs, 2)
+            porg1 = sample(elites_map[pcell_idx_1], 1)[0]
+            porg2 = sample(elites_map[pcell_idx_2], 1)[0]
             org = porg1.makeCrossedCopyWith(porg2, crossover_rate, crossover_odds).makeMutatedCopy(mutation_rate, mutation_odds)
         [org.getError(name, target) for name, target in objectives.items()]
 
@@ -105,6 +106,8 @@ def run(config):
         cell_idx = tuple([cell_idx_0, cell_idx_1, cell_idx_2])
         #calculate pareto front of cell when including the new organism
         cell = elites_map[cell_idx]
+        if len(cell) == 0:
+            cells_with_orgs.append(cell_idx)
         cell.append(org)
         new_front = first_front(cell)
         #replace the cell with the new pareto front
@@ -119,6 +122,7 @@ def run(config):
         #statistics over time
         if gen % 100 == 0:
             print("Gen: ", gen)
+            orgs_in_map = list(get_orgs_in_map(elites_map))
             for name, target in objectives.items():
                 popFitnesses = [org.getError(name, target) for org in orgs_in_map]
                 fitnessLog[name].append(mean(popFitnesses))
