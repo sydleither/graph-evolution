@@ -164,12 +164,13 @@ def main(config_dir):
     plot_fitnesses_error(fitness_logs, eval_funcs.keys(), data_path)
     combined_diversity(diversity_logs, data_path)
     plot_coverage(coverages, data_path)
-    combo_elites_map = {}
-    map_keys = elites_maps[0].keys()
-    for map_key in map_keys:
-        all_cells = [elite_map[map_key] for elite_map in elites_maps]
-        combo_elites_map[map_key] = [org for cell in all_cells for org in cell]
-    plot_elites_map(combo_elites_map, config_file["eval_funcs"], features, data_path)
+    if len(features) <= 3:
+        combo_elites_map = {}
+        map_keys = elites_maps[0].keys()
+        for map_key in map_keys:
+            all_cells = [elite_map[map_key] for elite_map in elites_maps]
+            combo_elites_map[map_key] = [org for cell in all_cells for org in cell]
+        plot_elites_map(combo_elites_map, config_file["eval_funcs"], features, data_path)
 
 
 if __name__ == "__main__":
