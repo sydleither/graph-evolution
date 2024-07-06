@@ -13,7 +13,7 @@ from organism import Organism
 
 
 def get_features_dict(hash_resolution, num_bands=5):
-    return {f"genome_hash{i}":np.round(np.linspace(0, sys.maxsize, hash_resolution), decimals=1) for i in range(num_bands)}
+    return {f"genome_hash{i}":np.round(np.linspace(1, 5, hash_resolution), decimals=1) for i in range(num_bands)}
 
 
 def get_orgs_in_map(elites_map):
@@ -74,11 +74,10 @@ def genome_hash(genotype_matrix, num_nodes, band_len, band_overlap):
             curr_band = genotype_matrix[band_idx_start:band_idx_end]
         else:
             curr_band = genotype_matrix[:band_idx_end] + genotype_matrix[band_idx_start:]
-        curr_band = [tuple(x) for x in curr_band]
         bands.append(tuple(curr_band))
         band_idx_start = (band_idx_start + (band_len-band_overlap))
         band_idx_end = (band_idx_end + (band_len-band_overlap)) % num_nodes
-    band_hashes = [hash(b) for b in bands]
+    band_hashes = [edit_distance([x for y in b for x in y]) for b in bands]
     return band_hashes
 
 
