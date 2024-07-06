@@ -12,10 +12,8 @@ from organism import Organism
 #"Multi-Objective Quality Diversity Optimization" (Pierrot et al., 2023)
 
 
-def get_features_dict(hash_resolution):
-    return {"genome_hash1":np.round(np.linspace(0, sys.maxsize, hash_resolution), decimals=1),
-            "genome_hash2":np.round(np.linspace(0, sys.maxsize, hash_resolution), decimals=1),
-            "sparsity":np.round(np.linspace(0, 1, 11), decimals=1)}
+def get_features_dict(hash_resolution, num_bands=5):
+    return {f"genome_hash{i}":np.round(np.linspace(0, sys.maxsize, hash_resolution), decimals=1) for i in range(num_bands)}
 
 
 def get_orgs_in_map(elites_map):
@@ -60,11 +58,28 @@ def crowding_distance_assignment(I:list[Organism]):
             I[i].nsga_distance += (I[i+1].errors[m]-I[i-1].errors[m])/rng
 
 
-def genome_hash(genotype_matrix, num_nodes):
-    flat_genome = [x for y in genotype_matrix for x in y]
-    g1 = tuple(flat_genome[:num_nodes//2])
-    g2 = tuple(flat_genome[num_nodes//2:])
-    return hash(g1), hash(g2)
+def edit_distance(vec):
+    sos = 0
+    for i in range(len(vec)):
+        sos += (vec[i])**2
+    return np.sqrt(sos)
+
+
+def genome_hash(genotype_matrix, num_nodes, band_len, band_overlap):
+    bands = []
+    band_idx_start = 0
+    band_idx_end = band_len
+    while band_idx_start < num_nodes:
+        if band_idx_end > band_idx_start:
+            curr_band = genotype_matrix[band_idx_start:band_idx_end]
+        else:
+            curr_band = genotype_matrix[:band_idx_end] + genotype_matrix[band_idx_start:]
+        curr_band = [tuple(x) for x in curr_band]
+        bands.append(tuple(curr_band))
+        band_idx_start = (band_idx_start + (band_len-band_overlap))
+        band_idx_end = (band_idx_end + (band_len-band_overlap)) % num_nodes
+    band_hashes = [hash(b) for b in bands]
+    return band_hashes
 
 
 def run(config):
@@ -99,11 +114,8 @@ def run(config):
         [org.getError(name, target) for name, target in objectives.items()]
 
         #get the organism's value for each feature, round that value to the nearest bin, convert the bin into its elites map index
-        g1, g2 = genome_hash(org.genotypeMatrix, num_nodes)
-        cell_idx_0 = bin_value(features["genome_hash1"], g1)
-        cell_idx_1 = bin_value(features["genome_hash2"], g2)
-        cell_idx_2 = bin_value(features["sparsity"], org.sparsity)
-        cell_idx = tuple([cell_idx_0, cell_idx_1, cell_idx_2])
+        band_hashes = genome_hash(org.genotypeMatrix, num_nodes, band_len=3, band_overlap=1)
+        cell_idx = tuple([bin_value(features[f"genome_hash{i}"], band_hashes[i]) for i in range(5)])
         #calculate pareto front of cell when including the new organism
         cell = elites_map[cell_idx]
         if len(cell) == 0:
