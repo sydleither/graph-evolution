@@ -13,7 +13,7 @@ from organism import Organism
 
 
 def get_features_dict(hash_resolution, num_bands=5):
-    return {f"genome_hash{i}":np.round(np.linspace(1, 5, hash_resolution), decimals=1) for i in range(num_bands)}
+    return {f"phenome_hash{i}":np.round(np.linspace(1, 5, hash_resolution), decimals=1) for i in range(num_bands)}
 
 
 def get_orgs_in_map(elites_map):
@@ -113,8 +113,8 @@ def run(config):
         [org.getError(name, target) for name, target in objectives.items()]
 
         #get the organism's value for each feature, round that value to the nearest bin, convert the bin into its elites map index
-        band_hashes = genome_hash(org.genotypeMatrix, num_nodes, band_len=3, band_overlap=1)
-        cell_idx = tuple([bin_value(features[f"genome_hash{i}"], band_hashes[i]) for i in range(5)])
+        band_hashes = genome_hash(org.adjacencyMatrix, num_nodes, band_len=3, band_overlap=1)
+        cell_idx = tuple([bin_value(features[f"phenome_hash{i}"], band_hashes[i]) for i in range(5)])
         #calculate pareto front of cell when including the new organism
         cell = elites_map[cell_idx]
         if len(cell) == 0:
