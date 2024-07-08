@@ -1,9 +1,10 @@
 from itertools import product
 from random import random, sample
 from statistics import mean
-import sys
+import struct
 
 import numpy as np
+import tlsh
 
 from organism import Organism
 
@@ -12,8 +13,9 @@ from organism import Organism
 #"Multi-Objective Quality Diversity Optimization" (Pierrot et al., 2023)
 
 
-def get_features_dict(hash_resolution, num_bands=5):
-    return {f"phenome_hash{i}":np.round(np.linspace(1, 4, hash_resolution), decimals=1) for i in range(num_bands)}
+def get_features_dict(hash_resolution):
+    return {"sparsity":np.round(np.linspace(0, 1, 11), decimals=1), 
+            "genome_score":np.linspace(0, 500, hash_resolution)}
 
 
 def get_orgs_in_map(elites_map):
@@ -65,17 +67,17 @@ def edit_distance(vec):
     return np.sqrt(sos)
 
 
-def genome_hash(genotype_matrix, num_nodes, band_len):
-    bands = []
-    band_idx_start = 0
-    band_idx_end = band_len
-    while band_idx_start < num_nodes:
-        curr_band = genotype_matrix[band_idx_start:band_idx_end]
-        bands.append(tuple(curr_band))
-        band_idx_start = band_idx_start + band_len
-        band_idx_end = band_idx_end + band_len
-    band_hashes = [edit_distance([x for y in b for x in y]) for b in bands]
-    return band_hashes
+def genome_hash(genotype_matrix):
+    genome_flat = [x for y in genotype_matrix for x in y]
+    byte_genome = bytearray()
+    for val in genome_flat:
+        byte_genome.extend(struct.pack("f", val))
+    genome_hash = tlsh.hash(bytes(byte_genome))
+    if genome_hash == "TNULL":
+        return 0
+    #TODO find better comparison if this method will be used for real
+    score = tlsh.diff("T17AE0F1213C7489A9893D88EF3D3983D939052757AF49A484F781278DA0C0792B3C0C94", genome_hash)
+    return score
 
 
 def run(config):
@@ -86,7 +88,6 @@ def run(config):
     mutation_odds = config["mutation_odds"]
     crossover_rate = config["crossover_rate"]
     crossover_odds = config["crossover_odds"]
-    num_nodes = config["network_size"]
     hash_resolution = config["hash_resolution"]
     features = get_features_dict(hash_resolution)
     feature_bins = list(features.values())
@@ -110,8 +111,9 @@ def run(config):
         [org.getError(name, target) for name, target in objectives.items()]
 
         #get the organism's value for each feature, round that value to the nearest bin, convert the bin into its elites map index
-        band_hashes = genome_hash(org.adjacencyMatrix, num_nodes, band_len=2)
-        cell_idx = tuple([bin_value(features[f"phenome_hash{i}"], band_hashes[i]) for i in range(5)])
+        cell_idx_0 = bin_value(features["sparsity"], org.sparsity)
+        cell_idx_1 = bin_value(features["genome_score"], genome_hash(org.genotypeMatrix))
+        cell_idx = tuple([cell_idx_0, cell_idx_1])
         #calculate pareto front of cell when including the new organism
         cell = elites_map[cell_idx]
         if len(cell) == 0:
