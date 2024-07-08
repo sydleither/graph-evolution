@@ -159,7 +159,6 @@ def main(config_dir):
     features = get_features_dict(config_file["hash_resolution"])
 
     final_pop_histogram(perfect_pops, eval_funcs, data_path, plot_all=True)
-    final_pop_distribution(perfect_pops, eval_funcs, data_path, plot_all=True)
     plot_fitnesses_sep(fitness_logs, eval_funcs.keys(), data_path)
     plot_fitnesses_error(fitness_logs, eval_funcs.keys(), data_path)
     combined_diversity(diversity_logs, data_path)

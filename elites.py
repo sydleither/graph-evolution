@@ -1,5 +1,5 @@
 from itertools import product
-from random import randint, random, sample
+from random import random, sample
 from statistics import mean
 import sys
 
@@ -13,7 +13,7 @@ from organism import Organism
 
 
 def get_features_dict(hash_resolution, num_bands=5):
-    return {f"phenome_hash{i}":np.round(np.linspace(1, 5, hash_resolution), decimals=1) for i in range(num_bands)}
+    return {f"phenome_hash{i}":np.round(np.linspace(1, 4, hash_resolution), decimals=1) for i in range(num_bands)}
 
 
 def get_orgs_in_map(elites_map):
@@ -65,18 +65,15 @@ def edit_distance(vec):
     return np.sqrt(sos)
 
 
-def genome_hash(genotype_matrix, num_nodes, band_len, band_overlap):
+def genome_hash(genotype_matrix, num_nodes, band_len):
     bands = []
     band_idx_start = 0
     band_idx_end = band_len
     while band_idx_start < num_nodes:
-        if band_idx_end > band_idx_start:
-            curr_band = genotype_matrix[band_idx_start:band_idx_end]
-        else:
-            curr_band = genotype_matrix[:band_idx_end] + genotype_matrix[band_idx_start:]
+        curr_band = genotype_matrix[band_idx_start:band_idx_end]
         bands.append(tuple(curr_band))
-        band_idx_start = (band_idx_start + (band_len-band_overlap))
-        band_idx_end = (band_idx_end + (band_len-band_overlap)) % num_nodes
+        band_idx_start = band_idx_start + band_len
+        band_idx_end = band_idx_end + band_len
     band_hashes = [edit_distance([x for y in b for x in y]) for b in bands]
     return band_hashes
 
@@ -113,7 +110,7 @@ def run(config):
         [org.getError(name, target) for name, target in objectives.items()]
 
         #get the organism's value for each feature, round that value to the nearest bin, convert the bin into its elites map index
-        band_hashes = genome_hash(org.adjacencyMatrix, num_nodes, band_len=3, band_overlap=1)
+        band_hashes = genome_hash(org.adjacencyMatrix, num_nodes, band_len=2)
         cell_idx = tuple([bin_value(features[f"phenome_hash{i}"], band_hashes[i]) for i in range(5)])
         #calculate pareto front of cell when including the new organism
         cell = elites_map[cell_idx]
