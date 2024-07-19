@@ -53,7 +53,7 @@ class Organism:
         self.nsga_distance = None
 
         if genome is None:
-            self.genotypeMatrix:list[list[float]] = [[round(random(), 3) for _ in range(numNodes)] for _ in range(numNodes)]
+            self.genotypeMatrix:list[list[float]] = [[random() for _ in range(numNodes)] for _ in range(numNodes)]
         else:
             self.genotypeMatrix:list[list[float]] = genome
 

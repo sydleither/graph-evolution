@@ -15,8 +15,7 @@ from organism import Organism
 
 def get_features_dict(hash_resolution):
     return {"sparsity":np.round(np.linspace(0, 1, 11), decimals=1), 
-            "genome_score":np.round(np.linspace(-1, 1, hash_resolution), decimals=2)}
-            #"genome_hash":np.round(np.linspace(0, 64, 64), decimals=1)}
+            "pheno_hash":np.linspace(0, int("1"*32, 2), hash_resolution)}
 
 
 def get_orgs_in_map(elites_map):
@@ -68,7 +67,7 @@ def edit_distance(vec):
     return np.sqrt(sos)
 
 
-def simhash(genome_flat, hash_res):
+def simhash(genome_flat, hash_res=32):
     v = [0 for _ in range(hash_res)]
     for x in genome_flat:
         x_hash_binary = bin(int(md5(struct.pack('>f', x)).hexdigest(), 16))[2:].zfill(hash_res)
@@ -77,13 +76,13 @@ def simhash(genome_flat, hash_res):
                 v[i] += x
             else:
                 v[i] -= x
-    return 1 - (sum(v)/np.sqrt(sum([y**2 for y in v])))
+    return "".join(["0" if v[i] < 0 else "1" for i in range(hash_res)])
 
 
-def genome_hash(genotype_matrix, hash_res=64):
+def genome_hash(genotype_matrix):
     genome_flat = [x for y in genotype_matrix for x in y]
-    cosine_sim_of_hash = simhash(genome_flat, hash_res)
-    return cosine_sim_of_hash
+    hash_bin = simhash(genome_flat)
+    return int(hash_bin, 2)
 
 
 def run(config):
@@ -118,7 +117,7 @@ def run(config):
 
         #get the organism's value for each feature, round that value to the nearest bin, convert the bin into its elites map index
         cell_idx_0 = bin_value(features["sparsity"], org.sparsity)
-        cell_idx_1 = bin_value(features["genome_score"], genome_hash(org.genotypeMatrix))
+        cell_idx_1 = bin_value(features["pheno_hash"], genome_hash(org.adjacencyMatrix))
         cell_idx = tuple([cell_idx_0, cell_idx_1])
         #calculate pareto front of cell when including the new organism
         cell = elites_map[cell_idx]
