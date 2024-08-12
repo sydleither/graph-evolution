@@ -14,8 +14,7 @@ from organism import Organism
 
 
 def get_features_dict(hash_resolution):
-    return {"pheno_hash":np.linspace(0, int("1"*32, 2), hash_resolution),
-            "unweighted_hash":np.linspace(int("1"*31, 2), int("1"*32, 2), hash_resolution)}
+    return {"sparsity":np.linspace(0, 1, 11)}
 
 
 def get_orgs_in_map(elites_map):
@@ -45,6 +44,35 @@ def first_front(population):
     return F
 
 
+def fast_non_dominated_sort(population):
+    F = {1:[]}
+    S = {}
+    n = {}
+    for p in population:
+        S[p.id] = []
+        n[p.id] = 0
+        for q in population:
+            if p > q:
+                S[p.id].append(q)
+            elif q > p:
+                n[p.id] += 1
+        if n[p.id] == 0:
+            p.nsga_rank = 1
+            F[1].append(p)
+    i = 1
+    while len(F[i]) > 0:
+        Q = []
+        for p in F[i]:
+            for q in S[p.id]:
+                n[q.id] -= 1
+                if n[q.id] == 0:
+                    q.nsga_rank = i+1
+                    Q.append(q)
+        i += 1
+        F[i] = Q[:]
+    return F
+
+
 def crowding_distance_assignment(I:list[Organism]):
     l = len(I)
     if l == 0: return
@@ -58,62 +86,6 @@ def crowding_distance_assignment(I:list[Organism]):
         if rng == 0: continue
         for i in range(1,l-2):
             I[i].nsga_distance += (I[i+1].errors[m]-I[i-1].errors[m])/rng
-
-
-def edit_distance(vec):
-    sos = 0
-    for i in range(len(vec)):
-        sos += (vec[i])**2
-    return np.sqrt(sos)
-
-
-# def genome_hash_bin(phenotype_matrix, num_nodes):
-#     binary_matrix = [[1 if val !=0 else 0 for val in row] for row in phenotype_matrix]
-#     v = [0 for _ in range(num_nodes*2)]
-#     for row in binary_matrix:
-#         for i in range(num_nodes):
-#             if row[i] == 1:
-#                 v[i] += 1
-#             else:
-#                 v[i] -= 1
-#     binary_matrix_T = T(binary_matrix)
-#     for row in binary_matrix_T:
-#         for i in range(num_nodes):
-#             if row[i] == 1:
-#                 v[i+num_nodes] += 1
-#             else:
-#                 v[i+num_nodes] -= 1
-#     hash_bin = "".join(["0" if v[i] < 0 else "1" for i in range(num_nodes*2)])
-#     return int(hash_bin, 2)
-
-
-def genome_hash_bin(phenotype_matrix, hash_res=32):
-    binary_matrix = [[1 if val !=0 else 0 for val in row] for row in phenotype_matrix]
-    v = [0 for _ in range(hash_res)]
-    for row in binary_matrix:
-        row_to_int = int("".join([str(x) for x in row]), 2)
-        row_hash_binary = bin(int(md5(struct.pack('>f', row_to_int)).hexdigest(), 16))[2:].zfill(hash_res)
-        for i in range(hash_res):
-            if row_hash_binary[i] == "1":
-                v[i] += 1
-            else:
-                v[i] -= 1
-    hash_bin = "".join(["0" if v[i] < 0 else "1" for i in range(hash_res)])
-    return int(hash_bin, 2)
-
-
-def genome_hash(genotype_matrix, hash_res=32):
-    genome_flat = [x for y in genotype_matrix for x in y]
-    v = [0 for _ in range(hash_res)]
-    for x in genome_flat:
-        x_hash_binary = bin(int(md5(struct.pack('>f', x)).hexdigest(), 16))[2:].zfill(hash_res)
-        for i in range(hash_res):
-            if x_hash_binary[i] == "1":
-                v[i] += x
-            else:
-                v[i] -= x
-    hash_bin = "".join(["0" if v[i] < 0 else "1" for i in range(hash_res)])
-    return int(hash_bin, 2)
 
 
 def run(config):
@@ -147,19 +119,30 @@ def run(config):
         [org.getError(name, target) for name, target in objectives.items()]
 
         #get the organism's value for each feature, round that value to the nearest bin, convert the bin into its elites map index
-        cell_idx_0 = bin_value(features["pheno_hash"], genome_hash(org.adjacencyMatrix))
-        cell_idx_1 = bin_value(features["unweighted_hash"], genome_hash_bin(org.adjacencyMatrix))
-        cell_idx = tuple([cell_idx_0, cell_idx_1])
+        cell_idx_0 = bin_value(features["sparsity"], org.sparsity)
+        cell_idx = tuple([cell_idx_0])
         #calculate pareto front of cell when including the new organism
         cell = elites_map[cell_idx]
         if len(cell) == 0:
             cells_with_orgs.append(cell_idx)
         cell.append(org)
+        # new_fronts = fast_non_dominated_sort(cell)
+        # new_cell_size = np.min([cell_capacity, len(cell)])
+        # new_cell = []
+        # i = 1
+        # while len(new_cell) + len(new_fronts[i]) < new_cell_size:
+        #     crowding_distance_assignment(new_fronts[i])
+        #     new_cell.extend(new_fronts[i])
+        #     i += 1
+        # if len(new_cell) < new_cell_size:
+        #     crowding_distance_assignment(new_fronts[i])
+        #     new_fronts[i].sort(key=lambda org: org.nsga_distance, reverse=True)
+        #     new_cell.extend(new_fronts[i][:new_cell_size-len(new_cell)])
         new_front = first_front(cell)
         #replace the cell with the new pareto front
         if len(new_front) > cell_capacity:
             crowding_distance_assignment(new_front)
-            new_front.sort(key=lambda org: org.nsga_distance,reverse=True)
+            new_front.sort(key=lambda org: org.nsga_distance, reverse=True)
             new_cell = new_front[:cell_capacity]
         else:
             new_cell = new_front
