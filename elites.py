@@ -103,6 +103,7 @@ def run(config):
     elites_map = {x:[] for x in product(*feature_bins)}
     elites_map_max_size = len(elites_map) * cell_capacity
     cells_with_orgs = []
+    orgs_to_place = []
     #initalize tracking performance over time
     fitnessLog = {funcName:[] for funcName in objectives}
     coverage = []
@@ -117,36 +118,34 @@ def run(config):
             porg2 = sample(elites_map[pcell_idx_2], 1)[0]
             org = porg1.makeCrossedCopyWith(porg2, crossover_rate, crossover_odds).makeMutatedCopy(mutation_rate, mutation_odds)
         [org.getError(name, target) for name, target in objectives.items()]
+        orgs_to_place.append(org)
 
-        #get the organism's value for each feature, round that value to the nearest bin, convert the bin into its elites map index
-        cell_idx_0 = bin_value(features["sparsity"], org.sparsity)
-        cell_idx = tuple([cell_idx_0])
-        #calculate pareto front of cell when including the new organism
-        cell = elites_map[cell_idx]
-        if len(cell) == 0:
-            cells_with_orgs.append(cell_idx)
-        cell.append(org)
-        # new_fronts = fast_non_dominated_sort(cell)
-        # new_cell_size = np.min([cell_capacity, len(cell)])
-        # new_cell = []
-        # i = 1
-        # while len(new_cell) + len(new_fronts[i]) < new_cell_size:
-        #     crowding_distance_assignment(new_fronts[i])
-        #     new_cell.extend(new_fronts[i])
-        #     i += 1
-        # if len(new_cell) < new_cell_size:
-        #     crowding_distance_assignment(new_fronts[i])
-        #     new_fronts[i].sort(key=lambda org: org.nsga_distance, reverse=True)
-        #     new_cell.extend(new_fronts[i][:new_cell_size-len(new_cell)])
-        new_front = first_front(cell)
-        #replace the cell with the new pareto front
-        if len(new_front) > cell_capacity:
-            crowding_distance_assignment(new_front)
-            new_front.sort(key=lambda org: org.nsga_distance, reverse=True)
-            new_cell = new_front[:cell_capacity]
-        else:
-            new_cell = new_front
-        elites_map[cell_idx] = new_cell
+        if gen % 100 == 0:
+            #place orgs in cells
+            for org in orgs_to_place:
+                cell_idx_0 = bin_value(features["sparsity"], org.sparsity)
+                cell_idx = tuple([cell_idx_0])
+                cell = elites_map[cell_idx]
+                if len(cell) == 0:
+                    cells_with_orgs.append(cell_idx)
+                cell.append(org)
+            if gen >= config["initial_popsize"]:
+                #recalculate pareto fronts of each cell
+                for cell_idx,cell in elites_map.items():
+                    new_fronts = fast_non_dominated_sort(cell)
+                    new_cell_size = np.min([cell_capacity, len(cell)])
+                    new_cell = []
+                    i = 1
+                    while len(new_cell) + len(new_fronts[i]) < new_cell_size:
+                        crowding_distance_assignment(new_fronts[i])
+                        new_cell.extend(new_fronts[i])
+                        i += 1
+                    if len(new_cell) < new_cell_size:
+                        crowding_distance_assignment(new_fronts[i])
+                        new_fronts[i].sort(key=lambda org: org.nsga_distance, reverse=True)
+                        new_cell.extend(new_fronts[i][:new_cell_size-len(new_cell)])
+                    elites_map[cell_idx] = new_cell
+            orgs_to_place = []
 
         #statistics over time
         if gen % 100 == 0:
