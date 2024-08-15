@@ -8,7 +8,7 @@ from statistics import mean
 import matplotlib.pyplot as plt
 import numpy as np
 
-from elites import get_features_dict
+#from elites import get_features_dict
 from plot_utils import (calculate_confidence_interval, fast_non_dominated_sort, 
                         final_pop_distribution, final_pop_histogram, 
                         get_perfect_pop, plot_elites_map, T)
@@ -143,10 +143,10 @@ def main(config_dir):
                     rdr = reader(f)
                     _ = next(f) #remove header
                     diversity_logs.append([line for line in rdr])
-                with open("{}/elites_map.pkl".format(full_path), "rb") as f:
-                    elites_maps.append(pickle.load(f))
-                with open("{}/coverage.pkl".format(full_path), "rb") as f:
-                    coverages.append(pickle.load(f))
+                # with open("{}/elites_map.pkl".format(full_path), "rb") as f:
+                #     elites_maps.append(pickle.load(f))
+                # with open("{}/coverage.pkl".format(full_path), "rb") as f:
+                #     coverages.append(pickle.load(f))
 
     data_path = "{}/{}".format(config_file["data_dir"], config_file["name"])
     if not os.path.exists(data_path):
@@ -156,20 +156,20 @@ def main(config_dir):
     perfect_pops = []
     for final_pop in final_pops:
         perfect_pops.append(get_perfect_pop(final_pop, eval_funcs))
-    features = get_features_dict(config_file["hash_resolution"])
+    # features = get_features_dict(config_file["hash_resolution"])
 
     final_pop_histogram(perfect_pops, eval_funcs, data_path, plot_all=True)
     plot_fitnesses_sep(fitness_logs, eval_funcs.keys(), data_path)
     plot_fitnesses_error(fitness_logs, eval_funcs.keys(), data_path)
     combined_diversity(diversity_logs, data_path)
-    plot_coverage(coverages, data_path)
-    if len(features) <= 3:
-        combo_elites_map = {}
-        map_keys = elites_maps[0].keys()
-        for map_key in map_keys:
-            all_cells = [elite_map[map_key] for elite_map in elites_maps]
-            combo_elites_map[map_key] = [org for cell in all_cells for org in cell]
-        plot_elites_map(combo_elites_map, config_file["eval_funcs"], features, data_path)
+    # plot_coverage(coverages, data_path)
+    # if len(features) <= 3:
+    #     combo_elites_map = {}
+    #     map_keys = elites_maps[0].keys()
+    #     for map_key in map_keys:
+    #         all_cells = [elite_map[map_key] for elite_map in elites_maps]
+    #         combo_elites_map[map_key] = [org for cell in all_cells for org in cell]
+    #     plot_elites_map(combo_elites_map, config_file["eval_funcs"], features, data_path)
 
 
 if __name__ == "__main__":

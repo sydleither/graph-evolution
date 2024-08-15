@@ -7,7 +7,8 @@ from collections import Counter
 import matplotlib.pyplot as plt
 import numpy as np
 
-from elites import get_features_dict, run
+#from elites import get_features_dict, run
+from nsga import run
 from eval_functions import functions
 from organism import Organism
 from plot_utils import (fast_non_dominated_sort, final_pop_distribution, 
@@ -81,6 +82,21 @@ def diversity(population:list[Organism], perfect_pop:list[Organism], save_loc_i:
             optimized_size = N
             diversityFile.write("{},{},{},{},{},{}\n".format(name, entropy, uniformity, 
                                                              spread, final_pop_size, optimized_size))
+            
+
+def plot_line(log:dict, ylabel, title, save_loc, logscale=False, transparent=False):
+    figure, axis = plt.subplots(1, 1)
+    for func_name in log.keys():
+        axis.plot(log[func_name], label=func_name)
+    if logscale:
+        axis.set_yscale("log")
+    figure.supxlabel("Generations")
+    figure.supylabel(ylabel)
+    figure.legend()
+    if transparent:
+        figure.patch.set_alpha(0.0)
+    plt.savefig("{}/{}.png".format(save_loc, title))
+    plt.close()
 
 
 def run_rep(i, save_loc, config):
@@ -90,27 +106,29 @@ def run_rep(i, save_loc, config):
         os.makedirs(save_loc_i)
 
     objectives = config["eval_funcs"]
-    final_pop, fitness_log, coverage, elites_map = run(config)
+    #final_pop, fitness_log, coverage, elites_map = run(config)
+    final_pop, fitness_log, diversity_log = run(config)
     perfect_pop = get_perfect_pop(final_pop, objectives)
-    features = get_features_dict(config["hash_resolution"])
+    #features = get_features_dict(config["hash_resolution"])
 
     if config["save_data"] == 1:
         with open("{}/final_pop.pkl".format(save_loc_i), "wb") as f:
             pickle.dump(final_pop, f)
         with open("{}/fitness_log.pkl".format(save_loc_i), "wb") as f:
             pickle.dump(fitness_log, f)
-        with open("{}/coverage.pkl".format(save_loc_i), "wb") as f:
-            pickle.dump(coverage, f)
-        with open("{}/elites_map.pkl".format(save_loc_i), "wb") as f:
-            pickle.dump(elites_map, f)
+        # with open("{}/coverage.pkl".format(save_loc_i), "wb") as f:
+        #     pickle.dump(coverage, f)
+        # with open("{}/elites_map.pkl".format(save_loc_i), "wb") as f:
+        #     pickle.dump(elites_map, f)
         diversity(final_pop, perfect_pop, save_loc_i)
 
     if config["plot_data"] == 1:
         plot_fitness(fitness_log, objectives.keys(), save_loc_i)
         final_pop_histogram(perfect_pop, objectives, save_loc_i, plot_all=True)
         final_pop_distribution(perfect_pop, objectives, save_loc_i, plot_all=True, with_error=True)
-        plot_coverage(coverage, save_loc_i)
-        plot_elites_map(elites_map, objectives, features, save_loc_i, transparent=False)
+        # plot_coverage(coverage, save_loc_i)
+        # plot_elites_map(elites_map, objectives, features, save_loc_i, transparent=False)
+        plot_line(diversity_log, "Count of Unique Types", "spread", save_loc_i)
 
 
 def main(config, rep=None):
