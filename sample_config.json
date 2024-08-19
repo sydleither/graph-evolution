@@ -4,17 +4,17 @@
     "reps": 3,
     "save_data": 1,
     "plot_data": 1,
+    "track_diversity_over": ["connectance", "average_negative_interactions_strength"],
     "mutation_rate": 0.05,
     "mutation_odds": [1,2,1,2],
     "crossover_odds": [1,2,2],
     "crossover_rate": 0.6,
     "weight_range": [-1,1],
     "network_size": 10,
-    "hash_resolution": 100,
-    "cell_capacity": 3,
-    "num_generations": 10000,
-    "initial_popsize": 1000,
+    "num_generations": 200,
+    "popsize": 250,
     "eval_funcs": {
-        "clustering_coefficient": 0.2
+        "positive_interactions_proportion": 0.2,
+        "average_positive_interactions_strength": 0.75
     }
 }
