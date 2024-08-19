@@ -3,6 +3,7 @@ from random import random, sample
 from statistics import mean
 
 from organism import Organism
+from plot_utils import fast_non_dominated_sort
 
 
 #transpose of a matrix (list-of-list)
@@ -13,10 +14,11 @@ def T(LL:list[list]) -> list[list]:
 def run(config):
     popsize = config["popsize"]
     objectives = config["eval_funcs"]
+    track_diversity_over = config["track_diversity_over"]
 
     population = [Organism(config["network_size"], random(), config["weight_range"]) for _ in range(popsize)]
     fitnessLog = {funcName:[] for funcName in objectives}
-    diversityLog = {"connectance": [], "clustering_coefficient": [], "positive_interactions_proportion":[], "average_positive_interactions_strength":[]}
+    diversityLog = {o:[] for o in track_diversity_over}
 
     #Algorithm from: Deb, Kalyanmoy, et al.
     #"A fast and elitist multiobjective genetic algorithm: NSGA-II."
@@ -63,52 +65,11 @@ def run(config):
             popFitnesses = [org.getError(name, target) for org in population]
             fitnessLog[name].append(mean(popFitnesses))
             _ = [org.getError(name,target) for org in children]
-        connectance_spread = len(Counter([org.getProperty("connectance") 
-                                          for org in population]))
-        cc_spread = len(Counter([org.getProperty("clustering_coefficient") 
-                                  for org in population]))
-        pip_spread = len(Counter([org.getProperty("positive_interactions_proportion") 
-                                  for org in population]))
-        apis_spread = len(Counter([org.getProperty("average_positive_interactions_strength") 
-                                  for org in population]))
-        diversityLog["connectance"].append(connectance_spread)
-        diversityLog["clustering_coefficient"].append(cc_spread)
-        diversityLog["positive_interactions_proportion"].append(pip_spread)
-        diversityLog["average_positive_interactions_strength"].append(apis_spread)
+        for name in track_diversity_over:
+            spread = len(Counter([org.getProperty(name) for org in population]))
+            diversityLog[name].append(spread)
 
     return population, fitnessLog, diversityLog
-
-
-#Algorithm from: Deb, Kalyanmoy, et al.
-#"A fast and elitist multiobjective genetic algorithm: NSGA-II."
-#IEEE transactions on evolutionary computation 6.2 (2002): 182-197.
-def fast_non_dominated_sort(population):
-    F = {1:[]}
-    S = {}
-    n = {}
-    for p in population:
-        S[p.id] = []
-        n[p.id] = 0
-        for q in population:
-            if p > q:
-                S[p.id].append(q)
-            elif q > p:
-                n[p.id] += 1
-        if n[p.id] == 0:
-            p.nsga_rank = 1
-            F[1].append(p)
-    i = 1
-    while len(F[i]) > 0:
-        Q = []
-        for p in F[i]:
-            for q in S[p.id]:
-                n[q.id] -= 1
-                if n[q.id] == 0:
-                    q.nsga_rank = i+1
-                    Q.append(q)
-        i += 1
-        F[i] = Q[:]
-    return F
 
 
 #Algorithm from: Deb, Kalyanmoy, et al.
