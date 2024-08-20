@@ -59,8 +59,8 @@ def fast_non_dominated_sort(population):
 
 def get_perfect_pop(final_pop, objectives):
     return [final_pop[i] for i in range(len(final_pop)) 
-            if all([np.isclose(final_pop[i].getError(name, target), 0) 
-                    for name,target in objectives.items()])]
+            if all([np.isclose(final_pop[i].getError(name, target), 0) for name,target in objectives.items()])
+            and final_pop[i].valid]
 
 
 def calculate_standard_error(data:list[list[float]]) -> tuple[list[float], list[float], list[float]]:

@@ -46,11 +46,13 @@ def sparsify(x, percentSparse:float = 0.5, outputRange:tuple[float]=(-1,1)):
 class Organism:
     nextID = 0
 
-    def __init__(self, numNodes:int, sparsity:float, weightRange, genome:list[list[float]]=None) -> None:
+    def __init__(self, numNodes:int, sparsity:float, weightRange, genome:list[list[float]]=None, age=0) -> None:
         self.id = Organism.nextID
         Organism.nextID += 1
         self.nsga_rank = None
         self.nsga_distance = None
+        self.age = age
+        self.clock = -1
 
         if genome is None:
             self.genotypeMatrix:list[list[float]] = [[random() for _ in range(numNodes)] for _ in range(numNodes)]
@@ -108,7 +110,7 @@ class Organism:
                         exit(1)
         # sometimes add random offset to sparsity and clamp to [0,1]
         newSparsity = self.sparsity if random() > mutationRate else min(1,max(0,self.sparsity + (random()/4)-(1/8)))
-        return Organism(self.numNodes,newSparsity,self.weightRange,newGenome)
+        return Organism(self.numNodes, newSparsity, self.weightRange, newGenome, self.age)
 
     
     def xover_traversal_helper(self, other, rateFromOther, algorithm):
@@ -140,7 +142,14 @@ class Organism:
         return list(visited) + completed
 
 
-    def makeCrossedCopyWith(self, other, rateFromOther, crossOdds:tuple[int]):
+    def makeCrossedCopyWith(self, other, rateFromOther, crossOdds:tuple[int], generation:int):
+        #age updating
+        if self.clock < generation:
+            self.age += 1
+            self.clock = generation
+        if other.clock < generation:
+            other.age += 1
+            other.clock = generation
         #setup
         crossoverThresholds = [sum(crossOdds[:k+1]) for k in range(len(crossOdds))]
         crossoverType = randint(1, sum(crossOdds))
@@ -162,7 +171,7 @@ class Organism:
             crossNodes = self.xover_traversal_helper(other, rateFromOther, "BFS")
             for i in crossNodes:
                 newGenome[i] = deepcopy(other.genotypeMatrix[i])
-        return Organism(self.numNodes, self.sparsity, self.weightRange, newGenome)
+        return Organism(self.numNodes, self.sparsity, self.weightRange, newGenome, max(self.age, other.age))#+1 on child age implicit in +1 on both parents above
 
 
     def getProperty(self, propertyName:str):
