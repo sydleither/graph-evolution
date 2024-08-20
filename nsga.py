@@ -34,10 +34,11 @@ def run(config):
 
     #evaluate all children
     for name, target in objectives.items():
-        _ = [org.getError(name,target) for org in children]
+        _ = [org.getError(name, target) for org in children]
 
     for gen in range(config["num_generations"]):
-        print("Gen:",gen)
+        print("Generation", gen)
+
         #begin of selection
         R = population+children
         F = fast_non_dominated_sort(R)
@@ -49,10 +50,10 @@ def run(config):
             i += 1
         if len(P) < popsize:
             nsga_distance_assignment(F[i])
-            F[i].sort(key=lambda org: org.nsga_distance,reverse=True)
+            F[i].sort(key=lambda org: org.nsga_distance, reverse=True)
             P.extend(F[i][:popsize-len(P)])
         population = P
-        parents = nsga_tournament(population,2*popsize)
+        parents = nsga_tournament(population, 2*popsize)
         #end of selection
 
         #repoduction

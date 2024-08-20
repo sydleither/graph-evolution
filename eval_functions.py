@@ -11,7 +11,7 @@ class Evaluation:
         freq = [0]*(num_nodes+1)
         for d in degree_sequence:
             freq[d] += 1/num_nodes
-        return freq
+        return [round(x, 5) for x in freq]
     
 
     def out_degree_distribution(self, network) -> list[float]:
@@ -21,7 +21,7 @@ class Evaluation:
         freq = [0]*(num_nodes+1)
         for d in degree_sequence:
             freq[d] += 1/num_nodes
-        return freq
+        return [round(x, 5) for x in freq]
 
 
     def avg_shortest_path_length_distribution(self, network) -> list[float]:
@@ -50,11 +50,11 @@ class Evaluation:
 
 
     def clustering_coefficient(self, network) -> float:
-        return nx.average_clustering(network.getNetworkxObject())
+        return round(nx.average_clustering(network.getNetworkxObject()), 3)
     
 
     def transitivity(self, network) -> float:
-        return nx.transitivity(network.getNetworkxObject())
+        return round(nx.transitivity(network.getNetworkxObject()), 3)
 
 
     def proportion_of_self_loops(self, network) -> float:
@@ -82,13 +82,13 @@ class Evaluation:
     def average_positive_interactions_strength(self, network) -> float:
         sum_pos = sum([sum([y for y in x if y > 0]) for x in network.adjacencyMatrix])
         num_pos = network.numPositive
-        return  sum_pos / num_pos if num_pos > 0 else 0
+        return round(sum_pos/num_pos, 3) if num_pos > 0 else 0
     
 
     def average_negative_interactions_strength(self, network) -> float:
         sum_neg = sum([sum([y for y in x if y < 0]) for x in network.adjacencyMatrix])
         num_neg = network.numNegative
-        return  sum_neg / num_neg if num_neg > 0 else 0
+        return round(sum_neg/num_neg, 3) if num_neg > 0 else 0
 
 
     def proportion_of_self_loops_positive(self, network) -> float:

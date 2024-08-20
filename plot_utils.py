@@ -10,8 +10,8 @@ from bintools import numBins
 import eval_functions as ef
 
 lmap = lambda f,x: list(map(f,x))
-mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=["#06470c", "#a9561e", "#82cafc", "#ae7181", "#929591", 
-                                                    "#be0119", "#fac205", "#cf6275", "#8e82fe", "#029386"])
+mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=["#509154", "#A9561E", "#77BCFD", "#B791D4", "#EEDD5D", 
+                                                    "#738696", "#24BCA8", "#D34A4F", "#8D81FE", "#FDA949"])
 
 
 #transpose a matrix (list of list)
@@ -53,7 +53,7 @@ def fast_non_dominated_sort(population):
 
 def get_perfect_pop(final_pop, objectives):
     return [final_pop[i] for i in range(len(final_pop)) 
-            if all([final_pop[i].getError(name, target) == 0 
+            if all([np.isclose(final_pop[i].getError(name, target), 0) 
                     for name,target in objectives.items()])]
 
 
@@ -105,9 +105,9 @@ def final_pop_histogram(final_pop, eval_funcs, save_loc, plot_all=True, transpar
     for property_name in property_names:
         is_eval_func = property_name in eval_funcs.keys()
         if plot_all:
-            color = "#06470c" if is_eval_func else "#a9561e"
+            color = "#509154" if is_eval_func else "#A9561E"
         else:
-            color = "black" if plotting_replicates else "#06470c"
+            color = "black" if plotting_replicates else "#509154"
         if plotting_replicates:
             data = [[org.getProperty(property_name) for org in final_pop[run]] for run in range(len(final_pop))]
             axis[fig_row][fig_col].hist(data, bins=numBins([d for dd in data for d in dd]), stacked=True)
@@ -157,9 +157,9 @@ def final_pop_distribution(final_pop, eval_funcs, save_loc, plot_all=True, with_
     for dist_name in distributions:
         is_eval_func = dist_name in eval_funcs.keys()
         if plot_all:
-            color = "#06470c" if is_eval_func else "#a9561e"
+            color = "#509154" if is_eval_func else "#A9561E"
         else:
-            color = "black" if plotting_replicates else "#06470c"
+            color = "black" if plotting_replicates else "#509154"
         for pop in final_pop:
             org_dists = [org.getProperty(dist_name) for org in pop]
             degree_mean, neg_error, pos_error = calculate_confidence_interval(org_dists)
