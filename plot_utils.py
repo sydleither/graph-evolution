@@ -22,6 +22,8 @@ def T(LL:list[list])->list[list]:
 #Algorithm from: Deb, Kalyanmoy, et al.
 #"A fast and elitist multiobjective genetic algorithm: NSGA-II."
 #IEEE transactions on evolutionary computation 6.2 (2002): 182-197.
+#Constraint handling from: Kalyanmoy Deb
+#"An efficient constraint handling method for genetic algorithms"
 def fast_non_dominated_sort(population):
     F = {1:[]}
     S = {}
@@ -30,7 +32,11 @@ def fast_non_dominated_sort(population):
         S[p.id] = []
         n[p.id] = 0
         for q in population:
-            if p > q:
+            if p.valid and not q.valid:
+                S[p.id].append(q)
+            elif not p.valid and q.valid:
+                n[p.id] += 1
+            elif p > q:
                 S[p.id].append(q)
             elif q > p:
                 n[p.id] += 1

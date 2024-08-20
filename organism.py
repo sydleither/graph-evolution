@@ -66,6 +66,8 @@ class Organism:
 
         self.adjacencyMatrix:list[list[float]] = [[round(sparsify(val, self.sparsity, self.weightRange), 3) for val in row] for row in self.genotypeMatrix]
 
+        #internal validity tracker - must be strongly connected
+        self.valid = len(list(nx.strongly_connected_components(self.getNetworkxObject()))) == 1
         #internal number of interactions reference
         self.numInteractions:int = sum([sum([1 for val in row if val != 0]) for row in self.adjacencyMatrix])
         #internal number of positive interactions reference
@@ -171,10 +173,7 @@ class Organism:
     
     def getError(self, propertyName:str, target) -> float:
         if propertyName not in self.errors:
-            if propertyName.endswith("_weight_distribution"):
-                dist = self.getProperty(propertyName)
-                self.errors[propertyName] = sum([(dist[i]-target[i])**2 for i in range(len(dist)) if dist[i] != 0])
-            elif propertyName.endswith("_distribution"):
+            if propertyName.endswith("_distribution"):
                 dist = self.getProperty(propertyName)
                 self.errors[propertyName] = sum([(dist[i]-target[i])**2 for i in range(len(dist))])
             else:

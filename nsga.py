@@ -6,11 +6,6 @@ from organism import Organism
 from plot_utils import fast_non_dominated_sort
 
 
-#transpose of a matrix (list-of-list)
-def T(LL:list[list]) -> list[list]:
-    return list(zip(*LL))
-
-
 def run(config):
     popsize = config["popsize"]
     objectives = config["eval_funcs"]
@@ -19,6 +14,7 @@ def run(config):
     population = [Organism(config["network_size"], random(), config["weight_range"]) for _ in range(popsize)]
     fitnessLog = {funcName:[] for funcName in objectives}
     diversityLog = {o:[] for o in track_diversity_over}
+    diversityLog["valid"] = []
 
     #Algorithm from: Deb, Kalyanmoy, et al.
     #"A fast and elitist multiobjective genetic algorithm: NSGA-II."
@@ -69,6 +65,8 @@ def run(config):
         for name in track_diversity_over:
             spread = len(Counter([org.getProperty(name) for org in population]))
             diversityLog[name].append(spread)
+        valid_spread = sum([1 if org.valid else 0 for org in population])
+        diversityLog["valid"].append(valid_spread)
 
     return population, fitnessLog, diversityLog
 
@@ -122,14 +120,16 @@ def nsga_tournament(population, numOffspring):
     for _ in range(numOffspring):
         if random() < 0.25:
             choices = sample(population, k=2)
-            if choices[0].nsga_rank > choices[1].nsga_rank:
-                parents.append(choices[1])
-            elif choices[1].nsga_rank > choices[0].nsga_rank:
-                parents.append(choices[0])
-            elif choices[0].nsga_distance < choices[1].nsga_distance:
-                parents.append(choices[1])
-            elif choices[1].nsga_distance < choices[0].nsga_distance:
-                parents.append(choices[0])
+            choice0 = choices[0]
+            choice1 = choices[1]
+            if choice0.nsga_rank > choice1.nsga_rank:
+                parents.append(choice1)
+            elif choice1.nsga_rank > choice0.nsga_rank:
+                parents.append(choice0)
+            elif choice0.nsga_distance < choice1.nsga_distance:
+                parents.append(choice1)
+            elif choice1.nsga_distance < choice0.nsga_distance:
+                parents.append(choice0)
             else:
                 parents.append(sample(choices, k=1)[0])
         else:
