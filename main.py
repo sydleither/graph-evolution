@@ -106,9 +106,10 @@ def run_rep(i, save_loc, config):
         diversity(final_pop, perfect_pop, save_loc_i)
 
     if config["plot_data"] == 1:
+        if len(perfect_pop) > 0:
+            final_pop_histogram(perfect_pop, objectives, save_loc_i, plot_all=True)
+            final_pop_distribution(perfect_pop, objectives, save_loc_i, plot_all=True, with_error=True)
         plot_fitness(fitness_log, objectives.keys(), save_loc_i)
-        final_pop_histogram(perfect_pop, objectives, save_loc_i, plot_all=True)
-        final_pop_distribution(perfect_pop, objectives, save_loc_i, plot_all=True, with_error=True)
         plotParetoFront(final_pop, config, save_loc_i, first_front_only=False)
         plot_spread(diversity_log, "Count of Unique Types", "spread", save_loc_i)
 

@@ -167,6 +167,8 @@ def final_pop_distribution(final_pop, eval_funcs, save_loc, plot_all=True, with_
         else:
             color = "black" if plotting_replicates else "#509154"
         for pop in final_pop:
+            if len(pop) == 0:
+                continue
             org_dists = [org.getProperty(dist_name) for org in pop]
             degree_mean, neg_error, pos_error = calculate_confidence_interval(org_dists)
             if plotting_replicates:
