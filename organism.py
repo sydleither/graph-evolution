@@ -171,7 +171,8 @@ class Organism:
             crossNodes = self.xover_traversal_helper(other, rateFromOther, "BFS")
             for i in crossNodes:
                 newGenome[i] = deepcopy(other.genotypeMatrix[i])
-        return Organism(self.numNodes, self.sparsity, self.weightRange, newGenome, max(self.age, other.age))#+1 on child age implicit in +1 on both parents above
+        #return child, +1 on child age implicit in +1 on both parents above
+        return Organism(self.numNodes, self.sparsity, self.weightRange, newGenome, max(self.age, other.age))
 
 
     def getProperty(self, propertyName:str):

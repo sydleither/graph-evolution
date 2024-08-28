@@ -11,8 +11,9 @@
     "crossover_rate": 0.6,
     "weight_range": [-1,1],
     "network_size": 10,
-    "num_generations": 200,
-    "popsize": 250,
+    "num_generations": 500,
+    "popsize": 100,
+    "age_gap": 100,
     "eval_funcs": {
         "positive_interactions_proportion": 0.2,
         "average_positive_interactions_strength": 0.75

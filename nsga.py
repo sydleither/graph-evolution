@@ -1,43 +1,23 @@
-#Algorithm from: Deb, Kalyanmoy, et al.
+#Algorithm based on: Deb, Kalyanmoy, et al.
 #"A fast and elitist multiobjective genetic algorithm: NSGA-II."
-#IEEE transactions on evolutionary computation 6.2 (2002): 182-197.
+#And: Gregory S. Hornby.
+#"ALPS: The Age-Layered Population Structure for Reducing the Problem of Premature Convergence"
 
 from collections import Counter
 from random import random, sample
 from statistics import mean
 
 from organism import Organism
-from plot_utils import fast_non_dominated_sort, T
-
-import matplotlib.pyplot as plt
-def plotParetoFront(population, config, save_loc=None, first_front_only=False):
-    #sort
-    allFronts = fast_non_dominated_sort(population)
-    #plot
-    funcNames = list(config["eval_funcs"].keys())
-    for i, feature1 in enumerate(funcNames):
-        for j, feature2 in enumerate(funcNames):
-            if j <= i: continue
-            for frontNumber in sorted(allFronts.keys()):
-                R = sorted(sorted([(org.errors[feature1], org.errors[feature2]) for org in allFronts[frontNumber]],
-                                    key=lambda r: r[1], reverse=True), key=lambda r: r[0])
-                plt.plot(*T(R), marker="o", linestyle="--",label=frontNumber)
-                if first_front_only: break
-            plt.title(feature1 + " " + feature2)
-            plt.xlabel(feature1 + " Error")
-            plt.ylabel(feature2 + " Error")
-            plt.legend()
-            if save_loc is not None:
-                plt.savefig("{}/pareto_{}_{}.png".format(save_loc, feature1, feature2))
-                plt.close()
-            else:
-                plt.show()
+from plot_utils import fast_non_dominated_sort
 
 
 def run(config):
+    num_generations = config["num_generations"]
     popsize = config["popsize"]
     objectives = config["eval_funcs"]
     track_diversity_over = config["track_diversity_over"]
+    network_size = config["network_size"]
+    weight_range = config["weight_range"]
     crossover_rate = config["crossover_rate"]
     crossover_odds = config["crossover_odds"]
     mutation_rate = config["mutation_rate"]
@@ -46,13 +26,13 @@ def run(config):
     fitnessLog = {funcName:[] for funcName in objectives}
     diversityLog = {o:[] for o in track_diversity_over}
 
-    #age-layered population structure
-    age_gap = 75
-    age_progression = [age_gap*x for x in range(1, 6)] #todo dynamic with num generations
-    age_progression.append(config["num_generations"]+1)
+    age_gap = config["age_gap"]
+    age_progression = [age_gap*x**2 for x in range(1, 11)]
     age_layers = [[]]
+    if num_generations > age_progression[-1]:
+        age_progression.append(num_generations)
 
-    for gen in range(config["num_generations"]):
+    for gen in range(num_generations):
         print("Generation", gen)
 
         #add new age layer if it is time
@@ -67,7 +47,7 @@ def run(config):
 
         #initialize / reset layer 0
         if gen % age_gap == 0:
-            population = [Organism(config["network_size"], random(), config["weight_range"]) for _ in range(popsize)]
+            population = [Organism(network_size, random(), weight_range) for _ in range(popsize)]
             for name, target in objectives.items():
                 _ = [org.getError(name, target) for org in population]
             F = fast_non_dominated_sort(population)
@@ -84,10 +64,6 @@ def run(config):
                 R = layer_l + age_layers[l-1]
                 F = fast_non_dominated_sort(R)
                 _ = [nsga_distance_assignment(F[f]) for f in F]
-                # if gen > 50:
-                #     print("layer", l, "out of", len(age_layers))
-                #     plotParetoFront(layer_l, config)
-                #     plotParetoFront(R, config)
             else:
                 R = layer_l
                 age_migrants_in = []
@@ -109,8 +85,7 @@ def run(config):
             #selection
             R = layer_candidates + age_migrants_in
             if len(R) < popsize:
-                print("Padding",popsize-len(R))
-                padding = [Organism(config["network_size"], random(), config["weight_range"]) for _ in range(popsize-len(R))]
+                padding = [Organism(network_size, random(), weight_range) for _ in range(popsize-len(R))]
                 for name, target in objectives.items():
                     _ = [org.getError(name, target) for org in padding]
                 R.extend(padding)
@@ -135,9 +110,6 @@ def run(config):
 
         #evaluation
         oldest_layer = age_layers[-1]
-        print("\t", mean([org.nsga_distance for org in oldest_layer]))
-        print("\t", max([org.age for org in oldest_layer]),min([org.age for org in oldest_layer]))
-        # if any([key > gen+1 for key in Counter([org.age for org in oldest_layer])]): exit()
         for name, target in objectives.items():
             popFitnesses = [org.getError(name, target) for org in oldest_layer]
             fitnessLog[name].append(mean(popFitnesses))
