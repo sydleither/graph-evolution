@@ -22,6 +22,7 @@ def run(config):
     crossover_odds = config["crossover_odds"]
     mutation_rate = config["mutation_rate"]
     mutation_odds = config["mutation_odds"]
+    tournament_probability = config["tournament_probability"]
 
     fitnessLog = {funcName:[] for funcName in objectives}
     diversityLog = {o:[] for o in track_diversity_over}
@@ -37,7 +38,7 @@ def run(config):
 
         #add new age layer if it is time
         if (gen == age_progression[len(age_layers)-1]):
-            parents = nsga_tournament(age_layers[-1], 2*popsize)
+            parents = nsga_tournament(age_layers[-1], 2*popsize, tournament_probability)
             children = [parents[i].makeCrossedCopyWith(
                         parents[i+popsize], crossover_rate, crossover_odds, gen).makeMutatedCopy(
                         mutation_rate, mutation_odds) for i in range(popsize)]
@@ -67,7 +68,7 @@ def run(config):
             else:
                 R = layer_l
                 age_migrants_in = []
-            parents = nsga_tournament(R, 2*popsize)
+            parents = nsga_tournament(R, 2*popsize, tournament_probability)
             children = [parents[i].makeCrossedCopyWith(
                         parents[i+popsize], crossover_rate, crossover_odds, gen).makeMutatedCopy(
                         mutation_rate, mutation_odds) for i in range(popsize)]
@@ -158,10 +159,10 @@ def nsga_distance_assignment(I:list[Organism]):
             I[i].nsga_distance += (I[i+1].sparsity-I[i-1].sparsity)/rng
 
 
-def nsga_tournament(population, numOffspring):
+def nsga_tournament(population, numOffspring, tournament_probability):
     parents = []
     for _ in range(numOffspring):
-        if random() < 0.25:
+        if random() < tournament_probability:
             choices = sample(population, k=2)
             choice0 = choices[0]
             choice1 = choices[1]
