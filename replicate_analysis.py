@@ -153,10 +153,11 @@ def main(config_dir):
     for final_pop in final_pops:
         perfect_pops.append(get_perfect_pop(final_pop, eval_funcs))
 
-    final_pop_histogram(perfect_pops, eval_funcs, data_path, plot_all=True)
+    if not all([len(pop) == 0 for pop in perfect_pops]):
+        final_pop_histogram(perfect_pops, eval_funcs, data_path, plot_all=True)
+        final_pop_distribution(perfect_pops, eval_funcs, data_path)
     plot_fitnesses_sep(fitness_logs, eval_funcs.keys(), data_path)
     plot_fitnesses_error(fitness_logs, eval_funcs.keys(), data_path)
-    final_pop_distribution(perfect_pops, eval_funcs, data_path)
     combined_diversity(diversities, data_path)
     plot_spreads(diversity_logs, diversity_logs[0].keys(), data_path)
 

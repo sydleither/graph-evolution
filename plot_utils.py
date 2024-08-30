@@ -1,5 +1,4 @@
 from math import ceil
-from statistics import mean
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -21,7 +20,8 @@ def T(LL:list[list])->list[list]:
 
 #Algorithm from: Deb, Kalyanmoy, et al.
 #"A fast and elitist multiobjective genetic algorithm: NSGA-II."
-#IEEE transactions on evolutionary computation 6.2 (2002): 182-197.
+#Constraint handling from: Kalyanmoy Deb.
+#"An efficient constraint handling method for genetic algorithms"
 def fast_non_dominated_sort(population):
     F = {1:[]}
     S = {}
@@ -30,7 +30,11 @@ def fast_non_dominated_sort(population):
         S[p.id] = []
         n[p.id] = 0
         for q in population:
-            if p > q:
+            if p.valid and not q.valid:
+                S[p.id].append(q)
+            elif not p.valid and q.valid:
+                n[p.id] += 1
+            elif p > q:
                 S[p.id].append(q)
             elif q > p:
                 n[p.id] += 1
@@ -53,8 +57,8 @@ def fast_non_dominated_sort(population):
 
 def get_perfect_pop(final_pop, objectives):
     return [final_pop[i] for i in range(len(final_pop)) 
-            if all([np.isclose(final_pop[i].getError(name, target), 0) 
-                    for name,target in objectives.items()])]
+            if all([np.isclose(final_pop[i].getError(name, target), 0) for name,target in objectives.items()])
+            and final_pop[i].valid]
 
 
 def calculate_standard_error(data:list[list[float]]) -> tuple[list[float], list[float], list[float]]:
@@ -161,6 +165,8 @@ def final_pop_distribution(final_pop, eval_funcs, save_loc, plot_all=True, with_
         else:
             color = "black" if plotting_replicates else "#509154"
         for pop in final_pop:
+            if len(pop) == 0:
+                continue
             org_dists = [org.getProperty(dist_name) for org in pop]
             degree_mean, neg_error, pos_error = calculate_confidence_interval(org_dists)
             if plotting_replicates:
