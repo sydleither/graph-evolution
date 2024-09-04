@@ -26,23 +26,26 @@ def fast_non_dominated_sort(population):
     F = {1:[]}
     S = {}
     n = {}
+    valid_population = [p for p in population if p.valid]
+    invalid_population = [p for p in population if not p.valid]
     for p in population:
         S[p.id] = []
         n[p.id] = 0
-        for q in population:
-            if p.valid and not q.valid:
+        if p.valid:
+            for q in invalid_population:
                 S[p.id].append(q)
-            elif not p.valid and q.valid:
-                n[p.id] += 1
-            elif p > q:
-                S[p.id].append(q)
-            elif q > p:
-                n[p.id] += 1
+            for q in valid_population:
+                if p > q:
+                    S[p.id].append(q)
+                elif q > p:
+                    n[p.id] += 1
+        else:
+            n[p.id] = len(valid_population)
         if n[p.id] == 0:
             p.nsga_rank = 1
             F[1].append(p)
     i = 1
-    while len(F[i]) > 0:
+    while F[i]:
         Q = []
         for p in F[i]:
             for q in S[p.id]:
@@ -51,7 +54,7 @@ def fast_non_dominated_sort(population):
                     q.nsga_rank = i+1
                     Q.append(q)
         i += 1
-        F[i] = Q[:]
+        F[i] = Q
     return F
 
 

@@ -16,6 +16,7 @@ def run(config):
     popsize = config["popsize"]
     objectives = config["eval_funcs"]
     track_diversity_over = config["track_diversity_over"]
+    tracking_frequency = config["tracking_frequency"]
     network_size = config["network_size"]
     weight_range = config["weight_range"]
     crossover_rate = config["crossover_rate"]
@@ -26,6 +27,8 @@ def run(config):
 
     fitnessLog = {funcName:[] for funcName in objectives}
     diversityLog = {o:[] for o in track_diversity_over}
+    if tracking_frequency == 0:
+        tracking_frequency = num_generations
 
     age_gap = config["age_gap"]
     age_progression = [age_gap*x**2 for x in range(1, 11)]
@@ -33,9 +36,7 @@ def run(config):
     if num_generations > age_progression[-1]:
         age_progression.append(num_generations)
 
-    for gen in range(num_generations):
-        print("Generation", gen)
-
+    for gen in range(num_generations+1):
         #add new age layer if it is time
         if (gen == age_progression[len(age_layers)-1]):
             parents = nsga_tournament(age_layers[-1], 2*popsize, tournament_probability)
@@ -110,13 +111,15 @@ def run(config):
             age_migrants_in = age_migrants_out
 
         #evaluation
-        oldest_layer = age_layers[-1]
-        for name, target in objectives.items():
-            popFitnesses = [org.getError(name, target) for org in oldest_layer]
-            fitnessLog[name].append(mean(popFitnesses))
-        for name in track_diversity_over:
-            spread = len(Counter([org.getProperty(name) for org in oldest_layer]))
-            diversityLog[name].append(spread)
+        if gen % tracking_frequency == 0:
+            print("Generation", gen)
+            oldest_layer = age_layers[-1]
+            for name, target in objectives.items():
+                popFitnesses = [org.getError(name, target) for org in oldest_layer]
+                fitnessLog[name].append(mean(popFitnesses))
+            for name in track_diversity_over:
+                spread = len(Counter([org.getProperty(name) for org in oldest_layer]))
+                diversityLog[name].append(spread)
 
     return oldest_layer, fitnessLog, diversityLog
 

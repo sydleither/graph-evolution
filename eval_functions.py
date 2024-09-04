@@ -10,8 +10,8 @@ class Evaluation:
         degree_sequence = list(d for _, d in networkx_obj.in_degree())
         freq = [0]*(num_nodes+1)
         for d in degree_sequence:
-            freq[d] += 1/num_nodes
-        return [round(x, 5) for x in freq]
+            freq[d] += 1
+        return [x/num_nodes for x in freq]
     
 
     def out_degree_distribution(self, network) -> list[float]:
@@ -20,8 +20,8 @@ class Evaluation:
         degree_sequence = list(d for _, d in networkx_obj.out_degree())
         freq = [0]*(num_nodes+1)
         for d in degree_sequence:
-            freq[d] += 1/num_nodes
-        return [round(x, 5) for x in freq]
+            freq[d] += 1
+        return [x/num_nodes for x in freq]
 
 
     def avg_shortest_path_length_distribution(self, network) -> list[float]:

@@ -233,21 +233,16 @@ class Organism:
     #pareto sorting functions #
     ###########################
     def __gt__(self, other):
-        if not isinstance(other, Organism):
-            raise TypeError("Invalid comparison of organism to", type(other))
-        if set(self.errors) == set(other.errors):
-            #NOTE: potential confusion, gtr defines 'better' based on having smallest score
-            someSelfBetter = False
-            noSelfWorse = True
-            for prop in self.errors:
-                if self.errors[prop] > other.errors[prop]:
-                    noSelfWorse = False
-                    break
-                elif self.errors[prop] < other.errors[prop]:
-                    someSelfBetter = True
-            return noSelfWorse and someSelfBetter
-        else:
-            raise Exception("Organisms must be evaluated on the same criteria.", self.errors.keys(), other.errors.keys())
+        #NOTE: potential confusion, gtr defines 'better' based on having smallest score
+        someSelfBetter = False
+        for prop in self.errors:
+            self_error = self.errors[prop]
+            other_error = other.errors[prop]
+            if self_error > other_error:
+                return False
+            elif self_error < other_error:
+                someSelfBetter = True
+        return someSelfBetter
 
 
     def __eq__(self, other):

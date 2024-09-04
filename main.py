@@ -15,10 +15,10 @@ from plot_utils import (fast_non_dominated_sort, final_pop_distribution,
 from random import seed
 
 
-def plot_line(log:dict, ylabel, title, save_loc, logscale=False, transparent=False):
+def plot_line(log:dict, generations, ylabel, title, save_loc, logscale=False, transparent=False):
     figure, axis = plt.subplots(1, 1)
     for func_name in log.keys():
-        axis.plot(log[func_name], label=func_name)
+        axis.plot(generations, log[func_name], label=func_name)
     if logscale:
         axis.set_yscale("log")
     figure.supxlabel("Generations")
@@ -92,11 +92,13 @@ def run_rep(i, save_loc, config):
         diversity(final_pop, perfect_pop, save_loc_i)
 
     if config["plot_data"] == 1:
+        tracking_frequency = config["tracking_frequency"]
+        generations = [x*tracking_frequency for x in range(config["num_generations"]//tracking_frequency)]
         if len(perfect_pop) > 0:
             final_pop_histogram(perfect_pop, objectives, save_loc_i, plot_all=True)
             final_pop_distribution(perfect_pop, objectives, save_loc_i, plot_all=True, with_error=True)
-        plot_line(fitness_log, "Error", "fitness", save_loc_i, logscale=True)
-        plot_line(diversity_log, "Count of Unique Types", "spread", save_loc_i)
+        plot_line(fitness_log, generations, "Error", "fitness", save_loc_i, logscale=True)
+        plot_line(diversity_log, generations, "Count of Unique Types", "spread", save_loc_i)
         plotParetoFront(final_pop, config, save_loc_i, first_front_only=False)
 
 
