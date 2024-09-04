@@ -4,6 +4,7 @@
     "reps": 3,
     "save_data": 1,
     "plot_data": 1,
+    "tracking_frequency": 2,
     "track_diversity_over": ["connectance", "average_negative_interactions_strength"],
     "weight_range": [-1,1],
     "network_size": 10,
