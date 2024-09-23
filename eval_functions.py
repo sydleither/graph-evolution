@@ -1,3 +1,5 @@
+import statistics
+
 import networkx as nx
 import numpy as np
 
@@ -81,6 +83,16 @@ class Evaluation:
         sum_neg = sum([sum([y for y in x if y < 0]) for x in network.adjacencyMatrix])
         num_neg = network.numNegative
         return round(sum_neg/num_neg, 3) if num_neg > 0 else 0
+    
+
+    def variance_positive_interactions_strength(self, network) -> float:
+        var_pos = statistics.variance([x for y in network.adjacencyMatrix for x in y if x > 0])
+        return var_pos
+    
+    
+    def variance_negative_interactions_strength(self, network) -> float:
+        var_neg = statistics.variance([x for y in network.adjacencyMatrix for x in y if x < 0])
+        return var_neg
 
 
     def proportion_of_self_loops_positive(self, network) -> float:

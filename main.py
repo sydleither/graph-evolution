@@ -93,7 +93,7 @@ def run_rep(i, save_loc, config):
 
     if config["plot_data"] == 1:
         tracking_frequency = config["tracking_frequency"]
-        generations = [x*tracking_frequency for x in range(config["num_generations"]//tracking_frequency)]
+        generations = [x*tracking_frequency for x in range((config["num_generations"]//tracking_frequency)+1)]
         if len(perfect_pop) > 0:
             final_pop_histogram(perfect_pop, objectives, save_loc_i, plot_all=True)
             final_pop_distribution(perfect_pop, objectives, save_loc_i, plot_all=True, with_error=True)

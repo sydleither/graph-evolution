@@ -154,7 +154,7 @@ def main(config_dir):
         perfect_pops.append(get_perfect_pop(final_pop, eval_funcs))
 
     tracking_frequency = config["tracking_frequency"]
-    generations = [x*tracking_frequency for x in range(config["num_generations"]//tracking_frequency+1)]
+    generations = [x*tracking_frequency for x in range((config["num_generations"]//tracking_frequency)+1)]
 
     if not all([len(pop) == 0 for pop in perfect_pops]):
         final_pop_histogram(perfect_pops, eval_funcs, data_path, plot_all=True)
