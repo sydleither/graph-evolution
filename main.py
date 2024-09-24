@@ -54,10 +54,10 @@ def plotParetoFront(population, config, save_loc=None, first_front_only=False):
                 plt.show()
 
 
-def diversity(population:list[Organism], perfect_pop:list[Organism], save_loc_i:str):
+def diversity(perfect_pop:list[Organism], save_loc_i:str):
     N = len(perfect_pop)
     with open("{}/diversity.csv".format(save_loc_i), 'w') as diversityFile:
-        diversityFile.write("property,entropy,uniformity,spread,final_pop_size,optimized_size\n")
+        diversityFile.write("property,entropy,uniformity,spread,unique_types,optimized_size\n")
         for name in functions:
             typeCounter = Counter([organism.getProperty(name) 
                                    if "distribution" not in name 
@@ -65,11 +65,11 @@ def diversity(population:list[Organism], perfect_pop:list[Organism], save_loc_i:
                                    for organism in perfect_pop])
             entropy = -sum([(count/N)*np.log2(count/N) for count in typeCounter.values()])
             uniformity = entropy / np.log2(len(typeCounter))
-            spread = len(typeCounter)
-            final_pop_size = len(population)
+            spread = entropy / np.log2(N)
+            unique_types = len(typeCounter)
             optimized_size = N
-            diversityFile.write("{},{},{},{},{},{}\n".format(name, entropy, uniformity, 
-                                                             spread, final_pop_size, optimized_size))
+            diversityFile.write("{},{},{},{},{},{}\n".format(name, entropy, uniformity, spread, 
+                                                                unique_types, optimized_size))
 
 
 def run_rep(i, save_loc, config):
@@ -89,7 +89,7 @@ def run_rep(i, save_loc, config):
             pickle.dump(fitness_log, f)
         with open("{}/diversity_log.pkl".format(save_loc_i), "wb") as f:
             pickle.dump(diversity_log, f)
-        diversity(final_pop, perfect_pop, save_loc_i)
+        diversity(perfect_pop, save_loc_i)
 
     if config["plot_data"] == 1:
         tracking_frequency = config["tracking_frequency"]
@@ -98,7 +98,7 @@ def run_rep(i, save_loc, config):
             final_pop_histogram(perfect_pop, objectives, save_loc_i, plot_all=True)
             final_pop_distribution(perfect_pop, objectives, save_loc_i, plot_all=True, with_error=True)
         plot_line(fitness_log, generations, "Error", "fitness", save_loc_i, logscale=True)
-        plot_line(diversity_log, generations, "Count of Unique Types", "spread", save_loc_i)
+        plot_line(diversity_log, generations, "Count of Unique Types", "unique_types", save_loc_i)
         plotParetoFront(final_pop, config, save_loc_i, first_front_only=False)
 
 

@@ -88,21 +88,21 @@ def combined_diversity(logs, data_path):
     scratch = {}
     for log in logs:
         for row in log:
-            name, entropy, uniformity, spread, final_pop_size, perfect_pop_size = row
+            name, entropy, uniformity, spread, unique_types, perfect_pop_size = row
             if name not in scratch:
                 scratch[name] = []
             scratch[name].append([float(entropy), float(uniformity), float(spread), 
-                                  float(final_pop_size), float(perfect_pop_size)])
+                                  float(unique_types), float(perfect_pop_size)])
     for name in scratch:
         scratch[name] = [mean(x) for x in T(scratch[name])]
     with open("{}/diversity_all.csv".format(data_path), 'w') as entropyFile:
-        entropyFile.write("property,entropy,uniformity,spread,final_pop_size,optimized_size\n")
+        entropyFile.write("property,entropy,uniformity,spread,unique_types,optimized_size\n")
         for name, measures in scratch.items():
             entropyFile.write("{},{},{},{},{},{}\n".format(name, measures[0], measures[1], 
-                                                     measures[2], measures[3], measures[4]))
+                                                           measures[2], measures[3], measures[4]))
 
 
-def plot_spreads(diversity_logs, generations, property_names, save_loc, logscale=False, transparent=False):
+def plot_unique_types(diversity_logs, generations, property_names, save_loc, logscale=False, transparent=False):
     figure, axis = plt.subplots(1, 1)
     num_replicates = len(diversity_logs)
     for func_name in property_names:
@@ -113,11 +113,11 @@ def plot_spreads(diversity_logs, generations, property_names, save_loc, logscale
     if logscale:
         axis.set_yscale("log")
     figure.supxlabel("Generations")
-    figure.supylabel("Spread")
+    figure.supylabel("Unique Types")
     figure.legend()
     if transparent:
         figure.patch.set_alpha(0.0)
-    plt.savefig("{}/spread.png".format(save_loc))
+    plt.savefig("{}/unique_types.png".format(save_loc))
     plt.close()
 
 
@@ -162,7 +162,7 @@ def main(config_dir):
     plot_fitnesses_sep(fitness_logs, generations, eval_funcs.keys(), data_path)
     plot_fitnesses_error(fitness_logs, generations, eval_funcs.keys(), data_path)
     combined_diversity(diversities, data_path)
-    plot_spreads(diversity_logs, generations, diversity_logs[0].keys(), data_path)
+    plot_unique_types(diversity_logs, generations, diversity_logs[0].keys(), data_path)
 
 
 if __name__ == "__main__":
