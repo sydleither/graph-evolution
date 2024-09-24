@@ -5,7 +5,7 @@
     "save_data": 1,
     "plot_data": 1,
     "tracking_frequency": 2,
-    "track_diversity_over": ["connectance", "average_negative_interactions_strength"],
+    "track_diversity_over": ["connectance", "variance_positive_interactions_strength"],
     "weight_range": [-1,1],
     "network_size": 10,
     "num_generations": 500,
@@ -17,7 +17,7 @@
     "crossover_rate": 0.6,
     "tournament_probability": 0.25,
     "eval_funcs": {
-        "positive_interactions_proportion": 0.2,
-        "average_positive_interactions_strength": 0.75
+        "positive_interactions_proportion": 0.75,
+        "average_positive_interactions_strength": 0.3
     }
 }

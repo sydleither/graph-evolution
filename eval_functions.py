@@ -86,13 +86,19 @@ class Evaluation:
     
 
     def variance_positive_interactions_strength(self, network) -> float:
-        var_pos = statistics.variance([x for y in network.adjacencyMatrix for x in y if x > 0])
-        return var_pos
+        flat = [x for y in network.adjacencyMatrix for x in y if x > 0]
+        if len(flat) == 0:
+            return 0
+        var_pos = statistics.variance(flat)
+        return round(var_pos, 3)
     
     
     def variance_negative_interactions_strength(self, network) -> float:
-        var_neg = statistics.variance([x for y in network.adjacencyMatrix for x in y if x < 0])
-        return var_neg
+        flat = [x for y in network.adjacencyMatrix for x in y if x < 0]
+        if len(flat) == 0:
+            return 0
+        var_neg = statistics.variance(flat)
+        return round(var_neg, 3)
 
 
     def proportion_of_self_loops_positive(self, network) -> float:
