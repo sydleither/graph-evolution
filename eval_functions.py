@@ -87,7 +87,7 @@ class Evaluation:
 
     def variance_positive_interactions_strength(self, network) -> float:
         flat = [x for y in network.adjacencyMatrix for x in y if x > 0]
-        if len(flat) == 0:
+        if len(flat) < 2:
             return 0
         var_pos = statistics.variance(flat)
         return round(var_pos, 3)
@@ -95,7 +95,7 @@ class Evaluation:
     
     def variance_negative_interactions_strength(self, network) -> float:
         flat = [x for y in network.adjacencyMatrix for x in y if x < 0]
-        if len(flat) == 0:
+        if len(flat) < 2:
             return 0
         var_neg = statistics.variance(flat)
         return round(var_neg, 3)
