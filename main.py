@@ -54,10 +54,10 @@ def plotParetoFront(population, config, save_loc=None, first_front_only=False):
                 plt.show()
 
 
-def diversity(perfect_pop:list[Organism], save_loc_i:str):
+def diversity(perfect_pop:list[Organism], popsize:int, save_loc_i:str):
     N = len(perfect_pop)
     with open("{}/diversity.csv".format(save_loc_i), 'w') as diversityFile:
-        diversityFile.write("property,entropy,uniformity,spread,unique_types,optimized_size\n")
+        diversityFile.write("property,entropy,uniformity,spread,unique_types,optimized_proportion\n")
         for name in functions:
             typeCounter = Counter([organism.getProperty(name) 
                                    if "distribution" not in name 
@@ -67,9 +67,9 @@ def diversity(perfect_pop:list[Organism], save_loc_i:str):
             uniformity = entropy / np.log2(len(typeCounter))
             spread = entropy / np.log2(N)
             unique_types = len(typeCounter)
-            optimized_size = N
+            optimized_proportion = N / popsize
             diversityFile.write("{},{},{},{},{},{}\n".format(name, entropy, uniformity, spread, 
-                                                                unique_types, optimized_size))
+                                                             unique_types, optimized_proportion))
 
 
 def run_rep(i, save_loc, config):
@@ -89,7 +89,7 @@ def run_rep(i, save_loc, config):
             pickle.dump(fitness_log, f)
         with open("{}/diversity_log.pkl".format(save_loc_i), "wb") as f:
             pickle.dump(diversity_log, f)
-        diversity(perfect_pop, save_loc_i)
+        diversity(perfect_pop, config["popsize"], save_loc_i)
 
     if config["plot_data"] == 1:
         tracking_frequency = config["tracking_frequency"]

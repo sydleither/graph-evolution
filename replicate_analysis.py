@@ -88,15 +88,15 @@ def combined_diversity(logs, data_path):
     scratch = {}
     for log in logs:
         for row in log:
-            name, entropy, uniformity, spread, unique_types, perfect_pop_size = row
+            name, entropy, uniformity, spread, unique_types, optimized_proportion = row
             if name not in scratch:
                 scratch[name] = []
             scratch[name].append([float(entropy), float(uniformity), float(spread), 
-                                  float(unique_types), float(perfect_pop_size)])
+                                  float(unique_types), float(optimized_proportion)])
     for name in scratch:
         scratch[name] = [mean(x) for x in T(scratch[name])]
     with open("{}/diversity_all.csv".format(data_path), 'w') as entropyFile:
-        entropyFile.write("property,entropy,uniformity,spread,unique_types,optimized_size\n")
+        entropyFile.write("property,entropy,uniformity,spread,unique_types,optimized_proportion\n")
         for name, measures in scratch.items():
             entropyFile.write("{},{},{},{},{},{}\n".format(name, measures[0], measures[1], 
                                                            measures[2], measures[3], measures[4]))
