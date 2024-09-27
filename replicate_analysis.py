@@ -10,7 +10,7 @@ import numpy as np
 
 from plot_utils import (calculate_confidence_interval, fast_non_dominated_sort, 
                         final_pop_distribution, final_pop_histogram, 
-                        get_perfect_pop, T)
+                        get_perfect_pop, entropy_diff, T)
 
 
 def plot_fitnesses_error(fitness_logs, generations, eval_func_names, save_loc, transparent=False):
@@ -156,13 +156,15 @@ def main(config_dir):
     tracking_frequency = config["tracking_frequency"]
     generations = [x*tracking_frequency for x in range((config["num_generations"]//tracking_frequency)+1)]
 
+    transparent = True
     if not all([len(pop) == 0 for pop in perfect_pops]):
-        final_pop_histogram(perfect_pops, eval_funcs, data_path, plot_all=True)
-        final_pop_distribution(perfect_pops, eval_funcs, data_path)
-    plot_fitnesses_sep(fitness_logs, generations, eval_funcs.keys(), data_path)
-    plot_fitnesses_error(fitness_logs, generations, eval_funcs.keys(), data_path)
+        final_pop_histogram(perfect_pops, eval_funcs, data_path, plot_all=True, transparent=transparent)
+        final_pop_distribution(perfect_pops, eval_funcs, data_path, transparent=transparent)
+    plot_fitnesses_sep(fitness_logs, generations, eval_funcs.keys(), data_path, transparent=transparent)
+    plot_fitnesses_error(fitness_logs, generations, eval_funcs.keys(), data_path, transparent=transparent)
     combined_diversity(diversities, data_path)
-    plot_unique_types(diversity_logs, generations, diversity_logs[0].keys(), data_path)
+    plot_unique_types(diversity_logs, generations, diversity_logs[0].keys(), data_path, transparent=transparent)
+    entropy_diff("diversity_all.csv", config, diversity_logs[0].keys(), data_path)
 
 
 if __name__ == "__main__":

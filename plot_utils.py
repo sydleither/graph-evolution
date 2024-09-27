@@ -1,12 +1,17 @@
+from collections import Counter
 from math import ceil
+import os
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from random import random
 from scipy.stats import sem, t
 
 from bintools import numBins
 import eval_functions as ef
+from organism import Organism
 
 lmap = lambda f,x: list(map(f,x))
 mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=["#509154", "#A9561E", "#77BCFD", "#B791D4", "#EEDD5D", 
@@ -84,6 +89,33 @@ def calculate_confidence_interval(data:list[list[float]]) -> tuple[list[float], 
     lower = [intervals[i][0] for i in range(num_across)]
     upper = [intervals[i][1] for i in range(num_across)]
     return data_mean, lower, upper
+
+
+def entropy_diff(file_name, config, property_names, data_path):
+    if os.path.exists("{}/{}".format(data_path, file_name)):
+        df = pd.read_csv("{}/{}".format(data_path, file_name))
+    else:
+        print(f"Please save {file_name} before calling plot_entropy_diff().")
+        return
+    N = config["popsize"]
+    random_sample = [Organism(config["network_size"], random(), config["weight_range"]) for _ in range(N)]
+
+    df_random = []
+    for func_name in property_names:
+        typeCounter = Counter([organism.getProperty(func_name) 
+                               if "distribution" not in func_name 
+                               else tuple(organism.getProperty(func_name)) 
+                               for organism in random_sample])
+        entropy = -sum([(count/N)*np.log2(count/N) for count in typeCounter.values()])
+        df_random_entry = dict()
+        df_random_entry["sampled_unique_types"] = len(typeCounter)
+        df_random_entry["sampled_entropy"] = entropy
+        df_random_entry["property"] = func_name
+        df_random.append(df_random_entry)
+    df_random = pd.DataFrame(df_random)
+    df = df_random.merge(df, on=["property"], how="inner")
+    df["entropy_pct_change"] = 100*((df["entropy"] - df["sampled_entropy"]) / df["sampled_entropy"])
+    print(df)
 
 
 def final_pop_histogram(final_pop, eval_funcs, save_loc, plot_all=True, transparent=False):
